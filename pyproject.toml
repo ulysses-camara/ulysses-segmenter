@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "segmentador"
+version = "0.1.0"
+description = "Segmentador de textos legais para a Câmara dos Deputados."
+authors = ["felsiq <felipe.siqueira@usp.br>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "3.8"
+pandas = "^1.4.0"
+numpy = "^1.22.2"
+torch = {url = "https://download.pytorch.org/whl/nightly/cu113/torch-1.12.0.dev20220209%2Bcu113-cp310-cp310-linux_x86_64.whl"}
+datasets = "^1.18.3"
+scikit-learn = "^1.0.2"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+mypy = "^0.931"
+pylint = "^2.12.2"
+notebook = "^6.4.8"
+jupyter-contrib-nbextensions = "^0.5.1"
+ipywidgets = "^7.6.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
