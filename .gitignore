@@ -154,3 +154,9 @@ cython_debug/
 
 cache/
 data/
+
+poetry.toml
+onnx/
+venvs/
+pretrained_segmenter_model/
+.python-version
