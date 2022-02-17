@@ -23,11 +23,16 @@ class Segmenter:
             uri_tokenizer = uri_model
 
         tokenizer = transformers.AutoTokenizer.from_pretrained(
-            uri_tokenizer, local_files_only=self.local_files_only
+            uri_tokenizer,
+            local_files_only=self.local_files_only,
+            cache_dir="../cache/tokenizers",
         )
 
         model = transformers.AutoModelForTokenClassification.from_pretrained(
-            uri_model, num_labels=num_labels, local_files_only=self.local_files_only
+            uri_model,
+            num_labels=num_labels,
+            local_files_only=self.local_files_only,
+            cache_dir="../cache/models",
         )
 
         self.pipeline = transformers.pipeline(
@@ -41,6 +46,9 @@ class Segmenter:
     @property
     def tokenizer(self):
         return self.pipeline.tokenizer
+
+    def save_pretrained(self, save_directory: str) -> None:
+        self.pipeline.save_pretrained(save_directory)
 
     @classmethod
     def preprocess_legal_text(cls, text: str) -> str:
