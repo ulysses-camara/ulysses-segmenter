@@ -9,9 +9,9 @@ sys.path.append("..")
 from config import *
 
 
-REGISTERED_TEST_CASES_URI = "./registered_test_case.csv"
-REGISTERED_TEST_CASES_COLUMNS = ("document_index", "expected_segment_count")
-TEST_CASES = dict()
+REGISTERED_TEST_CASES_URI = "./registered_test_cases.csv"
+REGISTERED_TEST_CASES_COLUMNS = ("document_index", "expected_segment_count", "expected_noise_count")
+TEST_CASES: dict[int, tuple[int, int]] = dict()
 
 
 def load_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> None:
@@ -21,14 +21,19 @@ def load_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> No
 
     df = pd.read_csv(test_cases_uri, usecols=REGISTERED_TEST_CASES_COLUMNS, index_col=None)
 
-    for i, (idx, seg_count) in df.iterrows():
-        TEST_CASES[idx] = seg_count
+    for i, (idx, *expected_values) in df.iterrows():
+        TEST_CASES[idx] = expected_values
 
     print(f"Loaded {len(TEST_CASES)} test cases from '{test_cases_uri}'.")
 
 
 def dump_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> None:
-    df = pd.DataFrame(TEST_CASES.items(), columns=REGISTERED_TEST_CASES_COLUMNS)
+    items = []
+
+    for key, vals in TEST_CASES.items():
+        items.append((key, *vals))
+
+    df = pd.DataFrame(items, columns=REGISTERED_TEST_CASES_COLUMNS)
     df.to_csv(test_cases_uri, index=False)
     print(f"Wrote {len(df)} test cases at '{test_cases_uri}'.")
 
@@ -37,7 +42,19 @@ def clear_registered_cases() -> None:
     TEST_CASES.clear()
 
 
-def print_results(df, id_: int, keyword_filters: t.Union[set[str], str, None] = None, print_full_text: bool = True) -> int:
+def update_test_case(document_idx: int, expected_segment_count: t.Union[int, tuple[int, ...]]) -> None:
+    if not hasattr(expected_segment_count, "__len__"):
+        expected_segment_count = (expected_segment_count,)
+
+    assert len(expected_segment_count) == len(REGISTERED_TEST_CASES_COLUMNS) - 1, f"Got length: {len(expected_segment_count)}"
+    TEST_CASES[document_idx] = tuple(expected_segment_count)
+
+
+def test_case_exists(document_idx: int) -> bool:
+    return document_idx in TEST_CASES
+
+
+def print_results(df, id_: int, keyword_filters: t.Union[set[str], str, None] = None, print_full_text: bool = True) -> tuple[int, int]:
     tokens = df["train"][id_]["tokens"]
     labels = df["train"][id_]["labels"]
     
@@ -45,8 +62,9 @@ def print_results(df, id_: int, keyword_filters: t.Union[set[str], str, None] = 
         print(" ".join(df["train"][id_]["tokens"]))
         print(64 * "_", end="\n\n")
     
-    sentence = []
+    sentence: list[str] = []
     segment_count = int(len(tokens) > 0)
+    noise_count = 0
     
     c_color = colorama.Fore.LIGHTWHITE_EX
     c_end = colorama.Fore.RESET
@@ -67,6 +85,7 @@ def print_results(df, id_: int, keyword_filters: t.Union[set[str], str, None] = 
         
         if lab == SPECIAL_SYMBOLS[MARKER_NOISE_START]:
             tok = colorama.Fore.RED + tok
+            noise_count += 1
             
         if lab == SPECIAL_SYMBOLS[MARKER_NOISE_END]:
             tok = colorama.Fore.RESET + tok
@@ -77,14 +96,6 @@ def print_results(df, id_: int, keyword_filters: t.Union[set[str], str, None] = 
         print(c_color, segment_count, c_end, " ".join(sentence), end="\n\n")
     
     print(colorama.Fore.RESET)
-    print(f"Idx/Segment count:   {id_}: {segment_count}")
+    print(f"Idx/Segment count, noise count:   {id_}: {segment_count}, {noise_count}")
     
-    return segment_count
-
-
-def update_test_case(document_idx: int, expected_segment_count: int):
-    TEST_CASES[document_idx] = expected_segment_count
-
-
-def test_case_exists(document_idx: int):
-    return document_idx in TEST_CASES
+    return segment_count, noise_count
