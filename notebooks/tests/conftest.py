@@ -20,6 +20,8 @@ TEST_CASES: dict[int, tuple[int, int]] = dict()
 
 
 def load_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> None:
+    clear_registered_cases()
+
     if not os.path.isfile(test_cases_uri):
         print(f"No test cases found at '{test_cases_uri}'.")
         return
