@@ -164,3 +164,4 @@ pretrained_segmenter_model/
 registered_test_cases.csv
 noises.txt
 Makefile
+test_cases/

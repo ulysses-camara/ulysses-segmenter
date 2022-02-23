@@ -1,6 +1,7 @@
 import os
 import typing as t
 import sys
+import pathlib
 
 import pandas as pd
 import colorama
@@ -34,6 +35,15 @@ def load_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> No
 
 
 def dump_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> None:
+    if not os.path.isfile(test_cases_uri):
+        dir_path, _ = os.path.split(test_cases_uri)
+        dir_path = pathlib.Path(dir_path)
+        dir_exists = os.path.isdir(dir_path)
+        dir_path.mkdir(exist_ok=True, parents=True)
+
+        if not dir_exists:
+            print(f"Created test directory as '{dir_path}'.")
+
     items = []
 
     for key, vals in TEST_CASES.items():
