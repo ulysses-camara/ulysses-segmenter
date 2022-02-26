@@ -86,8 +86,10 @@ def print_results(
     labels = df["train"][id_]["labels"]
 
     if print_full_text:
+        print(colorama.Fore.WHITE, colorama.Style.DIM, sep="", end="")
         print(" ".join(df["train"][id_]["tokens"]))
         print(64 * "_", end="\n\n")
+        print(colorama.Style.RESET_ALL, sep="", end="")
 
     sentence: list[str] = []
     segment_count = int(len(tokens) > 0)
