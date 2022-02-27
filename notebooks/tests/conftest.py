@@ -82,12 +82,19 @@ def print_results(
     keyword_filters: t.Union[set[str], str, None] = None,
     print_full_text: bool = True,
 ) -> tuple[int, int]:
-    tokens = df["train"][id_]["tokens"]
-    labels = df["train"][id_]["labels"]
+    inst = df["train"][id_]
+
+    tokens = inst["tokens"]
+    labels = inst["labels"]
 
     if print_full_text:
         print(colorama.Fore.WHITE, colorama.Style.DIM, sep="", end="")
-        print(" ".join(df["train"][id_]["tokens"]))
+
+        if "text" in inst:
+            print(inst["text"])
+        else:
+            print(" ".join(inst["tokens"]))
+
         print(64 * "_", end="\n\n")
         print(colorama.Style.RESET_ALL, sep="", end="")
 
