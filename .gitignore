@@ -165,3 +165,5 @@ registered_test_cases.csv
 noises.txt
 Makefile
 test_cases/
+tokenizers/
+segmenter_checkpoint/
