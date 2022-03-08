@@ -18,10 +18,17 @@ class Segmenter:
         uri_tokenizer: t.Optional[str] = None,
         num_labels: int = 4,
         local_files_only: bool = True,
-        num_hidden_layers: int = 12,
         device: str = "cuda",
+        config: t.Optional[transformers.BertConfig] = None,
+        cache_dir: str = "../cache/models",
     ):
         self.local_files_only = bool(local_files_only)
+
+        if config is None:
+            config = transformers.BertConfig.from_pretrained("neuralmind/bert-base-portuguese-cased")
+            config.max_position_embeddings = 1024
+            config.num_hidden_layers = 2
+            config.num_labels = 4
 
         if uri_tokenizer is None:
             uri_tokenizer = uri_model
@@ -29,10 +36,16 @@ class Segmenter:
         if device == "cuda" and not torch.cuda.is_available():
             device = "cpu"
 
-        config = transformers.BertConfig.from_pretrained(uri_model)
-        config.max_position_embeddings = 1024
-        config.num_hidden_layers = num_hidden_layers
-        config.num_labels = num_labels
+        model = transformers.AutoModelForTokenClassification.from_config(config)
+
+        """
+        model = transformers.AutoModelForTokenClassification.from_pretrained(
+            uri_model,
+            num_labels=num_labels,
+            local_files_only=self.local_files_only,
+            cache_dir=cache_dir,
+        )
+        """
 
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             uri_tokenizer,
@@ -40,47 +53,24 @@ class Segmenter:
             cache_dir="../cache/tokenizers",
         )
 
-        model = transformers.AutoModelForTokenClassification.from_config(config)
+        model.resize_token_embeddings(tokenizer.vocab_size)
 
-        model = model.to(device)
-
-        """
-        model = transformers.AutoModelForTokenClassification.from_pretrained(
-            uri_model,
-            num_labels=num_labels,
-            local_files_only=self.local_files_only,
-            cache_dir="../cache/models",
-            num_hidden_layers=num_hidden_layers,
-        )
-
-        emb = model.bert.embeddings.position_embeddings
-        emb = torch.nn.Embedding.from_pretrained(
-            torch.cat(
-                [
-                    emb.weight,
-                    torch.zeros(
-                        1024 - emb.num_embeddings, 768, device=emb.weight.device
-                    ),
-                ],
-                axis=0,
-            )
-        )
-        tokenizer.model_max_length = 1024
-        model.config.max_position_embeddings = 1024
-        model.bert.embeddings.position_embeddings = emb
-        """
+        self._tokenizer = tokenizer
+        self._model = model.to(device)
 
         self.pipeline = transformers.pipeline(
-            "token-classification", model=model, tokenizer=tokenizer
+            "token-classification",
+            model=model,
+            tokenizer=tokenizer,
         )
 
     @property
     def model(self):
-        return self.pipeline.model
+        return self._model
 
     @property
     def tokenizer(self):
-        return self.pipeline.tokenizer
+        return self._tokenizer
 
     def save_pretrained(self, save_directory: str) -> None:
         self.pipeline.save_pretrained(save_directory)
