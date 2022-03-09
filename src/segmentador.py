@@ -19,7 +19,9 @@ class Segmenter:
         num_labels: int = 4,
         local_files_only: bool = True,
         device: str = "cuda",
+        init_from_pretrained_weights: bool = False,
         config: t.Optional[transformers.BertConfig] = None,
+        num_hidden_layers: int = 6,
         cache_dir: str = "../cache/models",
     ):
         self.local_files_only = bool(local_files_only)
@@ -27,8 +29,8 @@ class Segmenter:
         if config is None:
             config = transformers.BertConfig.from_pretrained("neuralmind/bert-base-portuguese-cased")
             config.max_position_embeddings = 1024
-            config.num_hidden_layers = 2
-            config.num_labels = 4
+            config.num_hidden_layers = num_hidden_layers
+            config.num_labels = num_labels
 
         if uri_tokenizer is None:
             uri_tokenizer = uri_model
@@ -36,7 +38,15 @@ class Segmenter:
         if device == "cuda" and not torch.cuda.is_available():
             device = "cpu"
 
-        model = transformers.AutoModelForTokenClassification.from_config(config)
+        if init_from_pretrained_weights:
+            model = transformers.AutoModelForTokenClassification.from_pretrained(
+                uri_model,
+                local_files_only=self.local_files_only,
+                cache_dir=cache_dir,
+            )
+
+        else:
+            model = transformers.AutoModelForTokenClassification.from_config(config)
 
         """
         model = transformers.AutoModelForTokenClassification.from_pretrained(
