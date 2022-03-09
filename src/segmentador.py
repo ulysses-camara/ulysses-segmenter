@@ -27,7 +27,7 @@ class Segmenter:
         self.local_files_only = bool(local_files_only)
 
         if config is None:
-            config = transformers.BertConfig.from_pretrained("neuralmind/bert-base-portuguese-cased")
+            config = transformers.BertConfig.from_pretrained(uri_model)
             config.max_position_embeddings = 1024
             config.num_hidden_layers = num_hidden_layers
             config.num_labels = num_labels
