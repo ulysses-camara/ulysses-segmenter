@@ -12,11 +12,15 @@ class Segmenter:
     """TODO."""
 
     RE_BLANK_SPACES = regex.compile(r"\s+")
-    RE_JUSTIFICATIVA = regex.compile("|".join((
-        r"\s*".join("JUSTIFICATIVA"),
-        r"\s*".join([*"JUSTIFICA", "[CÇ]", "[AÁÀÃÃ]", "O"]),
-        r"\s*".join("ANEXOS"),
-    )))
+    RE_JUSTIFICATIVA = regex.compile(
+        "|".join(
+            (
+                r"\s*".join("JUSTIFICATIVA"),
+                r"\s*".join([*"JUSTIFICA", "[CÇ]", "[AÁÀÃÃ]", "O"]),
+                r"\s*".join("ANEXOS"),
+            )
+        )
+    )
 
     def __init__(
         self,
@@ -105,7 +109,13 @@ class Segmenter:
 
         text = self.preprocess_legal_text(text)
 
-        tokens = self._tokenizer(text, padding=False, truncation=False, return_tensors="pt", return_length=True)
+        tokens = self._tokenizer(
+            text,
+            padding=False,
+            truncation=False,
+            return_tensors="pt",
+            return_length=True,
+        )
         num_tokens = tokens.pop("length")
 
         preds = []
@@ -114,7 +124,7 @@ class Segmenter:
             subset = {}
 
             for key, vals in tokens.items():
-                slice_ = vals[..., i:i + 1024]
+                slice_ = vals[..., i : i + 1024]
                 slice_ = slice_.to(self._model.device)
                 subset[key] = slice_
 
