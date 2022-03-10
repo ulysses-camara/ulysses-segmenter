@@ -19,6 +19,7 @@ seqeval = "^1.2.2"
 colorama = "^0.4.4"
 tqdm = "^4.63.0"
 sentencepiece = "^0.1.96"
+psutil = "^5.9.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
