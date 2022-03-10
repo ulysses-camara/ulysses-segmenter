@@ -96,18 +96,29 @@ class Segmenter:
         self.pipeline.save_pretrained(save_directory)
 
     @classmethod
-    def preprocess_legal_text(cls, text: str) -> str:
+    def preprocess_legal_text(
+        cls, text: str, return_justificativa: bool = False
+    ) -> t.Union[str, tuple[str, list[str]]]:
         """Apply minimal legal text preprocessing."""
         text = cls.RE_BLANK_SPACES.sub(" ", text)
         text = text.strip()
-        text = cls.RE_JUSTIFICATIVA.split(text)[0]
+        text, *justificativa = cls.RE_JUSTIFICATIVA.split(text)
+
+        if return_justificativa:
+            return text, justificativa
+
         return text
 
-    def segment_legal_text(self, text: str):
+    def segment_legal_text(self, text: str, return_justificativa: bool = False):
         """Segment `text`."""
         self._model.eval()
 
-        text = self.preprocess_legal_text(text)
+        text = self.preprocess_legal_text(
+            text, return_justificativa=return_justificativa
+        )
+
+        if isinstance(text, tuple):
+            text, justificativa = text
 
         tokens = self._tokenizer(
             text,
@@ -147,10 +158,13 @@ class Segmenter:
             if seg:
                 segs.append(seg)
 
+        if return_justificativa:
+            return segs, justificativa
+
         return segs
 
-    def __call__(self, text: str) -> str:
-        return self.segment_legal_text(text)
+    def __call__(self, *args, **kwargs) -> str:
+        return self.segment_legal_text(*args, **kwargs)
 
 
 def main():
