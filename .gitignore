@@ -167,3 +167,4 @@ Makefile
 test_cases/
 tokenizers/
 segmenter_checkpoint/
+train_logs/
