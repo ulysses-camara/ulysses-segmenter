@@ -1,16 +1,22 @@
 """Legal text segmenter."""
 import typing as t
-import re
+import regex
 
 import transformers
 import torch
 import torch.nn
+import numpy as np
 
 
 class Segmenter:
     """TODO."""
 
-    RE_BLANK_SPACES = re.compile(r"\s+")
+    RE_BLANK_SPACES = regex.compile(r"\s+")
+    RE_JUSTIFICATIVA = regex.compile("|".join((
+        r"\s*".join("JUSTIFICATIVA"),
+        r"\s*".join([*"JUSTIFICA", "[CÇ]", "[AÁÀÃÃ]", "O"]),
+        r"\s*".join("ANEXOS"),
+    )))
 
     def __init__(
         self,
@@ -90,12 +96,48 @@ class Segmenter:
         """Apply minimal legal text preprocessing."""
         text = cls.RE_BLANK_SPACES.sub(" ", text)
         text = text.strip()
+        text = cls.RE_JUSTIFICATIVA.split(text)[0]
         return text
 
     def segment_legal_text(self, text: str):
         """Segment `text`."""
+        self._model.eval()
+
         text = self.preprocess_legal_text(text)
-        return self.pipeline(text)
+
+        tokens = self._tokenizer(text, padding=False, truncation=False, return_tensors="pt", return_length=True)
+        num_tokens = tokens.pop("length")
+
+        preds = []
+
+        for i in range(0, num_tokens, 1024):
+            subset = {}
+
+            for key, vals in tokens.items():
+                slice_ = vals[..., i:i + 1024]
+                slice_ = slice_.to(self._model.device)
+                subset[key] = slice_
+
+            with torch.no_grad():
+                model_out = self._model(**subset)
+
+            model_out = model_out["logits"]
+            model_out = model_out.cpu().numpy()
+            model_out = model_out.argmax(axis=-1)
+            preds.extend(model_out)
+
+        preds = np.hstack(preds).astype(int, copy=False)
+        segment_inds = np.hstack((0, np.flatnonzero(preds == 1), num_tokens))
+
+        segs: list[str] = []
+
+        for i, i_next in zip(segment_inds[:-1], segment_inds[1:]):
+            split_ = tokens["input_ids"].numpy().ravel()[i:i_next]
+            seg = self._tokenizer.decode(split_, skip_special_tokens=True)
+            if seg:
+                segs.append(seg)
+
+        return segs
 
     def __call__(self, text: str) -> str:
         return self.segment_legal_text(text)
