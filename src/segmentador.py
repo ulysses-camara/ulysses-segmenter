@@ -293,12 +293,13 @@ class Segmenter:
         model_out = model_out.cpu().numpy()
         model_out = model_out.argmax(axis=-1)
 
-        segment_inds = np.flatnonzero(model_out == 1)
-        segment_inds = np.hstack((0, segment_inds, num_tokens))
+        seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
+        segment_start_inds = np.flatnonzero(model_out == seg_cls_id)
+        segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
         segs: list[str] = []
 
-        for i, i_next in zip(segment_inds[:-1], segment_inds[1:]):
+        for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
             split_ = tokens["input_ids"].numpy().ravel()[i:i_next]
             seg = self._tokenizer.decode(split_, skip_special_tokens=True)
             if seg:
