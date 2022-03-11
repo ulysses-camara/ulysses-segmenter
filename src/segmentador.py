@@ -33,6 +33,7 @@ class Segmenter:
         config: t.Optional[transformers.BertConfig] = None,
         num_hidden_layers: int = 6,
         cache_dir: str = "../cache/models",
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
         self.local_files_only = bool(local_files_only)
 
@@ -58,15 +59,6 @@ class Segmenter:
         else:
             model = transformers.AutoModelForTokenClassification.from_config(config)
 
-        """
-        model = transformers.AutoModelForTokenClassification.from_pretrained(
-            uri_model,
-            num_labels=num_labels,
-            local_files_only=self.local_files_only,
-            cache_dir=cache_dir,
-        )
-        """
-
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             uri_tokenizer,
             local_files_only=self.local_files_only,
@@ -84,6 +76,8 @@ class Segmenter:
             tokenizer=tokenizer,
         )
 
+        self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
+
     @property
     def model(self):
         return self._model
@@ -96,29 +90,56 @@ class Segmenter:
         self.pipeline.save_pretrained(save_directory)
 
     @classmethod
+    def setup_regex_justificativa(
+        cls,
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
+    ) -> regex.Pattern:
+        if regex_justificativa is None:
+            regex_justificativa = cls.RE_JUSTIFICATIVA
+
+        if isinstance(regex_justificativa, str):
+            regex_justificativa = regex.compile(regex_justificativa)
+
+        return regex_justificativa
+
+    @classmethod
     def preprocess_legal_text(
-        cls, text: str, return_justificativa: bool = False
+        cls,
+        text: str,
+        return_justificativa: bool = False,
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> t.Union[str, tuple[str, list[str]]]:
         """Apply minimal legal text preprocessing."""
         text = cls.RE_BLANK_SPACES.sub(" ", text)
         text = text.strip()
-        text, *justificativa = cls.RE_JUSTIFICATIVA.split(text)
+
+        regex_justificativa = cls.setup_regex_justificativa(regex_justificativa)
+        text, *justificativa = regex_justificativa.split(text)
 
         if return_justificativa:
             return text, justificativa
 
         return text
 
-    def segment_legal_text(self, text: str, return_justificativa: bool = False):
+    def segment_legal_text(
+        self,
+        text: str,
+        return_justificativa: bool = False,
+    ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment `text`."""
         self._model.eval()
 
-        text = self.preprocess_legal_text(
-            text, return_justificativa=return_justificativa
+        preproc_result = self.preprocess_legal_text(
+            text,
+            return_justificativa=return_justificativa,
+            regex_justificativa=self.regex_justificativa,
         )
 
-        if isinstance(text, tuple):
-            text, justificativa = text
+        if isinstance(preproc_result, tuple):
+            text, justificativa = preproc_result
+
+        else:
+            text = preproc_result
 
         tokens = self._tokenizer(
             text,
@@ -147,8 +168,9 @@ class Segmenter:
             model_out = model_out.argmax(axis=-1)
             preds.extend(model_out)
 
-        preds = np.hstack(preds).astype(int, copy=False)
-        segment_inds = np.hstack((0, np.flatnonzero(preds == 1), num_tokens))
+        segment_inds = np.hstack(preds).astype(int, copy=False)
+        segment_inds = np.flatnonzero(segment_inds == 1)
+        segment_inds = np.hstack((0, segment_inds, num_tokens))
 
         segs: list[str] = []
 
@@ -163,5 +185,5 @@ class Segmenter:
 
         return segs
 
-    def __call__(self, *args, **kwargs) -> str:
+    def __call__(self, *args, **kwargs) -> t.Union[list[str], tuple[list[str], list[str]]]:
         return self.segment_legal_text(*args, **kwargs)
