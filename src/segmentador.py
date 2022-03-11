@@ -92,6 +92,8 @@ class Segmenter:
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
+        labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
+
         self.local_files_only = bool(local_files_only)
 
         if config is None:
@@ -99,6 +101,8 @@ class Segmenter:
             config.max_position_embeddings = 1024
             config.num_hidden_layers = num_hidden_layers
             config.num_labels = num_labels
+            config.label2id = dict(zip(labels, range(num_labels)))
+            config.id2label = dict(zip(range(num_labels), labels))
 
         if uri_tokenizer is None:
             uri_tokenizer = uri_model
@@ -111,6 +115,8 @@ class Segmenter:
                 uri_model,
                 local_files_only=self.local_files_only,
                 cache_dir=cache_dir_model,
+                label2id=config.label2id,
+                id2label=config.id2label,
             )
 
         else:
