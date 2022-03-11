@@ -1,9 +1,11 @@
 """Legal text segmenter."""
 import typing as t
-import regex
+import collections
 
+import regex
 import transformers
 import torch
+import torch.nn.functional as F
 import torch.nn
 import numpy as np
 
@@ -258,26 +260,34 @@ class Segmenter:
         )
         num_tokens = tokens.pop("length")
 
-        preds = []
+        subset = collections.defaultdict(list)
 
         for i in range(0, num_tokens, 1024):
-            subset = {}
-
             for key, vals in tokens.items():
                 slice_ = vals[..., i : i + 1024]
-                slice_ = slice_.to(self._model.device)
-                subset[key] = slice_
+                subset[key].append(slice_)
 
-            with torch.no_grad():
-                model_out = self._model(**subset)
+        for key, vals in subset.items():
+            last_len = max(vals[-1].size())
 
-            model_out = model_out["logits"]
-            model_out = model_out.cpu().numpy()
-            model_out = model_out.argmax(axis=-1)
-            preds.extend(model_out)
+            if last_len < 1024:
+                vals[-1] = F.pad(
+                    input=vals[-1],
+                    pad=(0, 1024 - last_len),
+                    mode="constant",
+                    value=self._tokenizer.pad_token_id,
+                )
 
-        segment_inds = np.hstack(preds).astype(int, copy=False)
-        segment_inds = np.flatnonzero(segment_inds == 1)
+            subset[key] = torch.vstack(vals).to(self._model.device)
+
+        with torch.no_grad():
+            model_out = self._model(**subset)
+
+        model_out = model_out["logits"]
+        model_out = model_out.cpu().numpy()
+        model_out = model_out.argmax(axis=-1)
+
+        segment_inds = np.flatnonzero(model_out == 1)
         segment_inds = np.hstack((0, segment_inds, num_tokens))
 
         segs: list[str] = []
