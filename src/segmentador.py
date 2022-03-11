@@ -165,11 +165,3 @@ class Segmenter:
 
     def __call__(self, *args, **kwargs) -> str:
         return self.segment_legal_text(*args, **kwargs)
-
-
-def main():
-    seg = Segmenter()
-
-
-if __name__ == "__main__":
-    main()
