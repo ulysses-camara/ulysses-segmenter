@@ -257,6 +257,12 @@ class Segmenter:
         else:
             text = preproc_result
 
+        try:
+            block_size = self._model.config.max_position_embeddings
+
+        except AttributeError:
+            block_size = 1024
+
         tokens = self._tokenizer(
             text,
             padding=False,
@@ -264,13 +270,15 @@ class Segmenter:
             return_tensors="pt",
             return_length=True,
         )
+
         num_tokens = tokens.pop("length")
+        num_blocks = int(np.ceil(num_tokens / block_size))
 
         subset = collections.defaultdict(list)
 
-        for i in range(0, num_tokens, 1024):
+        for i in range(0, num_tokens, block_size):
             for key, vals in tokens.items():
-                slice_ = vals[..., i : i + 1024]
+                slice_ = vals[..., i : i + block_size]
                 subset[key].append(slice_)
 
         for key, vals in subset.items():
@@ -291,6 +299,10 @@ class Segmenter:
 
         model_out = model_out["logits"]
         model_out = model_out.cpu().numpy()
+
+        if model_out.ndim == 3:
+            model_out = np.concatenate(model_out, axis=0)
+
         model_out = model_out.argmax(axis=-1)
 
         seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
