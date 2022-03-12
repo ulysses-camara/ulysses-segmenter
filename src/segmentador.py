@@ -158,6 +158,11 @@ class Segmenter:
         cls,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> regex.Pattern:
+        """Compile or set default 'JUSTIFICATIVA' block regex.
+
+        If the provided regex is already compiled, this function simply returns its own
+        argument.
+        """
         if regex_justificativa is None:
             regex_justificativa = cls.RE_JUSTIFICATIVA
 
