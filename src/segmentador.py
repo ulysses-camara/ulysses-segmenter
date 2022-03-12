@@ -219,10 +219,42 @@ class Segmenter:
 
         return text
 
+    @staticmethod
+    def _resolve_pooling_operation(
+        operation: t.Union[str, t.Callable[[np.ndarray, ...], np.ndarray]]
+    ) -> t.Callable[[np.ndarray, ...], np.ndarray]:
+        """TODO"""
+        if hasattr(operation, "__call__"):
+            return operation
+
+        if operation == "max":
+            return torch.max
+
+        if operation == "average":
+            return torch.average
+
+        if operation == "median":
+            return torch.median
+
+        raise ValueError(f"Pooling operation '{operation}' invalid.")
+
+    def _aggregate_logits(
+        self,
+        logits: np.ndarray,
+        window_shift_size: int,
+        pooling_operation: t.Callable[[np.ndarray, ...], np.ndarray],
+    ) -> np.ndarray:
+        """TODO"""
+        return logits
+
     def segment_legal_text(
         self,
         text: str,
         return_justificativa: bool = False,
+        window_shift_size: int = 1024,
+        window_pooling_operation: t.Union[
+            str, t.Callable[[torch.Tensor, ...], torch.Tensor]
+        ] = "median",
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
 
@@ -239,6 +271,12 @@ class Segmenter:
             If True, return a tuple in the format (content, justificativa).
             If False, return only `content`.
 
+        window_shift_size : int, default=1024
+            TODO.
+
+        window_pooling_operation : {"max", "average", "median"} or callable, default="median"
+            TODO.
+
         Returns
         -------
         preprocessed_text : list[str]
@@ -248,8 +286,6 @@ class Segmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
-        self._model.eval()
-
         preproc_result = self.preprocess_legal_text(
             text,
             return_justificativa=return_justificativa,
@@ -268,6 +304,14 @@ class Segmenter:
         except AttributeError:
             block_size = 1024
 
+        assert (
+            window_shift_size >= 1
+        ), f"'window_shift_size' must be >= 1 (got '{window_shift_size}')"
+
+        assert (
+            window_shift_size <= block_size
+        ), f"'window_shift_size' must be <= {block_size} (got '{window_shift_size}')"
+
         tokens = self._tokenizer(
             text,
             padding=False,
@@ -281,34 +325,43 @@ class Segmenter:
 
         subset = collections.defaultdict(list)
 
-        for i in range(0, num_tokens, block_size):
+        for i in range(0, num_tokens, window_shift_size):
             for key, vals in tokens.items():
                 slice_ = vals[..., i : i + block_size]
                 subset[key].append(slice_)
 
         for key, vals in subset.items():
-            last_len = max(vals[-1].size())
+            for i in range(len(vals)):
+                cur_len = max(vals[i].size())
 
-            if last_len < 1024:
-                vals[-1] = F.pad(
-                    input=vals[-1],
-                    pad=(0, 1024 - last_len),
+                if cur_len >= block_size:
+                    break
+
+                vals[i] = F.pad(
+                    input=vals[i],
+                    pad=(0, block_size - cur_len),
                     mode="constant",
                     value=self._tokenizer.pad_token_id,
                 )
 
             subset[key] = torch.vstack(vals).to(self._model.device)
 
+        self._model.eval()
+
         with torch.no_grad():
             model_out = self._model(**subset)
 
         model_out = model_out["logits"]
         model_out = model_out.cpu().numpy()
-
-        if model_out.ndim == 3:
-            model_out = np.concatenate(model_out, axis=0)
-
+        model_out = self._aggregate_logits(
+            logits=model_out,
+            window_shift_size=window_shift_size,
+            window_pooling_operation=self._resolve_pooling_operation(
+                window_pooling_operation
+            ),
+        )
         model_out = model_out.argmax(axis=-1)
+        model_out = model_out.squeeze()
 
         seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
         segment_start_inds = np.flatnonzero(model_out == seg_cls_id)
