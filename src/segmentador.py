@@ -1,6 +1,7 @@
 """Legal text segmenter."""
 import typing as t
 import collections
+import warnings
 
 import regex
 import transformers
@@ -8,6 +9,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn
 import numpy as np
+
+import poolers
 
 
 class Segmenter:
@@ -306,11 +309,18 @@ class Segmenter:
 
         assert (
             window_shift_size >= 1
-        ), f"'window_shift_size' must be >= 1 (got '{window_shift_size}')"
+        ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size}')"
 
-        assert (
-            window_shift_size <= block_size
-        ), f"'window_shift_size' must be <= {block_size} (got '{window_shift_size}')"
+        if window_shift_size > block_size:
+            warnings.warn(
+                message=(
+                    f"'window_shift_size' parameter must be <= {block_size} "
+                    f"(got '{window_shift_size}'). "
+                    f"Will set it to {block_size} automatically."
+                ),
+                category=UserWarning,
+            )
+            window_shift_size = block_size
 
         tokens = self._tokenizer(
             text,
