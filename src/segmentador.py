@@ -31,6 +31,9 @@ class Segmenter:
         URI to pretrained text Tokenizer. If None, will load the tokenizer from
         the `uri_model` path.
 
+    inference_pooling_operation : {"max", "avg"}, default="avg"
+        TODO.
+
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
@@ -85,6 +88,7 @@ class Segmenter:
         self,
         uri_model: str = "neuralmind/bert-base-portuguese-cased",
         uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal["max", "avg"] = "avg",
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
@@ -143,6 +147,10 @@ class Segmenter:
         )
 
         self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
+
+        self._moving_window_pooler = poolers.AutoMovingWindowPooler(
+            pooling_operation=inference_pooling_operation,
+        )
 
     @property
     def model(self):
@@ -222,42 +230,12 @@ class Segmenter:
 
         return text
 
-    @staticmethod
-    def _resolve_pooling_operation(
-        operation: t.Union[str, t.Callable[[np.ndarray, ...], np.ndarray]]
-    ) -> t.Callable[[np.ndarray, ...], np.ndarray]:
-        """TODO"""
-        if hasattr(operation, "__call__"):
-            return operation
-
-        if operation == "max":
-            return torch.max
-
-        if operation == "average":
-            return torch.average
-
-        if operation == "median":
-            return torch.median
-
-        raise ValueError(f"Pooling operation '{operation}' invalid.")
-
-    def _aggregate_logits(
-        self,
-        logits: np.ndarray,
-        window_shift_size: int,
-        pooling_operation: t.Callable[[np.ndarray, ...], np.ndarray],
-    ) -> np.ndarray:
-        """TODO"""
-        return logits
-
     def segment_legal_text(
         self,
         text: str,
         return_justificativa: bool = False,
+        max_batch_size: int = 32,
         window_shift_size: int = 1024,
-        window_pooling_operation: t.Union[
-            str, t.Callable[[torch.Tensor, ...], torch.Tensor]
-        ] = "median",
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
 
@@ -274,10 +252,10 @@ class Segmenter:
             If True, return a tuple in the format (content, justificativa).
             If False, return only `content`.
 
-        window_shift_size : int, default=1024
+        max_batch_size : int, default=32
             TODO.
 
-        window_pooling_operation : {"max", "average", "median"} or callable, default="median"
+        window_shift_size : int, default=1024
             TODO.
 
         Returns
@@ -341,7 +319,7 @@ class Segmenter:
                 subset[key].append(slice_)
 
         for key, vals in subset.items():
-            for i in range(len(vals)):
+            for i in reversed(range(len(vals))):
                 cur_len = max(vals[i].size())
 
                 if cur_len >= block_size:
@@ -363,12 +341,9 @@ class Segmenter:
 
         model_out = model_out["logits"]
         model_out = model_out.cpu().numpy()
-        model_out = self._aggregate_logits(
+        model_out = self._moving_window_pooler(
             logits=model_out,
             window_shift_size=window_shift_size,
-            window_pooling_operation=self._resolve_pooling_operation(
-                window_pooling_operation
-            ),
         )
         model_out = model_out.argmax(axis=-1)
         model_out = model_out.squeeze()
