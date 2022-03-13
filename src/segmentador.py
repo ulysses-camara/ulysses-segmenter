@@ -31,7 +31,7 @@ class Segmenter:
         URI to pretrained text Tokenizer. If None, will load the tokenizer from
         the `uri_model` path.
 
-    inference_pooling_operation : {"max", "avg"}, default="avg"
+    inference_pooling_operation : {"max", "sum"}, default="sum"
         TODO.
 
     local_files_only : bool, default=True

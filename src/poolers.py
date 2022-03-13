@@ -20,7 +20,7 @@ class AutoMovingWindowPooler(_BasePooler):
         if pooling_operation == "max":
             return MaxMovingWindowPooler()
 
-        return AvgMovingWindowPooler()
+        return SumMovingWindowPooler()
 
 
 class MaxMovingWindowPooler(_BasePooler):
@@ -46,7 +46,7 @@ class MaxMovingWindowPooler(_BasePooler):
         return pooled_logits
 
 
-class AvgMovingWindowPooler(_BasePooler):
+class SumMovingWindowPooler(_BasePooler):
     def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
         d_batch, d_block_size, d_emb_dim = logits.shape
 
@@ -55,14 +55,10 @@ class AvgMovingWindowPooler(_BasePooler):
 
         d_batch_output = d_block_size + (d_batch - 1) * window_shift_size
         pooled_logits = np.zeros((d_batch_output, d_emb_dim))
-        elem_count_per_pos = np.zeros_like(pooled_logits)
 
         for i, logit_block in enumerate(logits):
             i_start = i * window_shift_size
             i_end = i_start + d_block_size
             pooled_logits[i_start:i_end, ...] += logit_block
-            elem_count_per_pos[i_start:i_end] += 1
-
-        pooled_logits /= elem_count_per_pos
 
         return pooled_logits
