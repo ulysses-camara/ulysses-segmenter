@@ -9,18 +9,21 @@ import typing as t
 import abc
 
 import numpy as np
+import numpy.typing as npt
 
 
 class _BasePooler(abc.ABC):
     """Base abstract class for Inference Poolers."""
 
     @abc.abstractmethod
-    def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
         """Combine logits from overlapping moving windows.
 
         Parameters
         ----------
-        logits : np.ndarray of shape (N, B, C)
+        logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
             - B: Block size; and
@@ -31,13 +34,12 @@ class _BasePooler(abc.ABC):
 
         Returns
         -------
-        pooled_logits : np.ndarray of shape (B + (N - 1) * window_shift_size, C)
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
             Logits combined by the selected pooling strategy, where `B`, `N` and
             `C` are as specified in the `logits` parameter documentation.
         """
-        pass
 
-    def __call__(self, *args, **kwargs) -> np.ndarray:
+    def __call__(self, *args, **kwargs) -> npt.NDArray[np.float64]:
         return self.pool(*args, **kwargs)
 
 
@@ -60,6 +62,11 @@ class AutoMovingWindowPooler(_BasePooler):
 
         return MaxMovingWindowPooler()
 
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
+        return logits
+
 
 class MaxMovingWindowPooler(_BasePooler):
     """Maximal Pooler.
@@ -67,12 +74,14 @@ class MaxMovingWindowPooler(_BasePooler):
     Chooses the largest logit element-wise.
     """
 
-    def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
         """Pick the largest logits from overlapping moving windows for each token.
 
         Parameters
         ----------
-        logits : np.ndarray of shape (N, B, C)
+        logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
             - B: Block size; and
@@ -98,7 +107,7 @@ class MaxMovingWindowPooler(_BasePooler):
 
         Returns
         -------
-        pooled_logits : np.ndarray of shape (B + (N - 1) * window_shift_size, C)
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
             Largest logits associated with each input token, where `B`, `N` and
             `C` are as specified in the `logits` parameter documentation.
         """
@@ -130,7 +139,9 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
     class, that receives the smallest logit instead.
     """
 
-    def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
         """Pick maximal overlapping logits for each class, except the 'No-op' class.
 
         The 'No-op' class receives the minimal logit instead.
@@ -141,7 +152,7 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
 
         Parameters
         ----------
-        logits : np.ndarray of shape (N, B, C)
+        logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
             - B: Block size; and
@@ -167,7 +178,7 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
 
         Returns
         -------
-        pooled_logits : np.ndarray of shape (B + (N - 1) * window_shift_size, C)
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
             Largest logits associated with each input token, and for all classes except
             the 'No-op' class, that receives the minimal logits instead. `B`, `N` and `C`
             are as specified in the `logits` parameter documentation.
@@ -206,12 +217,14 @@ class SumMovingWindowPooler(_BasePooler):
     Sum overlapping logits.
     """
 
-    def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
         """Sum overlapping logits for each class, except the 'No-op' class.
 
         Parameters
         ----------
-        logits : np.ndarray of shape (N, B, C)
+        logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
             - B: Block size; and
@@ -237,7 +250,7 @@ class SumMovingWindowPooler(_BasePooler):
 
         Returns
         -------
-        pooled_logits : np.ndarray of shape (B + (N - 1) * window_shift_size, C)
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
             Sum of logits associated with each input token, where `B`, `N` and `C`
             are as specified in the `logits` parameter documentation.
         """
@@ -264,21 +277,23 @@ class GaussianMovingWindowPooler(_BasePooler):
     """
 
     @staticmethod
-    def _compute_gaussian_pdf_per_position(block_size: int) -> np.ndarray:
+    def _compute_gaussian_pdf_per_position(block_size: int) -> npt.NDArray[np.float64]:
         """Compute the Gaussian Probability Density associated to each position in window."""
         # Note: block_size / 6 = (half_block_size) / (3 standard deviations from the mean)
         dist_std = block_size / 6.0
         dist_avg = 0.5 * (block_size - 1.0)
 
-        norm_factor = dist_std * np.sqrt(2.0 * np.pi)
+        norm_factor = dist_std * float(np.sqrt(2.0 * np.pi))
 
         pos_weights = np.exp(
             -0.5 * np.square((np.arange(block_size) - dist_avg) / dist_std)
         )
 
-        return pos_weights / norm_factor
+        return np.asfarray(pos_weights / norm_factor)
 
-    def pool(self, logits: np.ndarray, window_shift_size: int) -> np.ndarray:
+    def pool(
+        self, logits: npt.NDArray[np.float64], window_shift_size: int
+    ) -> npt.NDArray[np.float64]:
         """Apply weights from a Gaussian distribution to overlapping logits.
 
         The gaussian distribution is parametrized as N(block_size / 2, block_size / 6),
@@ -289,7 +304,7 @@ class GaussianMovingWindowPooler(_BasePooler):
 
         Parameters
         ----------
-        logits : np.ndarray of shape (N, B, C)
+        logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
             - B: Block size; and
@@ -315,7 +330,7 @@ class GaussianMovingWindowPooler(_BasePooler):
 
         Returns
         -------
-        pooled_logits : np.ndarray of shape (B + (N - 1) * window_shift_size, C)
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
             Weighted sum of logits associated with each input token, where `B`, `N`
             and `C` are as specified in the `logits` parameter documentation.
 

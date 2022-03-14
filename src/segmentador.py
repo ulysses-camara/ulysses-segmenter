@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn
 import numpy as np
+import numpy.typing as npt
 
 import poolers
 
@@ -169,10 +170,12 @@ class Segmenter:
 
     @property
     def model(self):
+        # pylint: disable='missing-function-docstring'
         return self._model
 
     @property
     def tokenizer(self):
+        # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
     def save_pretrained(self, save_directory: str) -> None:
@@ -326,12 +329,13 @@ class Segmenter:
         window_shift_size : int or float, default=0.5
             Moving window shift size, to feed documents larger than 1024 subwords tokens into
             the segmenter model.
-            - If integer, specify exactly the shift size per step, and it must be in [1, 1024] range.
+            - If integer, specify exactly the shift size per step, and it must be in [1, 1024]
+            range.
             - If float, the shift size is calculated from the corresponding fraction of the window
             size (1024 subword tokens), and it must be in the (0.0, 1.0] range.
-            Overlapping logits are combined using the strategy speficied by the `inference_pooling_operation`
-            argument in the Segmenter model initialization, and the final prediction for each token is
-            derived from the combined logits.
+            Overlapping logits are combined using the strategy specified by the argument
+            `inference_pooling_operation` in Segmenter model initialization, and the final
+            prediction for each token is derived from the combined logits.
 
         Returns
         -------
@@ -394,7 +398,6 @@ class Segmenter:
         )
 
         num_tokens = tokens.pop("length")
-        num_blocks = int(np.ceil(num_tokens / block_size))
 
         minibatches = self._build_minibatches(
             tokens=tokens,
@@ -405,7 +408,7 @@ class Segmenter:
         )
 
         self._model.eval()
-        all_logits: list[np.ndarray] = []
+        all_logits: list[npt.NDArray[np.float64]] = []
 
         with torch.no_grad():
             for minibatch in minibatches:
