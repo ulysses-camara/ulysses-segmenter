@@ -1,0 +1,214 @@
+Can't load config for './pretrained_segmenter_model/2_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/2_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0508, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.020792944356799126, 'eval_per_cls_precision_0': 0.9957783176808694, 'eval_per_cls_precision_1': 0.901946595267313, 'eval_per_cls_precision_2': 0.8898163605996512, 'eval_per_cls_precision_3': 0.7753303964416154, 'eval_per_cls_recall_0': 0.9973875462486222, 'eval_per_cls_recall_1': 0.8917294667556288, 'eval_per_cls_recall_2': 0.5384827332838551, 'eval_per_cls_recall_3': 0.07605877268765748, 'eval_macro_precision': 0.8907179174973623, 'eval_macro_recall': 0.625914629743941, 'eval_macro_f1': 0.7351990076630707, 'eval_overall_accuracy': 0.9932808903574442, 'eval_runtime': 124.4524, 'eval_samples_per_second': 115.393, 'eval_steps_per_second': 14.431, 'epoch': 0.8}
+{'loss': 0.0162, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.010391597636044025, 'eval_per_cls_precision_0': 0.998213490288656, 'eval_per_cls_precision_1': 0.9546898525133451, 'eval_per_cls_precision_2': 0.912247071351531, 'eval_per_cls_precision_3': 0.8777777777582716, 'eval_per_cls_recall_0': 0.9986882904265663, 'eval_per_cls_recall_1': 0.9627571623898246, 'eval_per_cls_recall_2': 0.786737692872165, 'eval_per_cls_recall_3': 0.17070008642968584, 'eval_macro_precision': 0.935732047977951, 'eval_macro_recall': 0.7297208080295604, 'eval_macro_f1': 0.8199849543464008, 'eval_overall_accuracy': 0.996929843525793, 'eval_runtime': 124.4762, 'eval_samples_per_second': 115.371, 'eval_steps_per_second': 14.428, 'epoch': 1.6}
+{'loss': 0.008, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.005950973369181156, 'eval_per_cls_precision_0': 0.9989768707010245, 'eval_per_cls_precision_1': 0.9764358650892997, 'eval_per_cls_precision_2': 0.9649719775810999, 'eval_per_cls_precision_3': 0.8888888888814067, 'eval_per_cls_recall_0': 0.9993445590017911, 'eval_per_cls_recall_1': 0.9783220452159863, 'eval_per_cls_recall_2': 0.8855620867001418, 'eval_per_cls_recall_3': 0.4563526361259449, 'eval_macro_precision': 0.9573184005632077, 'eval_macro_recall': 0.8298953317609661, 'eval_macro_f1': 0.8890644166635722, 'eval_overall_accuracy': 0.9983108709402028, 'eval_runtime': 124.6659, 'eval_samples_per_second': 115.196, 'eval_steps_per_second': 14.407, 'epoch': 2.4}
+{'loss': 0.0049, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.0046140034683048725, 'eval_per_cls_precision_0': 0.9992978963368951, 'eval_per_cls_precision_1': 0.9816496300583674, 'eval_per_cls_precision_2': 0.9533866765901066, 'eval_per_cls_precision_3': 0.8793565683587176, 'eval_per_cls_recall_0': 0.9994337304254739, 'eval_per_cls_recall_1': 0.9840296988774696, 'eval_per_cls_recall_2': 0.9411278471703332, 'eval_per_cls_recall_3': 0.5669835782170831, 'eval_macro_precision': 0.9534226928360217, 'eval_macro_recall': 0.8728937136725899, 'eval_macro_f1': 0.9113827894515142, 'eval_overall_accuracy': 0.9987151035167229, 'eval_runtime': 124.5352, 'eval_samples_per_second': 115.317, 'eval_steps_per_second': 14.422, 'epoch': 3.2}
+{'train_runtime': 10236.9682, 'train_samples_per_second': 44.89, 'train_steps_per_second': 0.35, 'train_loss': 0.016674422965267697, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =        4.0
+  train_loss               =     0.0167
+  train_runtime            = 2:50:36.96
+  train_samples_per_second =      44.89
+  train_steps_per_second   =       0.35
+***** test metrics *****
+  test_loss                =     0.0047
+  test_macro_f1            =     0.9134
+  test_macro_precision     =     0.9576
+  test_macro_recall        =     0.8732
+  test_overall_accuracy    =     0.9987
+  test_per_cls_precision_0 =     0.9993
+  test_per_cls_precision_1 =     0.9814
+  test_per_cls_precision_2 =     0.9537
+  test_per_cls_precision_3 =      0.896
+  test_per_cls_recall_0    =     0.9994
+  test_per_cls_recall_1    =     0.9837
+  test_per_cls_recall_2    =     0.9396
+  test_per_cls_recall_3    =     0.5699
+  test_runtime             = 0:02:04.71
+  test_samples_per_second  =    115.151
+  test_steps_per_second    =     14.401
+Can't load config for './pretrained_segmenter_model/4_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/4_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0446, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.019976280629634857, 'eval_per_cls_precision_0': 0.9961188384829989, 'eval_per_cls_precision_1': 0.8970669530743373, 'eval_per_cls_precision_2': 0.8719931271465178, 'eval_per_cls_precision_3': 0.7054545454288925, 'eval_per_cls_recall_0': 0.9971725831182129, 'eval_per_cls_recall_1': 0.902985786511423, 'eval_per_cls_recall_2': 0.5593313739891997, 'eval_per_cls_recall_3': 0.08383751080344064, 'eval_macro_precision': 0.8676583660331867, 'eval_macro_recall': 0.6358318136055692, 'eval_macro_f1': 0.7338721546264021, 'eval_overall_accuracy': 0.9934059812343573, 'eval_runtime': 211.9654, 'eval_samples_per_second': 67.752, 'eval_steps_per_second': 8.473, 'epoch': 0.8}
+{'loss': 0.017, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.01127820834517479, 'eval_per_cls_precision_0': 0.9980980198185652, 'eval_per_cls_precision_1': 0.9454517012122843, 'eval_per_cls_precision_2': 0.8980256020819071, 'eval_per_cls_precision_3': 0.8792134831213704, 'eval_per_cls_recall_0': 0.9984230519923172, 'eval_per_cls_recall_1': 0.9608890584755508, 'eval_per_cls_recall_2': 0.7602865540037101, 'eval_per_cls_recall_3': 0.13526361279111815, 'eval_macro_precision': 0.9301972015585318, 'eval_macro_recall': 0.713715569315674, 'eval_macro_f1': 0.8077024925046755, 'eval_overall_accuracy': 0.996550347569627, 'eval_runtime': 211.7931, 'eval_samples_per_second': 67.807, 'eval_steps_per_second': 8.48, 'epoch': 1.6}
+{'loss': 0.0076, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.004820054862648249, 'eval_per_cls_precision_0': 0.9991584115923663, 'eval_per_cls_precision_1': 0.9827693287681358, 'eval_per_cls_precision_2': 0.9614717780765155, 'eval_per_cls_precision_3': 0.8395225464135311, 'eval_per_cls_recall_0': 0.999472212756808, 'eval_per_cls_recall_1': 0.9811599732900107, 'eval_per_cls_recall_2': 0.9167891256420675, 'eval_per_cls_recall_3': 0.5471045808100817, 'eval_macro_precision': 0.9457305162126372, 'eval_macro_recall': 0.861131473124742, 'eval_macro_f1': 0.9014504847673712, 'eval_overall_accuracy': 0.9986173636997135, 'eval_runtime': 211.8305, 'eval_samples_per_second': 67.795, 'eval_steps_per_second': 8.478, 'epoch': 2.4}
+{'loss': 0.0042, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.003705545561388135, 'eval_per_cls_precision_0': 0.9994391620074958, 'eval_per_cls_precision_1': 0.9856358326454682, 'eval_per_cls_precision_2': 0.9634474441033829, 'eval_per_cls_precision_3': 0.8517045454497063, 'eval_per_cls_recall_0': 0.9995324189848629, 'eval_per_cls_recall_1': 0.987296893382859, 'eval_per_cls_recall_2': 0.9538023512114678, 'eval_per_cls_recall_3': 0.6477960241977192, 'eval_macro_precision': 0.9500567460515132, 'eval_macro_recall': 0.8971069219442271, 'eval_macro_f1': 0.9228229130700638, 'eval_overall_accuracy': 0.998959050837777, 'eval_runtime': 211.7971, 'eval_samples_per_second': 67.805, 'eval_steps_per_second': 8.48, 'epoch': 3.2}
+{'train_runtime': 18980.3872, 'train_samples_per_second': 24.211, 'train_steps_per_second': 0.189, 'train_loss': 0.015237831750442353, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =        4.0
+  train_loss               =     0.0152
+  train_runtime            = 5:16:20.38
+  train_samples_per_second =     24.211
+  train_steps_per_second   =      0.189
+***** test metrics *****
+  test_loss                =     0.0038
+  test_macro_f1            =     0.9282
+  test_macro_precision     =     0.9567
+  test_macro_recall        =     0.9012
+  test_overall_accuracy    =     0.9989
+  test_per_cls_precision_0 =     0.9994
+  test_per_cls_precision_1 =      0.985
+  test_per_cls_precision_2 =     0.9631
+  test_per_cls_precision_3 =     0.8796
+  test_per_cls_recall_0    =     0.9995
+  test_per_cls_recall_1    =      0.987
+  test_per_cls_recall_2    =     0.9511
+  test_per_cls_recall_3    =     0.6673
+  test_runtime             = 0:03:32.32
+  test_samples_per_second  =     67.637
+  test_steps_per_second    =      8.459
+Can't load config for './pretrained_segmenter_model/6_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/6_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0489, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.020282628014683723, 'eval_per_cls_precision_0': 0.9956242257105682, 'eval_per_cls_precision_1': 0.904887157005934, 'eval_per_cls_precision_2': 0.8818031056823733, 'eval_per_cls_precision_3': 0.8034934497465723, 'eval_per_cls_recall_0': 0.9974690625848892, 'eval_per_cls_recall_1': 0.8860695093642973, 'eval_per_cls_recall_2': 0.5371969140333053, 'eval_per_cls_recall_3': 0.07951598962800555, 'eval_macro_precision': 0.896451984536362, 'eval_macro_recall': 0.6250628689026243, 'eval_macro_f1': 0.7365538947430984, 'eval_overall_accuracy': 0.9932157304794379, 'eval_runtime': 299.3116, 'eval_samples_per_second': 47.98, 'eval_steps_per_second': 6.0, 'epoch': 0.8}
+{'loss': 0.0171, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.011003081686794758, 'eval_per_cls_precision_0': 0.9981410617292407, 'eval_per_cls_precision_1': 0.9488773071044361, 'eval_per_cls_precision_2': 0.8774494227297135, 'eval_per_cls_precision_3': 0.8761329304871259, 'eval_per_cls_recall_0': 0.9984778789697555, 'eval_per_cls_recall_1': 0.9624471366338387, 'eval_per_cls_recall_2': 0.7608376193968029, 'eval_per_cls_recall_3': 0.12532411408761746, 'eval_macro_precision': 0.925150180512629, 'eval_macro_recall': 0.7117716872720037, 'eval_macro_f1': 0.8045536123625688, 'eval_overall_accuracy': 0.9966396407357837, 'eval_runtime': 299.1947, 'eval_samples_per_second': 47.999, 'eval_steps_per_second': 6.003, 'epoch': 1.6}
+{'loss': 0.0077, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.005195890087634325, 'eval_per_cls_precision_0': 0.9990592117522196, 'eval_per_cls_precision_1': 0.9829042751299977, 'eval_per_cls_precision_2': 0.9472732464062555, 'eval_per_cls_precision_3': 0.8553719008205554, 'eval_per_cls_recall_0': 0.9994560750049581, 'eval_per_cls_recall_1': 0.9776145505420699, 'eval_per_cls_recall_2': 0.9141256429087856, 'eval_per_cls_recall_3': 0.5367329299890374, 'eval_macro_precision': 0.946152158527257, 'eval_macro_recall': 0.8569822996112129, 'eval_macro_f1': 0.899362379150676, 'eval_overall_accuracy': 0.9985013228058568, 'eval_runtime': 299.2177, 'eval_samples_per_second': 47.995, 'eval_steps_per_second': 6.002, 'epoch': 2.4}
+{'loss': 0.0045, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.0038579765241593122, 'eval_per_cls_precision_0': 0.9993907768371056, 'eval_per_cls_precision_1': 0.9854449196329842, 'eval_per_cls_precision_2': 0.9630426646697575, 'eval_per_cls_precision_3': 0.8559231590135757, 'eval_per_cls_recall_0': 0.9995226949549022, 'eval_per_cls_recall_1': 0.9854605869820197, 'eval_per_cls_recall_2': 0.9453526818507114, 'eval_per_cls_recall_3': 0.6931719965397876, 'eval_macro_precision': 0.9509503800383559, 'eval_macro_recall': 0.9058769900818552, 'eval_macro_f1': 0.9278666150760575, 'eval_overall_accuracy': 0.9989057564931114, 'eval_runtime': 299.1822, 'eval_samples_per_second': 48.001, 'eval_steps_per_second': 6.003, 'epoch': 3.2}
+{'train_runtime': 27699.2038, 'train_samples_per_second': 16.59, 'train_steps_per_second': 0.13, 'train_loss': 0.016250249932840913, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =        4.0
+  train_loss               =     0.0163
+  train_runtime            = 7:41:39.20
+  train_samples_per_second =      16.59
+  train_steps_per_second   =       0.13
+***** test metrics *****
+  test_loss                =     0.0038
+  test_macro_f1            =     0.9269
+  test_macro_precision     =     0.9504
+  test_macro_recall        =     0.9045
+  test_overall_accuracy    =     0.9989
+  test_per_cls_precision_0 =     0.9994
+  test_per_cls_precision_1 =     0.9856
+  test_per_cls_precision_2 =      0.962
+  test_per_cls_precision_3 =     0.8547
+  test_per_cls_recall_0    =     0.9995
+  test_per_cls_recall_1    =     0.9858
+  test_per_cls_recall_2    =     0.9422
+  test_per_cls_recall_3    =     0.6906
+  test_runtime             = 0:04:59.70
+  test_samples_per_second  =     47.916
+  test_steps_per_second    =      5.992
+Can't load config for './pretrained_segmenter_model/8_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/8_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0483, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.020762570202350616, 'eval_per_cls_precision_0': 0.9952218330016889, 'eval_per_cls_precision_1': 0.9169326920646449, 'eval_per_cls_precision_2': 0.8226283949017601, 'eval_per_cls_precision_3': 0.6591639871170687, 'eval_per_cls_recall_0': 0.9977328527593569, 'eval_per_cls_recall_1': 0.865377277496831, 'eval_per_cls_recall_2': 0.5869764878760222, 'eval_per_cls_recall_3': 0.08859118409641922, 'eval_macro_precision': 0.8484867267712906, 'eval_macro_recall': 0.6346694505571573, 'eval_macro_f1': 0.7261657393682464, 'eval_overall_accuracy': 0.9930618807674788, 'eval_runtime': 387.218, 'eval_samples_per_second': 37.088, 'eval_steps_per_second': 4.638, 'epoch': 0.8}
+{'loss': 0.0178, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.013277297839522362, 'eval_per_cls_precision_0': 0.9979283261259947, 'eval_per_cls_precision_1': 0.9304165696997184, 'eval_per_cls_precision_2': 0.8136893203875595, 'eval_per_cls_precision_3': 0.8478260869334829, 'eval_per_cls_recall_0': 0.9978085760564982, 'eval_per_cls_recall_1': 0.9534484403318902, 'eval_per_cls_recall_2': 0.76974650991847, 'eval_per_cls_recall_3': 0.13483146067357463, 'eval_macro_precision': 0.8974650757866889, 'eval_macro_recall': 0.7139587467451083, 'eval_macro_f1': 0.7952632049005326, 'eval_overall_accuracy': 0.9957853223352576, 'eval_runtime': 386.452, 'eval_samples_per_second': 37.161, 'eval_steps_per_second': 4.647, 'epoch': 1.6}
+{'loss': 0.0086, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.005445893853902817, 'eval_per_cls_precision_0': 0.999125426065197, 'eval_per_cls_precision_1': 0.9774979208743434, 'eval_per_cls_precision_2': 0.9526923076913916, 'eval_per_cls_precision_3': 0.840116279063662, 'eval_per_cls_recall_0': 0.999325317836124, 'eval_per_cls_recall_1': 0.9810645807497074, 'eval_per_cls_recall_2': 0.9099926524605896, 'eval_per_cls_recall_3': 0.49956784788029573, 'eval_macro_precision': 0.9423579834236485, 'eval_macro_recall': 0.8474875997316791, 'eval_macro_f1': 0.8924084943570721, 'eval_overall_accuracy': 0.9984351573741775, 'eval_runtime': 386.5491, 'eval_samples_per_second': 37.152, 'eval_steps_per_second': 4.646, 'epoch': 2.4}
+{'loss': 0.0045, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.0038603460416197777, 'eval_per_cls_precision_0': 0.999400894727313, 'eval_per_cls_precision_1': 0.9862375103416768, 'eval_per_cls_precision_2': 0.9553844726825383, 'eval_per_cls_precision_3': 0.8014814814775236, 'eval_per_cls_recall_0': 0.9995017986351993, 'eval_per_cls_recall_1': 0.98551623263053, 'eval_per_cls_recall_2': 0.9459955914759863, 'eval_per_cls_recall_3': 0.7013828867731142, 'eval_macro_precision': 0.9356260898072629, 'eval_macro_recall': 0.9080991273787075, 'eval_macro_f1': 0.9216571137376178, 'eval_overall_accuracy': 0.9988920809631595, 'eval_runtime': 386.4825, 'eval_samples_per_second': 37.158, 'eval_steps_per_second': 4.647, 'epoch': 3.2}
+{'train_runtime': 36420.6638, 'train_samples_per_second': 12.617, 'train_steps_per_second': 0.099, 'train_loss': 0.016413939969329664, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =         4.0
+  train_loss               =      0.0164
+  train_runtime            = 10:07:00.66
+  train_samples_per_second =      12.617
+  train_steps_per_second   =       0.099
+***** test metrics *****
+  test_loss                =     0.0038
+  test_macro_f1            =     0.9241
+  test_macro_precision     =     0.9394
+  test_macro_recall        =     0.9093
+  test_overall_accuracy    =     0.9989
+  test_per_cls_precision_0 =     0.9994
+  test_per_cls_precision_1 =     0.9861
+  test_per_cls_precision_2 =     0.9577
+  test_per_cls_precision_3 =     0.8144
+  test_per_cls_recall_0    =     0.9995
+  test_per_cls_recall_1    =     0.9856
+  test_per_cls_recall_2    =     0.9452
+  test_per_cls_recall_3    =      0.707
+  test_runtime             = 0:06:27.30
+  test_samples_per_second  =     37.079
+  test_steps_per_second    =      4.637
+Can't load config for './pretrained_segmenter_model/10_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/10_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0402, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.021065153181552887, 'eval_per_cls_precision_0': 0.9960514875603542, 'eval_per_cls_precision_1': 0.8899231875967317, 'eval_per_cls_precision_2': 0.8279082177150108, 'eval_per_cls_precision_3': 0.7977528089439464, 'eval_per_cls_recall_0': 0.9969027930103651, 'eval_per_cls_recall_1': 0.8998060351679783, 'eval_per_cls_recall_2': 0.5699853049223274, 'eval_per_cls_recall_3': 0.0613656006911782, 'eval_macro_precision': 0.8779089254540108, 'eval_macro_recall': 0.6320149334479622, 'eval_macro_f1': 0.7349397708345129, 'eval_overall_accuracy': 0.9930761596296345, 'eval_runtime': 473.8919, 'eval_samples_per_second': 30.304, 'eval_steps_per_second': 3.79, 'epoch': 0.8}
+{'loss': 0.0188, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.016176095232367516, 'eval_per_cls_precision_0': 0.9976947253203606, 'eval_per_cls_precision_1': 0.908323492438314, 'eval_per_cls_precision_2': 0.7558658687178152, 'eval_per_cls_precision_3': 0.7978723404043119, 'eval_per_cls_recall_0': 0.9970424466321421, 'eval_per_cls_recall_1': 0.9477407866704071, 'eval_per_cls_recall_2': 0.730804555473245, 'eval_per_cls_recall_3': 0.12964563526305253, 'eval_macro_precision': 0.8649391067202004, 'eval_macro_recall': 0.7013083560097116, 'eval_macro_f1': 0.7745762193316612, 'eval_overall_accuracy': 0.9948085274973679, 'eval_runtime': 473.8855, 'eval_samples_per_second': 30.305, 'eval_steps_per_second': 3.79, 'epoch': 1.6}
+{'loss': 0.0115, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.006632399745285511, 'eval_per_cls_precision_0': 0.9988222603749637, 'eval_per_cls_precision_1': 0.9752324195470023, 'eval_per_cls_precision_2': 0.9431218248820169, 'eval_per_cls_precision_3': 0.8118503118418726, 'eval_per_cls_recall_0': 0.9992659391850869, 'eval_per_cls_recall_1': 0.9756510540874929, 'eval_per_cls_recall_2': 0.8695811903004503, 'eval_per_cls_recall_3': 0.3375108038014801, 'eval_macro_precision': 0.9322567041614639, 'eval_macro_recall': 0.7955022468436275, 'eval_macro_f1': 0.858467320423053, 'eval_overall_accuracy': 0.9980765769344088, 'eval_runtime': 474.0036, 'eval_samples_per_second': 30.297, 'eval_steps_per_second': 3.789, 'epoch': 2.4}
+{'loss': 0.0053, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.004120842553675175, 'eval_per_cls_precision_0': 0.9993529211225721, 'eval_per_cls_precision_1': 0.9850023843585293, 'eval_per_cls_precision_2': 0.9555369127507871, 'eval_per_cls_precision_3': 0.813296398887461, 'eval_per_cls_recall_0': 0.9994862815661129, 'eval_per_cls_recall_1': 0.9851903081178269, 'eval_per_cls_recall_2': 0.9414952240990617, 'eval_per_cls_recall_3': 0.6343993085538704, 'eval_macro_precision': 0.9382971542798374, 'eval_macro_recall': 0.8901427805842179, 'eval_macro_f1': 0.9135858580107884, 'eval_overall_accuracy': 0.9988277255280916, 'eval_runtime': 473.7994, 'eval_samples_per_second': 30.31, 'eval_steps_per_second': 3.791, 'epoch': 3.2}
+{'train_runtime': 45145.681, 'train_samples_per_second': 10.179, 'train_steps_per_second': 0.079, 'train_loss': 0.015830485584212253, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =         4.0
+  train_loss               =      0.0158
+  train_runtime            = 12:32:25.68
+  train_samples_per_second =      10.179
+  train_steps_per_second   =       0.079
+***** test metrics *****
+  test_loss                =     0.0042
+  test_macro_f1            =     0.9165
+  test_macro_precision     =      0.943
+  test_macro_recall        =     0.8914
+  test_overall_accuracy    =     0.9988
+  test_per_cls_precision_0 =     0.9993
+  test_per_cls_precision_1 =     0.9851
+  test_per_cls_precision_2 =     0.9538
+  test_per_cls_precision_3 =     0.8339
+  test_per_cls_recall_0    =     0.9995
+  test_per_cls_recall_1    =     0.9852
+  test_per_cls_recall_2    =     0.9392
+  test_per_cls_recall_3    =     0.6417
+  test_runtime             = 0:07:54.81
+  test_samples_per_second  =     30.246
+  test_steps_per_second    =      3.783
+Can't load config for './pretrained_segmenter_model/12_layer_model'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure './pretrained_segmenter_model/12_layer_model' is the correct path to a directory containing a config.json file
+Loaded model from (pretrained_bertimbau_local, ../base_models/bert-base-portuguese-cased).
+{'loss': 0.0614, 'learning_rate': 0.0005, 'epoch': 0.4}
+{'eval_loss': 0.02551945671439171, 'eval_per_cls_precision_0': 0.9949724956335777, 'eval_per_cls_precision_1': 0.8676279532294363, 'eval_per_cls_precision_2': 0.7753192565421984, 'eval_per_cls_precision_3': 0.9999999980000001, 'eval_per_cls_recall_0': 0.9962879032860372, 'eval_per_cls_recall_1': 0.8600273458614853, 'eval_per_cls_recall_2': 0.5631888317408493, 'eval_per_cls_recall_3': 0.002160760587717542, 'eval_macro_precision': 0.9094799258513031, 'eval_macro_recall': 0.6054162103690224, 'eval_macro_f1': 0.7269328547562554, 'eval_overall_accuracy': 0.9914296660455697, 'eval_runtime': 518.2488, 'eval_samples_per_second': 27.711, 'eval_steps_per_second': 6.929, 'epoch': 0.4}
+{'loss': 0.0237, 'learning_rate': 0.0004444100340662744, 'epoch': 0.8}
+{'eval_loss': 0.020806873217225075, 'eval_per_cls_precision_0': 0.9960850825250194, 'eval_per_cls_precision_1': 0.8880415077826399, 'eval_per_cls_precision_2': 0.8294617563727628, 'eval_per_cls_precision_3': 0.7476190475834467, 'eval_per_cls_recall_0': 0.996858310745651, 'eval_per_cls_recall_1': 0.9034309516995053, 'eval_per_cls_recall_2': 0.5378398236585802, 'eval_per_cls_recall_3': 0.06784788245433082, 'eval_macro_precision': 0.8653018485659673, 'eval_macro_recall': 0.6264942421395169, 'eval_macro_f1': 0.726783808568599, 'eval_overall_accuracy': 0.9930572552205833, 'eval_runtime': 518.2406, 'eval_samples_per_second': 27.711, 'eval_steps_per_second': 6.929, 'epoch': 0.8}
+{'loss': 0.0203, 'learning_rate': 0.00038882006813254876, 'epoch': 1.2}
+{'eval_loss': 0.01845518872141838, 'eval_per_cls_precision_0': 0.9969966930506436, 'eval_per_cls_precision_1': 0.8917346555018465, 'eval_per_cls_precision_2': 0.7405673894347687, 'eval_per_cls_precision_3': 0.7570422534944703, 'eval_per_cls_recall_0': 0.9965746587227527, 'eval_per_cls_recall_1': 0.9235985245953032, 'eval_per_cls_recall_2': 0.7120683321080895, 'eval_per_cls_recall_3': 0.09291270527185432, 'eval_macro_precision': 0.8465852478704323, 'eval_macro_recall': 0.6812885551744999, 'eval_macro_f1': 0.754995386960966, 'eval_overall_accuracy': 0.9936849218232296, 'eval_runtime': 518.5741, 'eval_samples_per_second': 27.693, 'eval_steps_per_second': 6.925, 'epoch': 1.2}
+{'loss': 0.0179, 'learning_rate': 0.00033323010219882314, 'epoch': 1.6}
+{'eval_loss': 0.01628207415342331, 'eval_per_cls_precision_0': 0.9975568864060864, 'eval_per_cls_precision_1': 0.89318775397181, 'eval_per_cls_precision_2': 0.8045849098588864, 'eval_per_cls_precision_3': 0.8458781361703986, 'eval_per_cls_recall_0': 0.9967532084643729, 'eval_per_cls_recall_1': 0.9487901046137438, 'eval_per_cls_recall_2': 0.6640337986768331, 'eval_per_cls_recall_3': 0.10198789974026799, 'eval_macro_precision': 0.8853019216017954, 'eval_macro_recall': 0.6778912528738044, 'eval_macro_f1': 0.7678365473523407, 'eval_overall_accuracy': 0.9943948427163223, 'eval_runtime': 518.5775, 'eval_samples_per_second': 27.693, 'eval_steps_per_second': 6.925, 'epoch': 1.6}
+{'loss': 0.015, 'learning_rate': 0.0002776401362650975, 'epoch': 2.0}
+{'eval_loss': 0.01235014759004116, 'eval_per_cls_precision_0': 0.997777025138161, 'eval_per_cls_precision_1': 0.9452707947218437, 'eval_per_cls_precision_2': 0.8728139904601241, 'eval_per_cls_precision_3': 0.8499999999776315, 'eval_per_cls_recall_0': 0.9983808455644023, 'eval_per_cls_recall_1': 0.9487424083435921, 'eval_per_cls_recall_2': 0.7563372520198784, 'eval_per_cls_recall_3': 0.13958513396655323, 'eval_macro_precision': 0.91646545257444, 'eval_macro_recall': 0.7107614099736066, 'eval_macro_f1': 0.8006115044596219, 'eval_overall_accuracy': 0.9961953871230808, 'eval_runtime': 518.8223, 'eval_samples_per_second': 27.68, 'eval_steps_per_second': 6.921, 'epoch': 2.0}
+{'loss': 0.0103, 'learning_rate': 0.00022205017033137195, 'epoch': 2.4}
+{'eval_loss': 0.008231478743255138, 'eval_per_cls_precision_0': 0.9985533077651055, 'eval_per_cls_precision_1': 0.9630255284885806, 'eval_per_cls_precision_2': 0.9399596902504084, 'eval_per_cls_precision_3': 0.7202166064916948, 'eval_per_cls_recall_0': 0.9989212533571158, 'eval_per_cls_recall_1': 0.9698082609939132, 'eval_per_cls_recall_2': 0.8138317413658946, 'eval_per_cls_recall_3': 0.34485738979971975, 'eval_macro_precision': 0.9054387832489473, 'eval_macro_recall': 0.7818546613791608, 'eval_macro_f1': 0.8391208196000454, 'eval_overall_accuracy': 0.9974750547272586, 'eval_runtime': 518.6819, 'eval_samples_per_second': 27.687, 'eval_steps_per_second': 6.923, 'epoch': 2.4}
+{'loss': 0.0075, 'learning_rate': 0.00016646020439764633, 'epoch': 2.8}
+{'eval_loss': 0.006417241878807545, 'eval_per_cls_precision_0': 0.9988675271474982, 'eval_per_cls_precision_1': 0.9747153993934098, 'eval_per_cls_precision_2': 0.950992984881977, 'eval_per_cls_precision_3': 0.9211136890844418, 'eval_per_cls_recall_0': 0.9992909733898796, 'eval_per_cls_recall_1': 0.9760326242487062, 'eval_per_cls_recall_2': 0.8840007347530455, 'eval_per_cls_recall_3': 0.3431287813295457, 'eval_macro_precision': 0.9614224001268317, 'eval_macro_recall': 0.8006132784302942, 'eval_macro_f1': 0.8736798519128404, 'eval_overall_accuracy': 0.9981447534734338, 'eval_runtime': 518.7339, 'eval_samples_per_second': 27.685, 'eval_steps_per_second': 6.923, 'epoch': 2.8}
+{'loss': 0.0057, 'learning_rate': 0.00011087023846392072, 'epoch': 3.2}
+{'eval_loss': 0.005074641201645136, 'eval_per_cls_precision_0': 0.9991335467371777, 'eval_per_cls_precision_1': 0.9808004455759882, 'eval_per_cls_precision_2': 0.9569313593530504, 'eval_per_cls_precision_3': 0.7874015747983805, 'eval_per_cls_recall_0': 0.9993950411998852, 'eval_per_cls_recall_1': 0.9798960221309915, 'eval_per_cls_recall_2': 0.9142174871409677, 'eval_per_cls_recall_3': 0.561797752806561, 'eval_macro_precision': 0.9310667316161492, 'eval_macro_recall': 0.8638265758196013, 'eval_macro_f1': 0.8961871759381773, 'eval_overall_accuracy': 0.9985115794533207, 'eval_runtime': 518.7595, 'eval_samples_per_second': 27.683, 'eval_steps_per_second': 6.922, 'epoch': 3.2}
+{'loss': 0.0045, 'learning_rate': 5.5280272530195106e-05, 'epoch': 3.6}
+{'eval_loss': 0.0045019336976110935, 'eval_per_cls_precision_0': 0.9992923093408733, 'eval_per_cls_precision_1': 0.9805401897706623, 'eval_per_cls_precision_2': 0.9635168603534353, 'eval_per_cls_precision_3': 0.8618376928178281, 'eval_per_cls_recall_0': 0.9994258684438034, 'eval_per_cls_recall_1': 0.9849597761454272, 'eval_per_cls_recall_2': 0.9290044085222915, 'eval_per_cls_recall_3': 0.5553154710434084, 'eval_macro_precision': 0.9512967630706998, 'eval_macro_recall': 0.8671763810387326, 'eval_macro_f1': 0.907290913180967, 'eval_overall_accuracy': 0.9986990146579559, 'eval_runtime': 518.6222, 'eval_samples_per_second': 27.691, 'eval_steps_per_second': 6.924, 'epoch': 3.6}
+{'train_runtime': 51780.2173, 'train_samples_per_second': 8.875, 'train_steps_per_second': 0.069, 'train_loss': 0.017031073337680388, 'epoch': 4.0}
+***** train metrics *****
+  epoch                    =         4.0
+  train_loss               =       0.017
+  train_runtime            = 14:23:00.21
+  train_samples_per_second =       8.875
+  train_steps_per_second   =       0.069
+***** test metrics *****
+  test_loss                =     0.0045
+  test_macro_f1            =     0.9056
+  test_macro_precision     =     0.9487
+  test_macro_recall        =     0.8662
+  test_overall_accuracy    =     0.9987
+  test_per_cls_precision_0 =     0.9992
+  test_per_cls_precision_1 =     0.9813
+  test_per_cls_precision_2 =     0.9576
+  test_per_cls_precision_3 =     0.8567
+  test_per_cls_recall_0    =     0.9994
+  test_per_cls_recall_1    =      0.984
+  test_per_cls_recall_2    =     0.9254
+  test_per_cls_recall_3    =     0.5559
+  test_runtime             = 0:08:41.33
+  test_samples_per_second  =     27.546
+  test_steps_per_second    =      6.888
