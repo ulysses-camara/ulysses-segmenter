@@ -1,6 +1,5 @@
 """Legal text segmenter."""
 import typing as t
-import collections
 import warnings
 
 import regex
@@ -106,7 +105,7 @@ class Segmenter:
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
-        config: t.Optional[transformers.BertConfig] = None,
+        config: t.Optional[t.Union[transformers.BertConfig, transformers.PretrainedConfig]] = None,
         num_labels: int = 4,
         num_hidden_layers: int = 6,
         cache_dir_model: str = "../cache/models",
@@ -244,11 +243,61 @@ class Segmenter:
 
         return text
 
+    def _build_minibatches(
+        self,
+        tokens: transformers.tokenization_utils_base.BatchEncoding,
+        num_tokens: int,
+        batch_size: int,
+        block_size: int,
+        window_shift_size: int,
+    ) -> list[transformers.tokenization_utils_base.BatchEncoding]:
+        """TODO."""
+        minibatches: list[transformers.tokenization_utils_base.BatchEncoding] = []
+        minibatch = transformers.tokenization_utils_base.BatchEncoding()
+
+        total_minibatches = 1 + int(np.ceil((num_tokens - block_size) / window_shift_size))
+
+        for i in range(total_minibatches):
+            i_start = i * window_shift_size
+            i_end = i_start + block_size
+
+            for key, vals in tokens.items():
+                slice_ = vals[..., i_start: i_end]
+
+                minibatch.setdefault(key, [])
+                minibatch[key].append(slice_)
+
+            if (i + 1) % batch_size == 0:
+                minibatches.append(minibatch)
+                minibatch = transformers.tokenization_utils_base.BatchEncoding()
+
+        if minibatch:
+            minibatches.append(minibatch)
+
+        for minibatch in minibatches:
+            for key, vals in minibatch.items():
+                for i in reversed(range(len(vals))):
+                    cur_len = max(vals[i].size())
+
+                    if cur_len >= block_size:
+                        break
+
+                    vals[i] = F.pad(
+                        input=vals[i],
+                        pad=(0, block_size - cur_len),
+                        mode="constant",
+                        value=self._tokenizer.pad_token_id,
+                    )
+
+                minibatch[key] = torch.vstack(vals)
+
+        return minibatches
+
     def segment_legal_text(
         self,
         text: str,
         return_justificativa: bool = False,
-        max_batch_size: int = 32,
+        batch_size: int = 32,
         window_shift_size: t.Union[float, int] = 0.5,
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
@@ -266,8 +315,9 @@ class Segmenter:
             If True, return a tuple in the format (content, justificativa).
             If False, return only `content`.
 
-        max_batch_size : int, default=32
-            TODO.
+        batch_size : int, default=32
+            Maximum batch size feed document blocks in parallel to model. Higher values
+            leads to faster inference with higher memory cost.
 
         window_shift_size : int or float, default=0.5
             Moving window shift size, to feed documents larger than 1024 subwords tokens into
@@ -288,6 +338,10 @@ class Segmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
+        assert (
+            batch_size >= 1
+        ), f"'batch_size' parameter must be >= 1 (got {batch_size})"
+
         preproc_result = self.preprocess_legal_text(
             text,
             return_justificativa=return_justificativa,
@@ -338,45 +392,38 @@ class Segmenter:
         num_tokens = tokens.pop("length")
         num_blocks = int(np.ceil(num_tokens / block_size))
 
-        subset = collections.defaultdict(list)
-
-        for i in range(0, num_tokens, window_shift_size):
-            for key, vals in tokens.items():
-                slice_ = vals[..., i : i + block_size]
-                subset[key].append(slice_)
-
-        for key, vals in subset.items():
-            for i in reversed(range(len(vals))):
-                cur_len = max(vals[i].size())
-
-                if cur_len >= block_size:
-                    break
-
-                vals[i] = F.pad(
-                    input=vals[i],
-                    pad=(0, block_size - cur_len),
-                    mode="constant",
-                    value=self._tokenizer.pad_token_id,
-                )
-
-            subset[key] = torch.vstack(vals).to(self._model.device)
+        minibatches = self._build_minibatches(
+            tokens=tokens,
+            num_tokens=num_tokens,
+            batch_size=batch_size,
+            block_size=block_size,
+            window_shift_size=int(window_shift_size),
+        )
 
         self._model.eval()
+        all_logits: list[np.ndarray] = []
 
         with torch.no_grad():
-            model_out = self._model(**subset)
+            for minibatch in minibatches:
+                minibatch = minibatch.to(self._model.device)
+                model_out = self._model(**minibatch)
+                model_out = model_out["logits"]
+                model_out = model_out.cpu().numpy()
+                all_logits.append(model_out)
 
-        model_out = model_out["logits"]
-        model_out = model_out.cpu().numpy()
-        model_out = self._moving_window_pooler(
-            logits=model_out,
+        logits = np.vstack(all_logits)
+        del all_logits
+
+        logits = self._moving_window_pooler(
+            logits=logits,
             window_shift_size=window_shift_size,
         )
-        model_out = model_out.argmax(axis=-1)
-        model_out = model_out.squeeze()
+
+        label_ids = logits.argmax(axis=-1)
+        label_ids = label_ids.squeeze()
 
         seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
-        segment_start_inds = np.flatnonzero(model_out == seg_cls_id)
+        segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
         segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
         segs: list[str] = []
