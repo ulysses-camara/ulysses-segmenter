@@ -33,6 +33,19 @@ autopep8 = "^1.6.0"
 grip = "^4.6.0"
 pytest = "^7.1.0"
 
+[tool.mypy]
+warn_return_any = true
+ignore_missing_imports = true
+disallow_any_generics = true
+strict_equality = true
+show_error_codes = true
+warn_unused_configs = true
+warn_unreachable = true
+
+[tool.pylint.messages_control]
+generated-members = "torch.*"
+disable = "R0903, R0914, R0913"
+
 [build-system]
 requires = ["poetry-core @ git+https://github.com/python-poetry/poetry-core.git@master"]
 build-backend = "poetry.core.masonry.api"
