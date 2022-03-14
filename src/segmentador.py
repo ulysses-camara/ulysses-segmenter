@@ -1,6 +1,7 @@
 """Legal text segmenter."""
 import typing as t
 import collections
+import warnings
 
 import regex
 import transformers
@@ -8,6 +9,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn
 import numpy as np
+
+import poolers
 
 
 class Segmenter:
@@ -27,6 +30,23 @@ class Segmenter:
     uri_tokenizer : str or None, default=None
         URI to pretrained text Tokenizer. If None, will load the tokenizer from
         the `uri_model` path.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default="assymetric-max"
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
@@ -82,6 +102,7 @@ class Segmenter:
         self,
         uri_model: str = "neuralmind/bert-base-portuguese-cased",
         uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal["max", "avg"] = "avg",
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
@@ -141,6 +162,10 @@ class Segmenter:
 
         self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
 
+        self._moving_window_pooler = poolers.AutoMovingWindowPooler(
+            pooling_operation=inference_pooling_operation,
+        )
+
     @property
     def model(self):
         return self._model
@@ -158,6 +183,11 @@ class Segmenter:
         cls,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> regex.Pattern:
+        """Compile or set default 'JUSTIFICATIVA' block regex.
+
+        If the provided regex is already compiled, this function simply returns its own
+        argument.
+        """
         if regex_justificativa is None:
             regex_justificativa = cls.RE_JUSTIFICATIVA
 
@@ -218,6 +248,8 @@ class Segmenter:
         self,
         text: str,
         return_justificativa: bool = False,
+        max_batch_size: int = 32,
+        window_shift_size: t.Union[float, int] = 0.5,
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
 
@@ -234,6 +266,19 @@ class Segmenter:
             If True, return a tuple in the format (content, justificativa).
             If False, return only `content`.
 
+        max_batch_size : int, default=32
+            TODO.
+
+        window_shift_size : int or float, default=0.5
+            Moving window shift size, to feed documents larger than 1024 subwords tokens into
+            the segmenter model.
+            - If integer, specify exactly the shift size per step, and it must be in [1, 1024] range.
+            - If float, the shift size is calculated from the corresponding fraction of the window
+            size (1024 subword tokens), and it must be in the (0.0, 1.0] range.
+            Overlapping logits are combined using the strategy speficied by the `inference_pooling_operation`
+            argument in the Segmenter model initialization, and the final prediction for each token is
+            derived from the combined logits.
+
         Returns
         -------
         preprocessed_text : list[str]
@@ -243,8 +288,6 @@ class Segmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
-        self._model.eval()
-
         preproc_result = self.preprocess_legal_text(
             text,
             return_justificativa=return_justificativa,
@@ -263,6 +306,27 @@ class Segmenter:
         except AttributeError:
             block_size = 1024
 
+        if isinstance(window_shift_size, float):
+            assert (
+                0.0 < window_shift_size <= 1.0
+            ), "If 'window_shift_size' is a float, it must be in (0, 1] range"
+            window_shift_size = int(np.ceil(block_size * window_shift_size))
+
+        assert (
+            window_shift_size >= 1
+        ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size}')"
+
+        if window_shift_size > block_size:
+            warnings.warn(
+                message=(
+                    f"'window_shift_size' parameter must be <= {block_size} "
+                    f"(got '{window_shift_size}'). "
+                    f"Will set it to {block_size} automatically."
+                ),
+                category=UserWarning,
+            )
+            window_shift_size = block_size
+
         tokens = self._tokenizer(
             text,
             padding=False,
@@ -276,34 +340,40 @@ class Segmenter:
 
         subset = collections.defaultdict(list)
 
-        for i in range(0, num_tokens, block_size):
+        for i in range(0, num_tokens, window_shift_size):
             for key, vals in tokens.items():
                 slice_ = vals[..., i : i + block_size]
                 subset[key].append(slice_)
 
         for key, vals in subset.items():
-            last_len = max(vals[-1].size())
+            for i in reversed(range(len(vals))):
+                cur_len = max(vals[i].size())
 
-            if last_len < 1024:
-                vals[-1] = F.pad(
-                    input=vals[-1],
-                    pad=(0, 1024 - last_len),
+                if cur_len >= block_size:
+                    break
+
+                vals[i] = F.pad(
+                    input=vals[i],
+                    pad=(0, block_size - cur_len),
                     mode="constant",
                     value=self._tokenizer.pad_token_id,
                 )
 
             subset[key] = torch.vstack(vals).to(self._model.device)
 
+        self._model.eval()
+
         with torch.no_grad():
             model_out = self._model(**subset)
 
         model_out = model_out["logits"]
         model_out = model_out.cpu().numpy()
-
-        if model_out.ndim == 3:
-            model_out = np.concatenate(model_out, axis=0)
-
+        model_out = self._moving_window_pooler(
+            logits=model_out,
+            window_shift_size=window_shift_size,
+        )
         model_out = model_out.argmax(axis=-1)
+        model_out = model_out.squeeze()
 
         seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
         segment_start_inds = np.flatnonzero(model_out == seg_cls_id)
