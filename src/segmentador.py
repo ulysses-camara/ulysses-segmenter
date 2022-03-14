@@ -260,8 +260,8 @@ class Segmenter:
         minibatches: list[transformers.tokenization_utils_base.BatchEncoding] = []
         minibatch = transformers.tokenization_utils_base.BatchEncoding()
 
-        total_minibatches = 1 + int(
-            np.ceil((num_tokens - block_size) / window_shift_size)
+        total_minibatches = 1 + max(
+            0, int(np.ceil((num_tokens - block_size) / window_shift_size))
         )
 
         for i in range(total_minibatches):
