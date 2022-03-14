@@ -105,7 +105,9 @@ class Segmenter:
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
-        config: t.Optional[t.Union[transformers.BertConfig, transformers.PretrainedConfig]] = None,
+        config: t.Optional[
+            t.Union[transformers.BertConfig, transformers.PretrainedConfig]
+        ] = None,
         num_labels: int = 4,
         num_hidden_layers: int = 6,
         cache_dir_model: str = "../cache/models",
@@ -255,14 +257,16 @@ class Segmenter:
         minibatches: list[transformers.tokenization_utils_base.BatchEncoding] = []
         minibatch = transformers.tokenization_utils_base.BatchEncoding()
 
-        total_minibatches = 1 + int(np.ceil((num_tokens - block_size) / window_shift_size))
+        total_minibatches = 1 + int(
+            np.ceil((num_tokens - block_size) / window_shift_size)
+        )
 
         for i in range(total_minibatches):
             i_start = i * window_shift_size
             i_end = i_start + block_size
 
             for key, vals in tokens.items():
-                slice_ = vals[..., i_start: i_end]
+                slice_ = vals[..., i_start:i_end]
 
                 minibatch.setdefault(key, [])
                 minibatch[key].append(slice_)
