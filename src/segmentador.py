@@ -102,7 +102,9 @@ class Segmenter:
         self,
         uri_model: str = "neuralmind/bert-base-portuguese-cased",
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal["max", "avg"] = "avg",
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
