@@ -10,7 +10,7 @@ import torch.nn
 import numpy as np
 import numpy.typing as npt
 
-import poolers
+from . import poolers
 
 
 class Segmenter:
