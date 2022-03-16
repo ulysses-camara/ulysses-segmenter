@@ -1,38 +1,58 @@
-[tool.poetry]
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.2,<4"]
+
+[project]
 name = "segmentador"
 version = "0.1.0"
 description = "Segmentador de textos legais para a Câmara dos Deputados."
-authors = ["felsiq <felipe.siqueira@usp.br>"]
-license = "MIT"
+authors = [
+	{name="felsiq", email= "felipe.siqueira@usp.br"}
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8"
-pandas = "^1.4.0"
-numpy = "^1.22.2"
-torch = {url = "https://download.pytorch.org/whl/nightly/cu113/torch-1.12.0.dev20220209%2Bcu113-cp39-cp39-linux_x86_64.whl"}
-datasets = "^1.18.3"
-scikit-learn = "^1.0.2"
-nltk = "^3.7"
-transformers = {extras = ["onnx"], version = "^4.16.2"}
-optimum = {extras = ["intel"], version = "^0.1.3"}
-seqeval = "^1.2.2"
-colorama = "^0.4.4"
-tqdm = "^4.63.0"
-sentencepiece = "^0.1.96"
-psutil = "^5.9.0"
-seaborn = "^0.11.2"
+requires-python = ">=3.9"
 
-[tool.poetry.dev-dependencies]
-black = "^22.1.0"
-mypy = "^0.931"
-pylint = "^2.12.2"
-notebook = "^6.4.8"
-jupyter-contrib-nbextensions = "^0.5.1"
-ipywidgets = "^7.6.5"
-autopep8 = "^1.6.0"
-grip = "^4.6.0"
-pytest = "^7.1.0"
-pytest-cov = "^3.0.0"
+dependencies = [
+	"numpy == 1.22.3",
+	"torch == 1.11.0",
+	"transformers == 4.16.2",
+]
+
+[project.optional-dependencies]
+general = [
+	"black == 22.1.0",
+]
+
+notebooks = [
+	"seaborn == 0.11.2",
+	"notebook == 6.4.8",
+	"jupyter-contrib-nbextensions == 0.5.1",
+	"ipywidgets == 7.6.5",
+	"autopep8 == 1.6.0",
+]
+
+train = [
+	"datasets == 1.18.3",
+	"pandas == 1.4.1",
+	"scikit-learn == 1.0.2",
+	"nltk == 3.7",
+	"colorama == 0.4.4",
+	"tqdm == 4.63.0",
+	"sentencepiece == 0.1.96",
+	"psutil == 5.9.0",
+]
+
+test = [
+	"mypy == 0.931",
+	"pylint == 2.12.2",
+	"pytest == 7.1.0",
+	"pytest-cov == 3.0.0",
+	"tox == 3.24.5",
+]
+
+doc = [
+	"grip == 4.6.0",
+]
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -50,22 +70,45 @@ warn_incomplete_stub = true
 
 [tool.pytest.ini_options]
 addopts = """
-	--cov=src
+	--cov=segmentador
 	--last-failed
 	--failed-first
 	--new-first
-	--doctest-modules
-	--doctest-glob="src/*.py"
 """
 testpaths = [
 	"tests",
-	"src",
 ]
 
 [tool.pylint.messages_control]
 generated-members = "torch.*"
 disable = "R0903, R0914, R0913"
 
-[build-system]
-requires = ["poetry-core @ git+https://github.com/python-poetry/poetry-core.git@master"]
-build-backend = "poetry.core.masonry.api"
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39, py310, mypy, pylint
+isolated_build = true
+
+[testenv]
+whitelist_externals = flit
+commands =
+	pip install .
+	pip install '.[test]'
+	python -m pytest
+	python -m pytest src/ --doctest-modules --doctest-glob="**/*.py"
+
+[testenv:mypy]
+basepython = python3.9
+deps = mypy
+commands =
+	python -m mypy src/
+
+[testenv:pylint]
+basepython = python3.9
+deps =
+	pylint
+	pytest
+commands =
+	python -m pylint src/
+	python -m pylint --disable='missing-function-docstring' tests/
+"""
