@@ -160,6 +160,7 @@ onnx/
 venvs/
 pretrained_segmenter_model/
 .python-version
+.tool-versions
 
 registered_test_cases.csv
 noises.txt
