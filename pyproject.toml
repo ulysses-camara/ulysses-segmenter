@@ -43,6 +43,20 @@ show_error_codes = true
 warn_unused_configs = true
 warn_unreachable = true
 
+[tool.pytest.ini_options]
+addopts = """
+	--cov=src
+	--last-failed
+	--failed-first
+	--new-first
+	--doctest-modules
+	--doctest-glob="src/*.py"
+"""
+testpaths = [
+	"tests",
+	"src",
+]
+
 [tool.pylint.messages_control]
 generated-members = "torch.*"
 disable = "R0903, R0914, R0913"
