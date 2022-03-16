@@ -32,6 +32,7 @@ ipywidgets = "^7.6.5"
 autopep8 = "^1.6.0"
 grip = "^4.6.0"
 pytest = "^7.1.0"
+pytest-cov = "^3.0.0"
 
 [tool.mypy]
 warn_return_any = true
