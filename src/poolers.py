@@ -47,14 +47,14 @@ class AutoMovingWindowPooler(_BasePooler):
     """Generate a specific pooler based on the chosen strategy."""
 
     def __new__(
-        cls, pooling_operation: t.Literal["max", "avg", "gaussian", "assymetric-max"]
+        cls, pooling_operation: t.Literal["max", "sum", "gaussian", "assymetric-max"]
     ):
-        assert pooling_operation in {"max", "avg", "gaussian", "assymetric-max"}
+        assert pooling_operation in {"max", "sum", "gaussian", "assymetric-max"}
 
         if pooling_operation == "assymetric-max":
             return AssymetricMaxMovingWindowPooler()
 
-        if pooling_operation == "avg":
+        if pooling_operation == "sum":
             return SumMovingWindowPooler()
 
         if pooling_operation == "gaussian":
