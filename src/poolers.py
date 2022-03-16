@@ -39,14 +39,14 @@ class _BasePooler(abc.ABC):
             `C` are as specified in the `logits` parameter documentation.
         """
 
-    def __call__(self, *args, **kwargs) -> npt.NDArray[np.float64]:
+    def __call__(self, *args: t.Any, **kwargs: t.Any) -> npt.NDArray[np.float64]:
         return self.pool(*args, **kwargs)
 
 
 class AutoMovingWindowPooler(_BasePooler):
     """Generate a specific pooler based on the chosen strategy."""
 
-    def __new__(
+    def __new__(  # type: ignore
         cls, pooling_operation: t.Literal["max", "sum", "gaussian", "assymetric-max"]
     ):
         assert pooling_operation in {"max", "sum", "gaussian", "assymetric-max"}

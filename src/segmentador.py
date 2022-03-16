@@ -59,7 +59,7 @@ class Segmenter:
         if True, load pretrained weights from the specified `uri_model` argument.
         If False, load only the model configuration from the same argument.
 
-    config : t.Optional[transformers.BertConfig], default=None
+    config : transformers.BertConfig or None, default=None
         Custom model configuration. Used only if `init_from_pretrained_weights=False`.
         If `init_from_pretrained_weights=False` and `config=None`, will load the
         configuration file from `uri_model` with the following changes:
@@ -155,8 +155,8 @@ class Segmenter:
 
         model.resize_token_embeddings(tokenizer.vocab_size)
 
-        self._tokenizer = tokenizer
-        self._model = model.to(device)
+        self._tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = tokenizer
+        self._model: transformers.models.bert.modeling_bert.BertForTokenClassification = model.to(device)
 
         self.pipeline = transformers.pipeline(
             "token-classification",
@@ -171,12 +171,12 @@ class Segmenter:
         )
 
     @property
-    def model(self):
+    def model(self) -> transformers.models.bert.modeling_bert.BertForTokenClassification:
         # pylint: disable='missing-function-docstring'
         return self._model
 
     @property
-    def tokenizer(self):
+    def tokenizer(self) -> transformers.models.bert.tokenization_bert_fast.BertTokenizerFast:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
@@ -286,7 +286,7 @@ class Segmenter:
         for minibatch in minibatches:
             for key, vals in minibatch.items():
                 for i in reversed(range(len(vals))):
-                    cur_len = max(vals[i].size())
+                    cur_len = int(max(vals[i].size()))
 
                     if cur_len >= block_size:
                         break
@@ -295,7 +295,7 @@ class Segmenter:
                         input=vals[i],
                         pad=(0, block_size - cur_len),
                         mode="constant",
-                        value=self._tokenizer.pad_token_id,
+                        value=int(self._tokenizer.pad_token_id or 0),
                     )
 
                 minibatch[key] = torch.vstack(vals)
@@ -449,6 +449,6 @@ class Segmenter:
         return segs
 
     def __call__(
-        self, *args, **kwargs
+        self, *args: t.Any, **kwargs: t.Any
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         return self.segment_legal_text(*args, **kwargs)
