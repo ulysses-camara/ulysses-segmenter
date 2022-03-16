@@ -1,3 +1,5 @@
+[![Tests](https://github.com/FelSiq/ulysses-segmenter/actions/workflows/tests.yml/badge.svg)](https://github.com/FelSiq/ulysses-segmenter/actions/workflows/tests.yml)
+
 ## Brazilian Legal Text Segmenter
 This project presents a Legal Text Segmenter for Portuguese-Brazilian language.
 
