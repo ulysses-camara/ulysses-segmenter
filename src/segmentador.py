@@ -155,8 +155,12 @@ class Segmenter:
 
         model.resize_token_embeddings(tokenizer.vocab_size)
 
-        self._tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = tokenizer
-        self._model: transformers.models.bert.modeling_bert.BertForTokenClassification = model.to(device)
+        self._tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = (
+            tokenizer
+        )
+        self._model: transformers.models.bert.modeling_bert.BertForTokenClassification = model.to(
+            device
+        )
 
         self.pipeline = transformers.pipeline(
             "token-classification",
@@ -171,12 +175,16 @@ class Segmenter:
         )
 
     @property
-    def model(self) -> transformers.models.bert.modeling_bert.BertForTokenClassification:
+    def model(
+        self,
+    ) -> transformers.models.bert.modeling_bert.BertForTokenClassification:
         # pylint: disable='missing-function-docstring'
         return self._model
 
     @property
-    def tokenizer(self) -> transformers.models.bert.tokenization_bert_fast.BertTokenizerFast:
+    def tokenizer(
+        self,
+    ) -> transformers.models.bert.tokenization_bert_fast.BertTokenizerFast:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
