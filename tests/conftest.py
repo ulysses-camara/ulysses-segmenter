@@ -8,7 +8,6 @@ import segmentador
 def fixture_model_2_layers() -> segmentador.Segmenter:
     model = segmentador.Segmenter(
         uri_model="pretrained_segmenter_model/2_6000_layer_model",
-        uri_tokenizer="tokenizers/6000_subwords",
         inference_pooling_operation="assymetric-max",
         device="cpu",
         local_files_only=True,
@@ -18,8 +17,20 @@ def fixture_model_2_layers() -> segmentador.Segmenter:
 
 
 @pytest.fixture(scope="session")
-def fixture_legal_text() -> str:
-    with open("tests/resources/test_legal_text.txt", "r", encoding="utf-8") as f_in:
+def fixture_legal_text_long() -> str:
+    with open(
+        "tests/resources/test_legal_text_long.txt", "r", encoding="utf-8"
+    ) as f_in:
+        text = f_in.read()
+
+    return text
+
+
+@pytest.fixture(scope="session")
+def fixture_legal_text_short() -> str:
+    with open(
+        "tests/resources/test_legal_text_short.txt", "r", encoding="utf-8"
+    ) as f_in:
         text = f_in.read()
 
     return text
