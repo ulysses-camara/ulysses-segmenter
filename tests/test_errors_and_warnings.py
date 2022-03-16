@@ -35,13 +35,9 @@ def test_warning_window_shift_size(
 
 
 @pytest.mark.parametrize("inference_pooling_operation", (None, "", "avg"))
-def test_invalid_window_shift_size(
-    fixture_model_2_layers: segmentador.Segmenter,
-    fixture_legal_text: str,
-    inference_pooling_operation: str,
-):
+def test_invalid_inference_pooling_operation(inference_pooling_operation: str):
     with pytest.raises(AssertionError):
-        model = segmentador.Segmenter(
+        segmentador.Segmenter(
             uri_model="pretrained_segmenter_model/2_6000_layer_model",
             uri_tokenizer="tokenizers/6000_subwords",
             inference_pooling_operation=inference_pooling_operation,
