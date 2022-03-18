@@ -13,79 +13,8 @@ import numpy.typing as npt
 from . import poolers
 
 
-class Segmenter:
-    """Brazilian Portuguese legal text segmenter class.
-
-    Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
-    The pretrained models support texts up to 1024 subwords. Texts larger than this
-    value are pre-segmented into 1024 subword blocks, and each block is feed to the
-    segmenter individually.
-
-    Parameters
-    ----------
-    uri_model : str, default="neuralmind/bert-base-portuguese-cased"
-        URI to load pretrained model from. May be a Hugginface HUB URL (if
-        `local_files_only=False`) or a local file.
-
-    uri_tokenizer : str or None, default=None
-        URI to pretrained text Tokenizer. If None, will load the tokenizer from
-        the `uri_model` path.
-
-    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
-            default="assymetric-max"
-        Specify the strategy used to combine logits during model inference for documents
-        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
-        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
-        therefore, predictions) associated with it. This argument defines how exactly the
-        logits should be combined in order to derive the final verdict for that said token.
-        The possible choices for this argument are:
-        - `max`: take the maximum logit of each token;
-        - `sum`: sum the logits associated with the same token;
-        - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
-
-    local_files_only : bool, default=True
-        If True, will search only for local pretrained model and tokenizers.
-        If False, may download models from Huggingface HUB, if necessary.
-
-    device : {'cpu', 'cuda'}, default="cpu"
-        Device to segment document content.
-
-    init_from_pretrained_weights : bool, default=True
-        if True, load pretrained weights from the specified `uri_model` argument.
-        If False, load only the model configuration from the same argument.
-
-    config : transformers.BertConfig or None, default=None
-        Custom model configuration. Used only if `init_from_pretrained_weights=False`.
-        If `init_from_pretrained_weights=False` and `config=None`, will load the
-        configuration file from `uri_model` with the following changes:
-        - config.max_position_embeddings = 1024
-        - config.num_hidden_layers = num_hidden_layers
-        - config.num_labels = num_labels
-
-    num_labels : int, default=4
-        Number of labels in the configuration file.
-
-    num_hidden_layers : int, default=6
-        Number of maximum Transformer Encoder hidden layers. If the model has more hidden
-        layers than the specified value in this parameter, later hidden layers will be
-        removed.
-
-    cache_dir_model : str, default="../cache/models"
-        Cache directory for transformer encoder model.
-
-    cache_dir_tokenizer : str, default="../cache/tokenizers"
-        Cache directory for text tokenizer.
-
-    regex_justificativa : str, regex.Pattern or None, default=None
-        Regular expression specifying how the `justificativa` portion from legal
-        documents should be detected. If None, will use the pattern predefined in
-        `Segmenter.RE_JUSTIFICATIVA` class attribute.
-    """
+class _BaseSegmenter:
+    """TODO."""
 
     RE_BLANK_SPACES = regex.compile(r"\s+")
     RE_JUSTIFICATIVA = regex.compile(
@@ -100,66 +29,23 @@ class Segmenter:
 
     def __init__(
         self,
-        uri_model: str = "neuralmind/bert-base-portuguese-cased",
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
-        init_from_pretrained_weights: bool = True,
-        config: t.Optional[
-            t.Union[transformers.BertConfig, transformers.PretrainedConfig]
-        ] = None,
-        num_labels: int = 4,
-        num_hidden_layers: int = 6,
-        cache_dir_model: str = "../cache/models",
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
-        labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
-
         self.local_files_only = bool(local_files_only)
 
-        if config is None:
-            config = transformers.BertConfig.from_pretrained(uri_model)
-            config.max_position_embeddings = 1024
-            config.num_hidden_layers = num_hidden_layers
-            config.num_labels = num_labels
-            config.label2id = dict(zip(labels, range(num_labels)))
-            config.id2label = dict(zip(range(num_labels), labels))
-
-        if uri_tokenizer is None:
-            uri_tokenizer = uri_model
-
-        if device == "cuda" and not torch.cuda.is_available():
-            device = "cpu"
-
-        if init_from_pretrained_weights:
-            model = transformers.AutoModelForTokenClassification.from_pretrained(
-                uri_model,
-                local_files_only=self.local_files_only,
-                cache_dir=cache_dir_model,
-                label2id=config.label2id,
-                id2label=config.id2label,
-            )
-
-        else:
-            model = transformers.AutoModelForTokenClassification.from_config(config)
-
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
-            uri_tokenizer,
-            local_files_only=self.local_files_only,
-            cache_dir=cache_dir_tokenizer,
-        )
-
-        model.resize_token_embeddings(tokenizer.vocab_size)
-
         self._tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = (
-            tokenizer
-        )
-        self._model: transformers.models.bert.modeling_bert.BertForTokenClassification = model.to(
-            device
+            transformers.AutoTokenizer.from_pretrained(
+                uri_tokenizer,
+                local_files_only=self.local_files_only,
+                cache_dir=cache_dir_tokenizer,
+            )
         )
 
         self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
@@ -168,10 +54,25 @@ class Segmenter:
             pooling_operation=inference_pooling_operation,
         )
 
+        self._model: t.Union[
+            torch.nn.Module,
+            transformers.models.bert.modeling_bert.BertForTokenClassification,
+        ]
+
+        self.device = device
+
+    def __call__(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Union[list[str], tuple[list[str], list[str]]]:
+        return self.segment_legal_text(*args, **kwargs)
+
     @property
     def model(
         self,
-    ) -> transformers.models.bert.modeling_bert.BertForTokenClassification:
+    ) -> t.Union[
+        torch.nn.Module,
+        transformers.models.bert.modeling_bert.BertForTokenClassification,
+    ]:
         # pylint: disable='missing-function-docstring'
         return self._model
 
@@ -305,6 +206,7 @@ class Segmenter:
         text: str,
         return_justificativa: bool = False,
         batch_size: int = 32,
+        block_size: int = 1024,
         window_shift_size: t.Union[float, int] = 0.5,
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
@@ -325,6 +227,10 @@ class Segmenter:
         batch_size : int, default=32
             Maximum batch size feed document blocks in parallel to model. Higher values
             leads to faster inference with higher memory cost.
+
+        block_size : int, default=1024
+            Moving window size. Higher values leads to larger contexts for each tokens, at
+            the expense of higher memory usage.
 
         window_shift_size : int or float, default=0.5
             Moving window shift size, to feed documents larger than 1024 subwords tokens into
@@ -348,7 +254,11 @@ class Segmenter:
         """
         assert (
             batch_size >= 1
-        ), f"'batch_size' parameter must be >= 1 (got {batch_size})"
+        ), f"'batch_size' parameter must be >= 1 (got {batch_size=})"
+
+        assert (
+            block_size >= 1
+        ), f"'block_size' parameter must be >= 1 (got {block_size=})"
 
         preproc_result = self.preprocess_legal_text(
             text,
@@ -363,10 +273,21 @@ class Segmenter:
             text = preproc_result
 
         try:
-            block_size = self._model.config.max_position_embeddings
+            max_block_size_allowed = int(self._model.config.max_position_embeddings)  # type: ignore
+
+            if block_size > max_block_size_allowed:
+                warnings.warn(
+                    message=(
+                        "'block_size' is larger than model's positional embeddings "
+                        f"({block_size=}, {max_block_size_allowed=}). "
+                        "Will set 'block_size' to the maximum allowed value."
+                    ),
+                    category=UserWarning,
+                )
+                block_size = max_block_size_allowed
 
         except AttributeError:
-            block_size = 1024
+            pass
 
         if isinstance(window_shift_size, float):
             assert (
@@ -376,13 +297,13 @@ class Segmenter:
 
         assert (
             window_shift_size >= 1
-        ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size}')"
+        ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size=}')"
 
         if window_shift_size > block_size:
             warnings.warn(
                 message=(
                     f"'window_shift_size' parameter must be <= {block_size} "
-                    f"(got '{window_shift_size}'). "
+                    f"(got '{window_shift_size=}'). "
                     f"Will set it to {block_size} automatically."
                 ),
                 category=UserWarning,
@@ -412,7 +333,7 @@ class Segmenter:
 
         with torch.no_grad():
             for minibatch in minibatches:
-                minibatch = minibatch.to(self._model.device)
+                minibatch = minibatch.to(self.device)
                 model_out = self._model(**minibatch)
                 model_out = model_out["logits"]
                 model_out = model_out.cpu().numpy()
@@ -429,7 +350,14 @@ class Segmenter:
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
-        seg_cls_id = self._model.config.label2id.get("SEG_START", 1)
+        seg_cls_id: int
+
+        try:
+            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
+
+        except AttributeError:
+            seg_cls_id = 1
+
         segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
         segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
@@ -446,7 +374,230 @@ class Segmenter:
 
         return segs
 
-    def __call__(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[list[str], tuple[list[str], list[str]]]:
-        return self.segment_legal_text(*args, **kwargs)
+
+class BERTSegmenter(_BaseSegmenter):
+    """Brazilian Portuguese legal text segmenter class.
+
+    Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
+    The pretrained models support texts up to 1024 subwords. Texts larger than this
+    value are pre-segmented into 1024 subword blocks, and each block is feed to the
+    segmenter individually.
+
+    Parameters
+    ----------
+    uri_model : str, default="neuralmind/bert-base-portuguese-cased"
+        URI to load pretrained model from. May be a Hugginface HUB URL (if
+        `local_files_only=False`) or a local file.
+
+    uri_tokenizer : str or None, default=None
+        URI to pretrained text Tokenizer. If None, will load the tokenizer from
+        the `uri_model` path.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default="assymetric-max"
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    device : {'cpu', 'cuda'}, default="cpu"
+        Device to segment document content.
+
+    init_from_pretrained_weights : bool, default=True
+        if True, load pretrained weights from the specified `uri_model` argument.
+        If False, load only the model configuration from the same argument.
+
+    config : transformers.BertConfig or None, default=None
+        Custom model configuration. Used only if `init_from_pretrained_weights=False`.
+        If `init_from_pretrained_weights=False` and `config=None`, will load the
+        configuration file from `uri_model` with the following changes:
+        - config.max_position_embeddings = 1024
+        - config.num_hidden_layers = num_hidden_layers
+        - config.num_labels = num_labels
+
+    num_labels : int, default=4
+        Number of labels in the configuration file.
+
+    num_hidden_layers : int, default=6
+        Number of maximum Transformer Encoder hidden layers. If the model has more hidden
+        layers than the specified value in this parameter, later hidden layers will be
+        removed.
+
+    cache_dir_model : str, default="../cache/models"
+        Cache directory for transformer encoder model.
+
+    cache_dir_tokenizer : str, default="../cache/tokenizers"
+        Cache directory for text tokenizer.
+
+    regex_justificativa : str, regex.Pattern or None, default=None
+        Regular expression specifying how the `justificativa` portion from legal
+        documents should be detected. If None, will use the pattern predefined in
+        `Segmenter.RE_JUSTIFICATIVA` class attribute.
+    """
+
+    def __init__(
+        self,
+        uri_model: str = "neuralmind/bert-base-portuguese-cased",
+        uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
+        local_files_only: bool = True,
+        device: str = "cpu",
+        init_from_pretrained_weights: bool = True,
+        config: t.Optional[
+            t.Union[transformers.BertConfig, transformers.PretrainedConfig]
+        ] = None,
+        num_labels: int = 4,
+        num_hidden_layers: int = 6,
+        cache_dir_model: str = "../cache/models",
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
+    ):
+        super().__init__(
+            uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            device=device,
+            cache_dir_tokenizer=cache_dir_tokenizer,
+            regex_justificativa=regex_justificativa,
+        )
+
+        labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
+
+        if config is None:
+            config = transformers.BertConfig.from_pretrained(uri_model)
+            config.max_position_embeddings = 1024
+            config.num_hidden_layers = num_hidden_layers
+            config.num_labels = num_labels
+            config.label2id = dict(zip(labels, range(num_labels)))
+            config.id2label = dict(zip(range(num_labels), labels))
+
+        if device == "cuda" and not torch.cuda.is_available():
+            device = "cpu"
+
+        if init_from_pretrained_weights:
+            model = transformers.AutoModelForTokenClassification.from_pretrained(
+                uri_model,
+                local_files_only=self.local_files_only,
+                cache_dir=cache_dir_model,
+                label2id=config.label2id,
+                id2label=config.id2label,
+            )
+
+        else:
+            model = transformers.AutoModelForTokenClassification.from_config(config)
+
+        model.resize_token_embeddings(self._tokenizer.vocab_size)
+
+        self._model: transformers.models.bert.modeling_bert.BertForTokenClassification = model.to(
+            device
+        )
+
+
+# Alias for BERTSegmenter.
+Segmenter = BERTSegmenter
+
+
+class _LSTMSegmenterTorchModule(torch.nn.Module):
+    """TODO."""
+
+    def __init__(
+        self, hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int
+    ):
+        super().__init__()
+
+        self.embeddings = torch.nn.Embedding(
+            num_embeddings=num_embeddings,
+            embedding_dim=768,
+            padding_idx=pad_id,
+        )
+
+        self.lstm = torch.nn.LSTM(
+            input_size=768,
+            hidden_size=hidden_layer_size,
+            num_layers=1,
+            batch_first=True,
+            bidirectional=True,
+            proj_size=0,
+        )
+
+        self.lin_out = torch.nn.Linear(
+            2 * hidden_layer_size,
+            num_classes,
+        )
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> dict[str, torch.Tensor]:
+        # pylint: disable='missing-function-docstring', 'unused-argument'
+        out = input_ids
+
+        out = self.embeddings(out)
+        out, *_ = self.lstm(out)
+        out = self.lin_out(out)
+
+        return {"logits": out}
+
+
+class LSTMSegmenter(_BaseSegmenter):
+    """TODO."""
+
+    def __init__(
+        self,
+        uri_model: str,
+        uri_tokenizer: t.Optional[str],
+        hidden_layer_size: int,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
+        block_size: int = 4096,
+        local_files_only: bool = True,
+        device: str = "cpu",
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
+    ):
+        assert block_size > 0, f"'block_size' must be >= 1 (got {block_size=})."
+
+        super().__init__(
+            uri_tokenizer=uri_tokenizer,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            device=device,
+            cache_dir_tokenizer=cache_dir_tokenizer,
+            regex_justificativa=regex_justificativa,
+        )
+
+        self._model = _LSTMSegmenterTorchModule(
+            hidden_layer_size=hidden_layer_size,
+            num_embeddings=self._tokenizer.vocab_size,
+            pad_id=int(self._tokenizer.pad_token_id or 0),
+            num_classes=4,
+        )
+
+        state_dict = torch.load(uri_model)
+
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+
+        self._model.load_state_dict(state_dict)
+        self._model = self._model.to(device)
+
+        self.block_size = int(block_size)
