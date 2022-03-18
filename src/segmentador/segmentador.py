@@ -154,7 +154,7 @@ class _BaseSegmenter:
         tokens: transformers.tokenization_utils_base.BatchEncoding,
         num_tokens: int,
         batch_size: int,
-        block_size: int,
+        moving_window_size: int,
         window_shift_size: int,
     ) -> list[transformers.tokenization_utils_base.BatchEncoding]:
         """TODO."""
@@ -162,12 +162,12 @@ class _BaseSegmenter:
         minibatch = transformers.tokenization_utils_base.BatchEncoding()
 
         total_minibatches = 1 + max(
-            0, int(np.ceil((num_tokens - block_size) / window_shift_size))
+            0, int(np.ceil((num_tokens - moving_window_size) / window_shift_size))
         )
 
         for i in range(total_minibatches):
             i_start = i * window_shift_size
-            i_end = i_start + block_size
+            i_end = i_start + moving_window_size
 
             for key, vals in tokens.items():
                 slice_ = vals[..., i_start:i_end]
@@ -187,12 +187,12 @@ class _BaseSegmenter:
                 for i in reversed(range(len(vals))):
                     cur_len = int(max(vals[i].size()))
 
-                    if cur_len >= block_size:
+                    if cur_len >= moving_window_size:
                         break
 
                     vals[i] = F.pad(
                         input=vals[i],
-                        pad=(0, block_size - cur_len),
+                        pad=(0, moving_window_size - cur_len),
                         mode="constant",
                         value=int(self._tokenizer.pad_token_id or 0),
                     )
@@ -206,7 +206,7 @@ class _BaseSegmenter:
         text: str,
         return_justificativa: bool = False,
         batch_size: int = 32,
-        block_size: int = 1024,
+        moving_window_size: int = 1024,
         window_shift_size: t.Union[float, int] = 0.5,
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         """Segment legal `text`.
@@ -228,7 +228,7 @@ class _BaseSegmenter:
             Maximum batch size feed document blocks in parallel to model. Higher values
             leads to faster inference with higher memory cost.
 
-        block_size : int, default=1024
+        moving_window_size : int, default=1024
             Moving window size. Higher values leads to larger contexts for each tokens, at
             the expense of higher memory usage.
 
@@ -252,13 +252,11 @@ class _BaseSegmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
-        assert (
-            batch_size >= 1
-        ), f"'batch_size' parameter must be >= 1 (got {batch_size=})"
+        assert batch_size >= 1, f"'batch_size' parameter must be >= 1 (got {batch_size=})"
 
         assert (
-            block_size >= 1
-        ), f"'block_size' parameter must be >= 1 (got {block_size=})"
+            moving_window_size >= 1
+        ), f"'moving_window_size' parameter must be >= 1 (got {moving_window_size=})"
 
         preproc_result = self.preprocess_legal_text(
             text,
@@ -273,18 +271,20 @@ class _BaseSegmenter:
             text = preproc_result
 
         try:
-            max_block_size_allowed = int(self._model.config.max_position_embeddings)  # type: ignore
+            max_moving_window_size_allowed = int(  # type: ignore
+                self._model.config.max_position_embeddings
+            )
 
-            if block_size > max_block_size_allowed:
+            if moving_window_size > max_moving_window_size_allowed:
                 warnings.warn(
                     message=(
-                        "'block_size' is larger than model's positional embeddings "
-                        f"({block_size=}, {max_block_size_allowed=}). "
-                        "Will set 'block_size' to the maximum allowed value."
+                        "'moving_window_size' is larger than model's positional embeddings "
+                        f"({moving_window_size=}, {max_moving_window_size_allowed=}). "
+                        "Will set 'moving_window_size' to the maximum allowed value."
                     ),
                     category=UserWarning,
                 )
-                block_size = max_block_size_allowed
+                moving_window_size = max_moving_window_size_allowed
 
         except AttributeError:
             pass
@@ -293,22 +293,22 @@ class _BaseSegmenter:
             assert (
                 0.0 < window_shift_size <= 1.0
             ), "If 'window_shift_size' is a float, it must be in (0, 1] range"
-            window_shift_size = int(np.ceil(block_size * window_shift_size))
+            window_shift_size = int(np.ceil(moving_window_size * window_shift_size))
 
         assert (
             window_shift_size >= 1
         ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size=}')"
 
-        if window_shift_size > block_size:
+        if window_shift_size > moving_window_size:
             warnings.warn(
                 message=(
-                    f"'window_shift_size' parameter must be <= {block_size} "
+                    f"'window_shift_size' parameter must be <= {moving_window_size} "
                     f"(got '{window_shift_size=}'). "
-                    f"Will set it to {block_size} automatically."
+                    f"Will set it to {moving_window_size} automatically."
                 ),
                 category=UserWarning,
             )
-            window_shift_size = block_size
+            window_shift_size = moving_window_size
 
         tokens = self._tokenizer(
             text,
@@ -324,7 +324,7 @@ class _BaseSegmenter:
             tokens=tokens,
             num_tokens=num_tokens,
             batch_size=batch_size,
-            block_size=block_size,
+            moving_window_size=moving_window_size,
             window_shift_size=int(window_shift_size),
         )
 
@@ -459,9 +459,7 @@ class BERTSegmenter(_BaseSegmenter):
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
-        config: t.Optional[
-            t.Union[transformers.BertConfig, transformers.PretrainedConfig]
-        ] = None,
+        config: t.Optional[t.Union[transformers.BertConfig, transformers.PretrainedConfig]] = None,
         num_labels: int = 4,
         num_hidden_layers: int = 6,
         cache_dir_model: str = "../cache/models",
@@ -516,9 +514,7 @@ Segmenter = BERTSegmenter
 class _LSTMSegmenterTorchModule(torch.nn.Module):
     """TODO."""
 
-    def __init__(
-        self, hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int
-    ):
+    def __init__(self, hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int):
         super().__init__()
 
         self.embeddings = torch.nn.Embedding(
@@ -568,13 +564,15 @@ class LSTMSegmenter(_BaseSegmenter):
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
-        block_size: int = 4096,
+        moving_window_size: int = 4096,
         local_files_only: bool = True,
         device: str = "cpu",
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
-        assert block_size > 0, f"'block_size' must be >= 1 (got {block_size=})."
+        assert (
+            moving_window_size > 0
+        ), f"'moving_window_size' must be >= 1 (got {moving_window_size=})."
 
         super().__init__(
             uri_tokenizer=uri_tokenizer,
@@ -600,4 +598,4 @@ class LSTMSegmenter(_BaseSegmenter):
         self._model.load_state_dict(state_dict)
         self._model = self._model.to(device)
 
-        self.block_size = int(block_size)
+        self.moving_window_size = int(moving_window_size)
