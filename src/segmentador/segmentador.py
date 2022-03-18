@@ -14,7 +14,7 @@ from . import poolers
 
 
 class _BaseSegmenter:
-    """TODO."""
+    """Base class for Segmenter models."""
 
     RE_BLANK_SPACES = regex.compile(r"\s+")
     RE_JUSTIFICATIVA = regex.compile(
@@ -157,7 +157,7 @@ class _BaseSegmenter:
         moving_window_size: int,
         window_shift_size: int,
     ) -> list[transformers.tokenization_utils_base.BatchEncoding]:
-        """TODO."""
+        """Break BatchEncoding items into proper smaller minibatches."""
         minibatches: list[transformers.tokenization_utils_base.BatchEncoding] = []
         minibatch = transformers.tokenization_utils_base.BatchEncoding()
 
@@ -215,6 +215,9 @@ class _BaseSegmenter:
         value are pre-segmented into 1024 subword blocks, and each block is feed to the
         segmenter individually.
 
+        The block size can be configured to smaller (not larger) values using the
+        `moving_window_size` from `BERTSegmenter.segment_legal_text` method during inference.
+
         Parameters
         ----------
         text : str
@@ -229,8 +232,9 @@ class _BaseSegmenter:
             leads to faster inference with higher memory cost.
 
         moving_window_size : int, default=1024
-            Moving window size. Higher values leads to larger contexts for each tokens, at
-            the expense of higher memory usage.
+            Moving window size, which corresponds to the maximum number of subwords feed in
+            parallel to the segmenter model. Higher values leads to larger contexts for every
+            tokens, at the expense of higher memory usage.
 
         window_shift_size : int or float, default=0.5
             Moving window shift size, to feed documents larger than 1024 subwords tokens into
@@ -376,7 +380,7 @@ class _BaseSegmenter:
 
 
 class BERTSegmenter(_BaseSegmenter):
-    """Brazilian Portuguese legal text segmenter class.
+    """BERT segmenter for PT-br legal text data.
 
     Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
     The pretrained models support texts up to 1024 subwords. Texts larger than this
@@ -507,14 +511,16 @@ class BERTSegmenter(_BaseSegmenter):
         )
 
 
-# Alias for BERTSegmenter.
+# Alias for 'BERTSegmenter'.
 Segmenter = BERTSegmenter
 
 
 class _LSTMSegmenterTorchModule(torch.nn.Module):
-    """TODO."""
+    """Bidirecional LSTM Torch model for legal document segmentation."""
 
-    def __init__(self, hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int):
+    def __init__(
+        self, lstm_hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int
+    ):
         super().__init__()
 
         self.embeddings = torch.nn.Embedding(
@@ -525,7 +531,7 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
 
         self.lstm = torch.nn.LSTM(
             input_size=768,
-            hidden_size=hidden_layer_size,
+            hidden_size=lstm_hidden_layer_size,
             num_layers=1,
             batch_first=True,
             bidirectional=True,
@@ -533,7 +539,7 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
         )
 
         self.lin_out = torch.nn.Linear(
-            2 * hidden_layer_size,
+            2 * lstm_hidden_layer_size,
             num_classes,
         )
 
@@ -554,26 +560,68 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
 
 
 class LSTMSegmenter(_BaseSegmenter):
-    """TODO."""
+    """Bidirectional LSTM segmenter for PT-br legal text data.
+
+    Uses a pretrained Bidirectional LSTM to segment Brazilian Portuguese legal texts.
+
+    Parameters
+    ----------
+    uri_model : str
+        URI to load pretrained model from.
+
+    uri_tokenizer : str or None
+        URI to pretrained text Tokenizer.
+
+    lstm_hidden_layer_size : int
+        Dimension of LSTM model hidden layer.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default="assymetric-max"
+        Specify the strategy used to combine logits during model inference for documents
+        larger than `moving_window_size` subword tokens (see `LSTMSegmenter.segment_legal_text`
+        documentation). Larger documents are sharded into possibly overlapping windows of
+        `moving_window_size` subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    device : {'cpu', 'cuda'}, default="cpu"
+        Device to segment document content.
+
+    cache_dir_tokenizer : str, default="../cache/tokenizers"
+        Cache directory for text tokenizer.
+
+    regex_justificativa : str, regex.Pattern or None, default=None
+        Regular expression specifying how the `justificativa` portion from legal
+        documents should be detected. If None, will use the pattern predefined in
+        `Segmenter.RE_JUSTIFICATIVA` class attribute.
+    """
 
     def __init__(
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str],
-        hidden_layer_size: int,
+        lstm_hidden_layer_size: int,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
-        moving_window_size: int = 4096,
         local_files_only: bool = True,
         device: str = "cpu",
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
-        assert (
-            moving_window_size > 0
-        ), f"'moving_window_size' must be >= 1 (got {moving_window_size=})."
-
         super().__init__(
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
@@ -584,7 +632,7 @@ class LSTMSegmenter(_BaseSegmenter):
         )
 
         self._model = _LSTMSegmenterTorchModule(
-            hidden_layer_size=hidden_layer_size,
+            lstm_hidden_layer_size=lstm_hidden_layer_size,
             num_embeddings=self._tokenizer.vocab_size,
             pad_id=int(self._tokenizer.pad_token_id or 0),
             num_classes=4,
@@ -597,5 +645,3 @@ class LSTMSegmenter(_BaseSegmenter):
 
         self._model.load_state_dict(state_dict)
         self._model = self._model.to(device)
-
-        self.moving_window_size = int(moving_window_size)
