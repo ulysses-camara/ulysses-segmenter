@@ -40,6 +40,7 @@ train = [
 	"tqdm == 4.63.0",
 	"sentencepiece == 0.1.96",
 	"psutil == 5.9.0",
+	"pytorch_lightning == 1.5.10",
 ]
 
 test = [
