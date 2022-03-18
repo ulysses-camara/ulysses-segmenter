@@ -84,7 +84,12 @@ testpaths = [
 
 [tool.pylint.messages_control]
 generated-members = "torch.*"
-disable = "R0903, R0914, R0913"
+disable = """
+	too-few-public-methods,
+	too-many-locals,
+	too-many-arguments,
+	too-many-statements
+"""
 
 [tool.tox]
 legacy_tox_ini = """
