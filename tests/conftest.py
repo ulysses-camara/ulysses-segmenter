@@ -18,9 +18,7 @@ def fixture_model_2_layers() -> segmentador.Segmenter:
 
 @pytest.fixture(scope="session")
 def fixture_legal_text_long() -> str:
-    with open(
-        "tests/resources/test_legal_text_long.txt", "r", encoding="utf-8"
-    ) as f_in:
+    with open("tests/resources/test_legal_text_long.txt", "r", encoding="utf-8") as f_in:
         text = f_in.read()
 
     return text
@@ -28,9 +26,7 @@ def fixture_legal_text_long() -> str:
 
 @pytest.fixture(scope="session")
 def fixture_legal_text_short() -> str:
-    with open(
-        "tests/resources/test_legal_text_short.txt", "r", encoding="utf-8"
-    ) as f_in:
+    with open("tests/resources/test_legal_text_short.txt", "r", encoding="utf-8") as f_in:
         text = f_in.read()
 
     return text
