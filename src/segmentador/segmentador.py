@@ -275,8 +275,8 @@ class _BaseSegmenter:
             text = preproc_result
 
         try:
-            max_moving_window_size_allowed = int(  # type: ignore
-                self._model.config.max_position_embeddings
+            max_moving_window_size_allowed = int(
+                self._model.config.max_position_embeddings  # type: ignore
             )
 
             if moving_window_size > max_moving_window_size_allowed:
