@@ -84,6 +84,7 @@ testpaths = [
 
 [tool.pylint.messages_control]
 generated-members = "torch.*"
+jobs = 4
 disable = """
 	too-few-public-methods,
 	too-many-locals,
