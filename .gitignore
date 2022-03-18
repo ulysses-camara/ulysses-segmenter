@@ -170,3 +170,4 @@ tokenizers/
 segmenter_checkpoint/
 train_logs/
 **/figures/
+**/lightning_logs/
