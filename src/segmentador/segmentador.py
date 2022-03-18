@@ -14,7 +14,7 @@ from . import poolers
 
 
 class Segmenter:
-    r"""Brazilian Portuguese legal text segmenter class.
+    """Brazilian Portuguese legal text segmenter class.
 
     Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
     The pretrained models support texts up to 1024 subwords. Texts larger than this
@@ -162,12 +162,6 @@ class Segmenter:
             device
         )
 
-        self.pipeline = transformers.pipeline(
-            "token-classification",
-            model=model,
-            tokenizer=tokenizer,
-        )
-
         self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
 
         self._moving_window_pooler = poolers.AutoMovingWindowPooler(
@@ -187,10 +181,6 @@ class Segmenter:
     ) -> transformers.models.bert.tokenization_bert_fast.BertTokenizerFast:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
-
-    def save_pretrained(self, save_directory: str) -> None:
-        """Save pipeline (model and tokenizer) in `save_directory` path."""
-        self.pipeline.save_pretrained(save_directory)
 
     @classmethod
     def setup_regex_justificativa(
