@@ -28,7 +28,7 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 ### Model details
 
 #### Inference
-The trained models are Transformer Encoders, with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword blocks automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
+The trained models are Transformer Encoders, with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword windows automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
 
 <p align="center">
 	<img src="./diagrams/segmenter_inference_pipeline.png" alt="Full segmenter inference pipeline."></img>
@@ -40,22 +40,22 @@ The *pooling* operations can be one of the following:
 | :---                     | :---                                                                                                               |
 | Max                      | Keep maximal overlapping logits.                                                                                   |
 | Sum                      | Sum overlapping logits.		                                                                                    |
-| Gaussian                 | Weight overlapping logits by a Gaussian distribution, centered at the middle of each block.                        |
+| Gaussian                 | Weight overlapping logits by a Gaussian distribution, centered at the middle of each moving window.                |
 | Assymetric-Max (default) | Keep maximal overlapping logits for all classes except "No-op" (which gets the minimal overlapping logit instead). |
 
 
 #### Training
-The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [a notebook in this repository](https://github.com/FelSiq/ulysses-segmenter/blob/master/notebooks/2_generate_labels_from_regular_expressions.ipynb)).
+The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [a notebook in this repository](./notebooks/2_generate_labels_from_regular_expressions.ipynb)).
 
 
 ### Trained models
 TODO.
 
 ### Experimental results
-Experimental results are available in [a notebook in this repository](https://github.com/FelSiq/ulysses-segmenter/blob/master/notebooks/4_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced.
+Experimental results are available in [a notebook in this repository](./notebooks/5_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
 
 ### Train data
 TODO.
 
 ### License
-[MIT.](https://github.com/FelSiq/ulysses-segmenter/blob/master/LICENSE)
+[MIT.](./LICENSE)
