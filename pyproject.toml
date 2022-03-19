@@ -101,6 +101,11 @@ legacy_tox_ini = """
 envlist = py39, py310, mypy, pylint
 isolated_build = true
 
+[gh-actions]
+python =
+    3.9: py39, mypy, pylint
+    3.10: py310
+
 [testenv]
 whitelist_externals = flit
 commands =
