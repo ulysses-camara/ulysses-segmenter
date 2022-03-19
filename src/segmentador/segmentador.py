@@ -519,7 +519,12 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
     """Bidirecional LSTM Torch model for legal document segmentation."""
 
     def __init__(
-        self, lstm_hidden_layer_size: int, num_embeddings: int, pad_id: int, num_classes: int
+        self,
+        lstm_hidden_layer_size: int,
+        lstm_num_layers: int,
+        num_embeddings: int,
+        pad_id: int,
+        num_classes: int,
     ):
         super().__init__()
 
@@ -532,7 +537,7 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
         self.lstm = torch.nn.LSTM(
             input_size=768,
             hidden_size=lstm_hidden_layer_size,
-            num_layers=1,
+            num_layers=lstm_num_layers,
             batch_first=True,
             bidirectional=True,
             proj_size=0,
@@ -575,6 +580,9 @@ class LSTMSegmenter(_BaseSegmenter):
     lstm_hidden_layer_size : int
         Dimension of LSTM model hidden layer.
 
+    lstm_num_layers : int
+        Number of layers in LSTM model.
+
     inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
             default="assymetric-max"
         Specify the strategy used to combine logits during model inference for documents
@@ -614,6 +622,7 @@ class LSTMSegmenter(_BaseSegmenter):
         uri_model: str,
         uri_tokenizer: t.Optional[str],
         lstm_hidden_layer_size: int,
+        lstm_num_layers: int,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
@@ -633,6 +642,7 @@ class LSTMSegmenter(_BaseSegmenter):
 
         self._model = _LSTMSegmenterTorchModule(
             lstm_hidden_layer_size=lstm_hidden_layer_size,
+            lstm_num_layers=lstm_num_layers,
             num_embeddings=self._tokenizer.vocab_size,
             pad_id=int(self._tokenizer.pad_token_id or 0),
             num_classes=4,
