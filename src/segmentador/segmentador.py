@@ -27,6 +27,9 @@ class _BaseSegmenter:
         )
     )
 
+    _RE_REPR_TOKENIZER_ADJUST_01 = regex.compile(r"(?<=[\(,]\s*)(?=[a-z_]+\s*=)")
+    _RE_REPR_TOKENIZER_ADJUST_02 = regex.compile(r"(?<=[{,]\s*)(?=[a-z_']+\s*:)")
+
     def __init__(
         self,
         uri_tokenizer: t.Optional[str] = None,
@@ -65,6 +68,35 @@ class _BaseSegmenter:
         self, *args: t.Any, **kwargs: t.Any
     ) -> t.Union[list[str], tuple[list[str], list[str]]]:
         return self.segment_legal_text(*args, **kwargs)
+
+    def __repr__(self):
+        strs: list[str] = []
+
+        strs.append(f"{self.__class__.__name__} pipeline")
+        strs.append(f" o Regex JUSTIFICATIVA pattern:")
+        strs.append(f" |   '''")
+        strs.append(f" |   " + self.regex_justificativa.pattern.replace("|", "|\n |   "))
+        strs.append(f" |   '''")
+        strs.append(f" | ")
+        strs.append(f" o Device: {self.device}")
+
+        strs.append(f" | ")
+        strs.append(f"(1) Tokenizer:")
+
+        text_tokenizer = str(self._tokenizer)
+        text_tokenizer = self._RE_REPR_TOKENIZER_ADJUST_01.sub("\n  ", text_tokenizer)
+        text_tokenizer = self._RE_REPR_TOKENIZER_ADJUST_02.sub("\n    ", text_tokenizer)
+        strs.append(f" | " + text_tokenizer.replace("\n", "\n |  "))
+
+        strs.append(r" | ")
+        strs.append(f"(2) Segmenter model:")
+        strs.append(f" | " + str(self._model).replace("\n", "\n |  "))
+
+        strs.append(f" | ")
+        strs.append(f"(3) Inference pooler:")
+        strs.append(f"   " + str(self._moving_window_pooler).replace("\n", "\n |  "))
+
+        return "\n".join(strs)
 
     @property
     def model(
