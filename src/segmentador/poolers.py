@@ -49,18 +49,22 @@ class AutoMovingWindowPooler(_BasePooler):
     def __new__(  # type: ignore
         cls, pooling_operation: t.Literal["max", "sum", "gaussian", "assymetric-max"]
     ):
-        assert pooling_operation in {"max", "sum", "gaussian", "assymetric-max"}
+        options = {
+            "assymetric-max": AssymetricMaxMovingWindowPooler,
+            "sum": SumMovingWindowPooler,
+            "gaussian": GaussianMovingWindowPooler,
+            "max": MaxMovingWindowPooler,
+        }
 
-        if pooling_operation == "assymetric-max":
-            return AssymetricMaxMovingWindowPooler()
+        if pooling_operation not in options:
+            raise ValueError(
+                "Invalid value for 'pooling_operation' parameter, which must assume a "
+                f"value from: {', '.join(options.keys())} (got {pooling_operation=})."
+            )
 
-        if pooling_operation == "sum":
-            return SumMovingWindowPooler()
+        chosen_cls = options[pooling_operation]
 
-        if pooling_operation == "gaussian":
-            return GaussianMovingWindowPooler()
-
-        return MaxMovingWindowPooler()
+        return chosen_cls()  # type: ignore
 
     def pool(
         self, logits: npt.NDArray[np.float64], window_shift_size: int

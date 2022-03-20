@@ -288,11 +288,13 @@ class _BaseSegmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
-        assert batch_size >= 1, f"'batch_size' parameter must be >= 1 (got {batch_size=})"
+        if batch_size < 1:
+            raise ValueError(f"'batch_size' parameter must be >= 1 (got {batch_size=}).")
 
-        assert (
-            moving_window_size >= 1
-        ), f"'moving_window_size' parameter must be >= 1 (got {moving_window_size=})"
+        if moving_window_size < 1:
+            raise ValueError(
+                f"'moving_window_size' parameter must be >= 1 (got {moving_window_size=})."
+            )
 
         preproc_result = self.preprocess_legal_text(
             text,
@@ -326,14 +328,15 @@ class _BaseSegmenter:
             pass
 
         if isinstance(window_shift_size, float):
-            assert (
-                0.0 < window_shift_size <= 1.0
-            ), "If 'window_shift_size' is a float, it must be in (0, 1] range"
+            if not 0.0 < window_shift_size <= 1.0:
+                raise ValueError("If 'window_shift_size' is a float, it must be in (0, 1] range.")
+
             window_shift_size = int(np.ceil(moving_window_size * window_shift_size))
 
-        assert (
-            window_shift_size >= 1
-        ), f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size=}')"
+        if window_shift_size < 1:
+            raise ValueError(
+                f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size=}')."
+            )
 
         if window_shift_size > moving_window_size:
             warnings.warn(
