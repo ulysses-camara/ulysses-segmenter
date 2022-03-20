@@ -398,9 +398,10 @@ class _BaseSegmenter:
         segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
         segs: list[str] = []
+        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].numpy().ravel()
 
         for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
-            split_ = tokens["input_ids"].numpy().ravel()[i:i_next]
+            split_ = np_token_ids[i:i_next]
             seg = self._tokenizer.decode(split_, skip_special_tokens=True)
             if seg:
                 segs.append(seg)
