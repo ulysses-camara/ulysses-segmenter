@@ -2,7 +2,7 @@
 
 Poolers combine logits from overlapping moving windows along the document
 subword tokens. This is necessary for documents longer than 1024 subwords,
-since they need to be sharded into 1024-long blocks to be feed to the
+since they need to be sharded into 1024-long windows to be feed to the
 segmenter model.
 """
 import typing as t
@@ -26,7 +26,7 @@ class _BasePooler(abc.ABC):
         logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
-            - B: Block size; and
+            - B: Moving window size; and
             - C: Number of classes.
 
         window_shift_size : int
@@ -84,7 +84,7 @@ class MaxMovingWindowPooler(_BasePooler):
         logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
-            - B: Block size; and
+            - B: Moving window size; and
             - C: Number of classes.
 
         window_shift_size : int
@@ -111,21 +111,21 @@ class MaxMovingWindowPooler(_BasePooler):
             Largest logits associated with each input token, where `B`, `N` and
             `C` are as specified in the `logits` parameter documentation.
         """
-        d_batch, d_block_size, d_n_cls = logits.shape
+        d_batch, d_window_size, d_n_cls = logits.shape
 
         if d_batch <= 1:
             return logits
 
-        d_batch_output = d_block_size + (d_batch - 1) * window_shift_size
+        d_batch_output = d_window_size + (d_batch - 1) * window_shift_size
         pooled_logits = np.full((d_batch_output, d_n_cls), fill_value=-np.inf)
 
-        for i, logit_block in enumerate(logits):
+        for i, logit_window in enumerate(logits):
             i_start = i * window_shift_size
-            i_end = i_start + d_block_size
+            i_end = i_start + d_window_size
 
             np.maximum(
                 pooled_logits[i_start:i_end, ...],
-                logit_block,
+                logit_window,
                 out=pooled_logits[i_start:i_end, ...],
             )
 
@@ -155,7 +155,7 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
         logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
-            - B: Block size; and
+            - B: Moving window size; and
             - C: Number of classes.
 
         window_shift_size : int
@@ -183,28 +183,28 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
             the 'No-op' class, that receives the minimal logits instead. `B`, `N` and `C`
             are as specified in the `logits` parameter documentation.
         """
-        d_batch, d_block_size, d_n_cls = logits.shape
+        d_batch, d_window_size, d_n_cls = logits.shape
 
         if d_batch <= 1:
             return logits
 
-        d_batch_output = d_block_size + (d_batch - 1) * window_shift_size
+        d_batch_output = d_window_size + (d_batch - 1) * window_shift_size
         pooled_logits = np.full((d_batch_output, d_n_cls), fill_value=-np.inf)
         pooled_logits[..., :1] = np.inf
 
-        for i, logit_block in enumerate(logits):
+        for i, logit_window in enumerate(logits):
             i_start = i * window_shift_size
-            i_end = i_start + d_block_size
+            i_end = i_start + d_window_size
 
             np.maximum(
                 pooled_logits[i_start:i_end, ..., 1:],
-                logit_block[..., 1:],
+                logit_window[..., 1:],
                 out=pooled_logits[i_start:i_end, ..., 1:],
             )
 
             np.minimum(
                 pooled_logits[i_start:i_end, ..., :1],
-                logit_block[..., :1],
+                logit_window[..., :1],
                 out=pooled_logits[i_start:i_end, ..., :1],
             )
 
@@ -227,7 +227,7 @@ class SumMovingWindowPooler(_BasePooler):
         logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
-            - B: Block size; and
+            - B: Moving window size; and
             - C: Number of classes.
 
         window_shift_size : int
@@ -254,18 +254,18 @@ class SumMovingWindowPooler(_BasePooler):
             Sum of logits associated with each input token, where `B`, `N` and `C`
             are as specified in the `logits` parameter documentation.
         """
-        d_batch, d_block_size, d_n_cls = logits.shape
+        d_batch, d_window_size, d_n_cls = logits.shape
 
         if d_batch <= 1:
             return logits
 
-        d_batch_output = d_block_size + (d_batch - 1) * window_shift_size
+        d_batch_output = d_window_size + (d_batch - 1) * window_shift_size
         pooled_logits = np.zeros((d_batch_output, d_n_cls))
 
-        for i, logit_block in enumerate(logits):
+        for i, logit_window in enumerate(logits):
             i_start = i * window_shift_size
-            i_end = i_start + d_block_size
-            pooled_logits[i_start:i_end, ...] += logit_block
+            i_end = i_start + d_window_size
+            pooled_logits[i_start:i_end, ...] += logit_window
 
         return pooled_logits
 
@@ -277,17 +277,15 @@ class GaussianMovingWindowPooler(_BasePooler):
     """
 
     @staticmethod
-    def _compute_gaussian_pdf_per_position(block_size: int) -> npt.NDArray[np.float64]:
+    def _compute_gaussian_pdf_per_position(window_size: int) -> npt.NDArray[np.float64]:
         """Compute the Gaussian Probability Density associated to each position in window."""
-        # Note: block_size / 6 = (half_block_size) / (3 standard deviations from the mean)
-        dist_std = block_size / 6.0
-        dist_avg = 0.5 * (block_size - 1.0)
+        # Note: window_size / 6 = (half_window_size) / (3 standard deviations from the mean)
+        dist_std = window_size / 6.0
+        dist_avg = 0.5 * (window_size - 1.0)
 
         norm_factor = dist_std * float(np.sqrt(2.0 * np.pi))
 
-        pos_weights = np.exp(
-            -0.5 * np.square((np.arange(block_size) - dist_avg) / dist_std)
-        )
+        pos_weights = np.exp(-0.5 * np.square((np.arange(window_size) - dist_avg) / dist_std))
 
         return np.asfarray(pos_weights / norm_factor)
 
@@ -296,9 +294,9 @@ class GaussianMovingWindowPooler(_BasePooler):
     ) -> npt.NDArray[np.float64]:
         """Apply weights from a Gaussian distribution to overlapping logits.
 
-        The gaussian distribution is parametrized as N(block_size / 2, block_size / 6),
+        The gaussian distribution is parametrized as N(window_size / 2, window_size / 6),
         such that it weights more logits next to the center of the window, and instances
-        within the radius (-block_size / 6, block_size / 6) from the window center
+        within the radius (-window_size / 6, window_size / 6) from the window center
         receives approximately 68% from the weight total, whereas doubling this radius
         yields a total weight of approximately 95%.
 
@@ -307,7 +305,7 @@ class GaussianMovingWindowPooler(_BasePooler):
         logits : npt.NDArray[np.float64] of shape (N, B, C)
             Logits to be pooled, where:
             - N: Input batch size;
-            - B: Block size; and
+            - B: Moving window size; and
             - C: Number of classes.
 
         window_shift_size : int
@@ -341,20 +339,20 @@ class GaussianMovingWindowPooler(_BasePooler):
         2. This numeric difference should not affect the segmentation output, since every
         logit associated with a single token will remain in the same scale.
         """
-        d_batch, d_block_size, d_n_cls = logits.shape
+        d_batch, d_window_size, d_n_cls = logits.shape
 
         if d_batch <= 1:
             return logits
 
-        d_batch_output = d_block_size + (d_batch - 1) * window_shift_size
+        d_batch_output = d_window_size + (d_batch - 1) * window_shift_size
         pooled_logits = np.zeros((d_batch_output, d_n_cls))
 
-        pos_weights = self._compute_gaussian_pdf_per_position(d_block_size)
+        pos_weights = self._compute_gaussian_pdf_per_position(d_window_size)
         pos_weights = np.expand_dims(pos_weights, 1)
 
-        for i, logit_block in enumerate(logits):
+        for i, logit_window in enumerate(logits):
             i_start = i * window_shift_size
-            i_end = i_start + d_block_size
-            pooled_logits[i_start:i_end, ...] += logit_block * pos_weights
+            i_end = i_start + d_window_size
+            pooled_logits[i_start:i_end, ...] += logit_window * pos_weights
 
         return pooled_logits
