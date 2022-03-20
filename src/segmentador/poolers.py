@@ -90,6 +90,12 @@ class MaxMovingWindowPooler(_BasePooler):
         window_shift_size : int
             Shift size (in subword tokens) between two adjacent windows.
 
+        Returns
+        -------
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
+            Largest logits associated with each input token, where `B`, `N` and
+            `C` are as specified in the `logits` parameter documentation.
+
         Examples
         --------
         >>> logits = np.array([
@@ -104,12 +110,6 @@ class MaxMovingWindowPooler(_BasePooler):
                [ 3.,  2.],
                [ 5.,  1.],
                [-5.,  0.]])
-
-        Returns
-        -------
-        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
-            Largest logits associated with each input token, where `B`, `N` and
-            `C` are as specified in the `logits` parameter documentation.
         """
         d_batch, d_window_size, d_n_cls = logits.shape
 
@@ -161,6 +161,13 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
         window_shift_size : int
             Shift size (in subword tokens) between two adjacent windows.
 
+        Returns
+        -------
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
+            Largest logits associated with each input token, and for all classes except
+            the 'No-op' class, that receives the minimal logits instead. `B`, `N` and `C`
+            are as specified in the `logits` parameter documentation.
+
         Examples
         --------
         >>> logits = np.array([
@@ -175,13 +182,6 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
                [-2.,  2.],
                [-3.,  1.],
                [-5.,  0.]])
-
-        Returns
-        -------
-        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
-            Largest logits associated with each input token, and for all classes except
-            the 'No-op' class, that receives the minimal logits instead. `B`, `N` and `C`
-            are as specified in the `logits` parameter documentation.
         """
         d_batch, d_window_size, d_n_cls = logits.shape
 
@@ -233,6 +233,12 @@ class SumMovingWindowPooler(_BasePooler):
         window_shift_size : int
             Shift size (in subword tokens) between two adjacent windows.
 
+        Returns
+        -------
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
+            Sum of logits associated with each input token, where `B`, `N` and `C`
+            are as specified in the `logits` parameter documentation.
+
         Examples
         --------
         >>> logits = np.array([
@@ -247,12 +253,6 @@ class SumMovingWindowPooler(_BasePooler):
                [ 1.,  2.],
                [ 2., -2.],
                [-5.,  0.]])
-
-        Returns
-        -------
-        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
-            Sum of logits associated with each input token, where `B`, `N` and `C`
-            are as specified in the `logits` parameter documentation.
         """
         d_batch, d_window_size, d_n_cls = logits.shape
 
@@ -311,6 +311,12 @@ class GaussianMovingWindowPooler(_BasePooler):
         window_shift_size : int
             Shift size (in subword tokens) between two adjacent windows.
 
+        Returns
+        -------
+        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
+            Weighted sum of logits associated with each input token, where `B`, `N`
+            and `C` are as specified in the `logits` parameter documentation.
+
         Examples
         --------
         >>> logits = np.array([
@@ -326,18 +332,12 @@ class GaussianMovingWindowPooler(_BasePooler):
                [ 3.665, -2.286],
                [-0.54 ,  0.   ]])
 
-        Returns
-        -------
-        pooled_logits : npt.NDArray[np.float64] of shape (B + (N - 1) * window_shift_size, C)
-            Weighted sum of logits associated with each input token, where `B`, `N`
-            and `C` are as specified in the `logits` parameter documentation.
-
         Notes
         -----
         The total sum of weights is different than 1.0 due to the discrete nature of the
         problem, altought it is fairly next to it (~0.9973) for any window size larger than
-        2. This numeric difference should not affect the segmentation output, since every
-        logit associated with a single token will remain in the same scale.
+        2. This numeric difference should not affect the segmentation output, since all
+        logits associated with the same token will remain in the same scale.
         """
         d_batch, d_window_size, d_n_cls = logits.shape
 
