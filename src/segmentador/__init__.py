@@ -1,5 +1,5 @@
 # pylint: disable='missing-module-docstring'
-from .segmentador import *
+from .segmenter import *
 
 try:
     import importlib.metadata as importlib_metadata
