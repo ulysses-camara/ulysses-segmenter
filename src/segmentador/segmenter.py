@@ -17,6 +17,7 @@ from . import poolers
 class _BaseSegmenter:
     """Base class for Segmenter models."""
 
+    NUM_CLASSES = 4
     RE_BLANK_SPACES = regex.compile(r"\s+")
     RE_JUSTIFICATIVA = regex.compile(
         "|".join(
@@ -354,9 +355,10 @@ class _BaseSegmenter:
             ignored while computing the loss function during training.
             Only returned if `return_labels=True`.
 
-        logits : npt.NDArray[np.float64] of shape (N, 4)
+        logits : npt.NDArray[np.float64] of shape (N, C)
             Predicted logits for each token, where `N` is the length of tokenized
-            document (in subword units).
+            document (in subword units), and `C` is equal to the `Segmenter.NUM_CLASSES`
+            attribute.
             Only returned if `return_logits=True`.
         """
         if batch_size < 1:
@@ -465,7 +467,7 @@ class _BaseSegmenter:
         )
 
         label_ids = label_ids[:num_tokens]
-        logits = logits.reshape(-1, 4)
+        logits = logits.reshape(-1, self.NUM_CLASSES)
         logits = logits[:num_tokens, :]
 
         assert label_ids.size == logits.shape[0]
@@ -745,7 +747,7 @@ class LSTMSegmenter(_BaseSegmenter):
             lstm_num_layers=lstm_num_layers,
             num_embeddings=self._tokenizer.vocab_size,
             pad_id=int(self._tokenizer.pad_token_id or 0),
-            num_classes=4,
+            num_classes=self.NUM_CLASSES,
         )
 
         state_dict = torch.load(uri_model)
