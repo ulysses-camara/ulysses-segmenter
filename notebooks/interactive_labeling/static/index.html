@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <title>Interactive token-wise label refinery</title>
+    <link href="style.css" rel="stylesheet" type="text/css"></link>
+  </head>
+
+  <body>
+    <header>
+      <div class="column" style="text-align: center;">
+        <h2>Labels</h2>
+
+        <span class="hoverable unselectable label-box-commands" id="box-label-prev">&#8592; / A</span>
+        <span class="hoverable unselectable label-box" cls-id="0">[0]: No-op       </span>
+        <span class="hoverable unselectable label-box" cls-id="1">[1]: Segment     </span>
+        <span class="hoverable unselectable label-box" cls-id="2">[2]: Noise start </span>
+        <span class="hoverable unselectable label-box" cls-id="3">[3]: Noise end   </span>
+        <span class="hoverable unselectable label-box-commands" id="box-label-next">&#8594; / D</span>
+      </div>
+
+      <div class="column">
+        <h2>Statistics</h2>
+        <ul>
+          <li>Total modified tokens: <span id="total-modified-tokens"></span></li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="unselectable segment-board">
+      <h2>Segment board</h2>
+    </div>
+
+    <div class="action-board">
+      <h2>Action board</h2>
+      <button class="hoverable" id="button-save">Save &amp; Finish</button>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

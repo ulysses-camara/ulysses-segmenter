@@ -1,0 +1,142 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #222222;
+  color: white;
+  max-width: 100%;
+}
+
+h2 {
+  font-size: 18px;
+  font-style: italic;
+  margin-top: 32px;
+  background-color: #333333;
+  text-align: left;
+}
+
+.label-box {
+  margin-right: 12px;
+  margin-left: 12px;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.label-box-commands {
+  margin-right: 32px;
+  color: #AAAAAA;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.unselectable {
+  user-select: none;
+}
+
+.highlighted-label-box {
+  font-weight: 600;
+  color: yellow;
+}
+
+.token {
+  margin-bottom: 12px;
+  margin-left: 6px;
+  padding: 4px;
+  border-width: thin;
+  border-style: dotted;
+  border-color: #CCCCCC;
+  border-radius: 4px;
+  font-size: 16px;
+  display: inline-block;
+}
+
+.segment-board {
+  width: 100%;
+  clear: left;
+  padding-top: 20px;
+  overflow: visible;
+  max-width: 100%;
+}
+
+.segment-start-rule {
+  width: 100%;
+  margin-bottom: 20px;
+  margin-top: 32px;
+  color: #888888;
+  border-style: solid;
+}
+
+.segment-start-numbering {
+  margin-left: 8px;
+  font-size: 18px;
+  margin-right: 8px;
+  color: #2671D4;
+}
+
+.column {
+  width: 50%;
+  float: left;
+  padding: 8px;
+}
+
+.column ul {
+  margin-left: 0px;
+  padding-left: 4px;
+}
+
+.column li {
+  list-style: none;
+  padding-left: 4px;
+}
+
+.action-board {
+  font-size: 30px;
+  text-align: center;
+  padding-top: 30px;
+}
+
+.hoverable {
+  cursor: pointer;
+}
+
+.hoverable:disabled {
+  cursor: default;
+}
+
+button {
+  color: white;
+  text-decoration: none;
+  font-size: 20px;
+  border-radius: 4px;
+  text-align: center;
+  padding: 8px 32px;
+  margin-top: 8px;
+  margin-right: 32px;
+  margin-left: 32px;
+  background-color: #2A2A2A;
+  border-style: dashed;
+}
+
+button:hover {
+  background-color: #3A3A3A;
+  border-style: solid;
+}
+
+button:disabled {
+  background-color: #222222;
+  border-style: solid;
+  border-color: #111111;
+  color: gray;
+}
+
+#button-save {
+  border-color: rgb(153, 35, 27);
+  margin-bottom: 32px;
+}
+
+#button-save:disabled {
+  border-color: #111111;
+}
