@@ -3,11 +3,11 @@ const fetch_url = "http://127.0.0.1:5000/refinery-data-transfer";
 
 const input_uri = "input_content.tsv";
 
-const htmlModTokens = d3.select("#total-modified-tokens");
+const htmlModTokens = d3.select("#value-total-modified-tokens");
   
 let selectedClass = 1;
 let totalModifiedTokens = 0;
-
+let marginHeatmapEnabled = true;
 
 function fn_eventHandlerKeyup(event) {
   const keyName = event.key.toLowerCase();
@@ -81,6 +81,19 @@ function fn_saveModifications() {
 }
 
 
+function fn_setTokenBackgroundColor() {
+  const node = d3.select(this);
+  if (marginHeatmapEnabled && node.attr("original-label") != -100 && node.attr("margin")) {
+    const margin = +node.attr("margin");
+    const redValue =  (1 - margin) * 255 + margin * 34;
+    node.style("background-color", "rgb(" + redValue + ", 34, 34)");
+  } else {
+    node.style("background-color", "#222222");
+  }
+  return node.style("background-color");
+}
+
+
 function fn_highlightSelectedClass() { 
   /* Label section */
   d3.selectAll(".label-box")
@@ -106,7 +119,7 @@ function fn_setTokensTextColor(tokens) {
   }
 
   tokens.style("color", function() {
-    return d3.select(this).attr("label") >= 2 ? "red" : "white";
+    return d3.select(this).attr("label") >= 2 ? "rgb(180, 0, 255)" : "white";
   });
 }
 
@@ -175,7 +188,6 @@ d3.selectAll(".label-box, .label-box-commands")
     d3.select(this).style("background-color", "#222222");
   });
 
-
 fn_highlightSelectedClass();
 
 /* Segment section */
@@ -183,25 +195,26 @@ fetch(fetch_url)
   .then(function(response) {return response.json(); })
   .then(function(data) {
   const totalTokens = data.length;
-  const domSegmentBoard = d3.select(".segment-board");
+  const domSegmentBoard = d3.select("#segment-board");
   const domP = domSegmentBoard.selectAll("span")
-    .data(data)
-    .text(function(d) { return d["token"]; });
+    .data(data);
   
   domP.enter().append("span")
     .text(function(d) { return d["token"]; })
     .classed("token", true)
     .classed("hoverable", true)
     .attr("original-label", function(d) { return d["label"]; })
-    .attr("label", function(d) { return d3.select(this).attr("original-label"); })
+    .attr("margin", function(d) { return d["margin"]; })
+    .attr("label", function() { return d3.select(this).attr("original-label"); })
     .attr("token-index", function(_, i) { return i; })
+    .style("background-color", fn_setTokenBackgroundColor)
     .on("mouseover", function() {
       const node = d3.select(this);
       if (!node.attr("disabled")) {
         node.style("background-color", "gray");
       }
     })
-    .on("mouseout", function() { d3.select(this).style("background-color", "#222222"); })
+    .on("mouseout", fn_setTokenBackgroundColor)
     .on("click", function() {
       const node = d3.select(this);
   
@@ -244,19 +257,63 @@ fetch(fetch_url)
           .style("border-color", "#CCCCCC")
           .style("border-width", "thin")
           .style("border-style", "dotted");
-  
       } else {
-
         node
           .style("border-color", "#FCF65E")
           .style("border-style", "solid")
           .style("border-width", "1.5px");
       }
-  
+
       fn_setTokensTextColor(node);
     });
   
   domP.exit().remove();
+
+  if ("margin" in data[0]) {
+    let minMargin = 1.0;
+    for (let i = 0; i < data.length; i++) {
+      if (data[i]["label"] != -100) {
+        minMargin = Math.min(minMargin, +data[i]["margin"]);
+      }
+    }
+
+    d3.select("#stat-board")
+      .select("ul")
+      .append("li")
+        .text("Minimal margin: ")
+        .attr("id", "minimal-margin")
+        .append("span")
+          .attr("id", "value-minimal-margin")
+          .text(Math.round(10000 * minMargin) / 100 + "%");
+
+    const barHeight = 6;
+    const barWidth = 320;
+    const barLeftShift = 32;
+
+    const svgContainer = d3.select("#minimal-margin")
+      .append("svg")
+        .attr("id", "svg-minimal-margin")
+        .attr("width", barLeftShift + barWidth)
+        .attr("height", barHeight);
+
+    svgContainer.append("rect")
+      .attr("x", barLeftShift)
+      .attr("y", 0)
+      .attr("width", barWidth)
+      .attr("height", barHeight)
+      .style("fill", "white");
+
+    svgContainer.append("rect")
+      .attr("x", barLeftShift)
+      .attr("y", 0)
+      .attr("width", minMargin * barWidth)
+      .attr("height", barHeight)
+      .style("fill", function() {
+        if (minMargin >= 0.70) { return "green"; }
+        if (minMargin >= 0.30) { return "orange"; }
+        return "red";
+      });
+  }
 
   d3.selectAll(".token")
     .filter(function() { return d3.select(this).attr("label") == -100; })
