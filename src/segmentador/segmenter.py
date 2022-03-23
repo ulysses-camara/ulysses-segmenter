@@ -1,6 +1,7 @@
 """Legal text segmenter."""
 import typing as t
 import warnings
+import collections
 
 import regex
 import transformers
@@ -66,7 +67,7 @@ class _BaseSegmenter:
 
     def __call__(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[list[str], tuple[list[str], list[str]]]:
+    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
         return self.segment_legal_text(*args, **kwargs)
 
     def __repr__(self) -> str:
@@ -233,14 +234,68 @@ class _BaseSegmenter:
 
         return minibatches
 
+    def _generate_segments_from_labels(
+        self,
+        tokens: transformers.tokenization_utils_base.BatchEncoding,
+        num_tokens: int,
+        label_ids: npt.NDArray[np.int32],
+    ) -> list[str]:
+        """Convert predicted labels and subword tokens to text segments."""
+        seg_cls_id: int
+
+        try:
+            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
+
+        except AttributeError:
+            seg_cls_id = 1
+
+        segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
+        segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
+
+        segs: list[str] = []
+        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].numpy().ravel()
+
+        for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
+            split_ = np_token_ids[i:i_next]
+            seg = self._tokenizer.decode(split_, skip_special_tokens=True)
+            if seg:
+                segs.append(seg)
+
+        return segs
+
+    @staticmethod
+    def _pack_results(
+        keys: list[str], vals: list[t.Any], inclusion: list[bool]
+    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
+        """Build result tuple (if more than one value) or return segment list."""
+        ret_keys: list[str] = []
+        ret_vals: list[t.Any] = []
+
+        for key, val, inc in zip(keys, vals, inclusion):
+            if not inc:
+                continue
+
+            ret_keys.append(key)
+            ret_vals.append(val)
+
+        if len(ret_vals) == 1:
+            segs: list[str] = ret_vals[0]
+            return segs
+
+        ret_type = collections.namedtuple("SegmentationResults", ret_keys)  # type: ignore
+
+        return ret_type(*ret_vals)
+
     def segment_legal_text(
         self,
         text: str,
-        return_justificativa: bool = False,
         batch_size: int = 32,
         moving_window_size: int = 1024,
         window_shift_size: t.Union[float, int] = 0.5,
-    ) -> t.Union[list[str], tuple[list[str], list[str]]]:
+        return_justificativa: bool = False,
+        return_labels: bool = False,
+        return_logits: bool = False,
+    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
         """Segment legal `text`.
 
         The pretrained model support texts up to 1024 subwords. Texts larger than this
@@ -254,10 +309,6 @@ class _BaseSegmenter:
         ----------
         text : str
             Legal text to be segmented.
-
-        return_justificativa : bool, default=False
-            If True, return a tuple in the format (content, justificativa).
-            If False, return only `content`.
 
         batch_size : int, default=32
             Maximum batch size feed document blocks in parallel to model. Higher values
@@ -279,6 +330,15 @@ class _BaseSegmenter:
             `inference_pooling_operation` in Segmenter model initialization, and the final
             prediction for each token is derived from the combined logits.
 
+        return_justificativa : bool, default=False
+            If True, return contents from the 'justificativa' block from document.
+
+        return_labels : bool, default=False
+            If True, return label list for each token.
+
+        return_logits : bool, default=False
+            If True, return logit array for each token.
+
         Returns
         -------
         preprocessed_text : list[str]
@@ -287,6 +347,17 @@ class _BaseSegmenter:
         justificativa_block : list[str]
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
+
+        labels : npt.NDArray[np.int32] of shape (N,)
+            Predicted labels for each token, where `N` is the length of tokenized
+            document (in subword units). The `-100` labels is a special legal, and
+            ignored while computing the loss function during training.
+            Only returned if `return_labels=True`.
+
+        logits : npt.NDArray[np.float64] of shape (N, 4)
+            Predicted logits for each token, where `N` is the length of tokenized
+            document (in subword units).
+            Only returned if `return_logits=True`.
         """
         if batch_size < 1:
             raise ValueError(f"'batch_size' parameter must be >= 1 (got {batch_size=}).")
@@ -306,7 +377,7 @@ class _BaseSegmenter:
             text, justificativa = preproc_result
 
         else:
-            text = preproc_result
+            text, justificativa = preproc_result, None
 
         try:
             max_moving_window_size_allowed = int(
@@ -389,30 +460,23 @@ class _BaseSegmenter:
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
-        seg_cls_id: int
+        segs = self._generate_segments_from_labels(
+            tokens=tokens, num_tokens=num_tokens, label_ids=label_ids
+        )
 
-        try:
-            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
+        label_ids = label_ids[:num_tokens]
+        logits = logits.reshape(-1, 4)
+        logits = logits[:num_tokens, :]
 
-        except AttributeError:
-            seg_cls_id = 1
+        assert label_ids.size == logits.shape[0]
 
-        segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
-        segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
+        ret = self._pack_results(
+            keys=["segments", "justificativa", "labels", "logits"],
+            vals=[segs, justificativa, label_ids, logits],
+            inclusion=[True, return_justificativa, return_labels, return_logits],
+        )
 
-        segs: list[str] = []
-        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].numpy().ravel()
-
-        for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
-            split_ = np_token_ids[i:i_next]
-            seg = self._tokenizer.decode(split_, skip_special_tokens=True)
-            if seg:
-                segs.append(seg)
-
-        if return_justificativa:
-            return segs, justificativa
-
-        return segs
+        return ret
 
 
 class BERTSegmenter(_BaseSegmenter):
