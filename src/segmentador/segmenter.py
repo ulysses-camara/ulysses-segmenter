@@ -289,7 +289,7 @@ class _BaseSegmenter:
 
     def segment_legal_text(
         self,
-        text: str,
+        text: t.Union[str, dict[str, list[int]]],
         batch_size: int = 32,
         moving_window_size: int = 1024,
         window_shift_size: t.Union[float, int] = 0.5,
@@ -308,7 +308,7 @@ class _BaseSegmenter:
 
         Parameters
         ----------
-        text : str
+        text : str or dict[str, list[int]]
             Legal text to be segmented.
 
         batch_size : int, default=32
@@ -369,18 +369,6 @@ class _BaseSegmenter:
                 f"'moving_window_size' parameter must be >= 1 (got {moving_window_size=})."
             )
 
-        preproc_result = self.preprocess_legal_text(
-            text,
-            return_justificativa=return_justificativa,
-            regex_justificativa=self.regex_justificativa,
-        )
-
-        if isinstance(preproc_result, tuple):
-            text, justificativa = preproc_result
-
-        else:
-            text, justificativa = preproc_result, None
-
         try:
             max_moving_window_size_allowed = int(
                 self._model.config.max_position_embeddings  # type: ignore
@@ -422,15 +410,36 @@ class _BaseSegmenter:
             )
             window_shift_size = moving_window_size
 
-        tokens = self._tokenizer(
-            text,
-            padding=False,
-            truncation=False,
-            return_tensors="pt",
-            return_length=True,
-        )
+        if isinstance(text, str):
+            preproc_result = self.preprocess_legal_text(
+                text,
+                return_justificativa=return_justificativa,
+                regex_justificativa=self.regex_justificativa,
+            )
 
-        num_tokens = tokens.pop("length")
+            if isinstance(preproc_result, tuple):
+                text, justificativa = preproc_result
+
+            else:
+                text, justificativa = preproc_result, None
+
+            tokens = self._tokenizer(
+                text,
+                padding=False,
+                truncation=False,
+                return_tensors="pt",
+                return_length=True,
+            )
+
+            num_tokens = tokens.pop("length")
+        else:
+
+            tokens = transformers.tokenization_utils_base.BatchEncoding({
+                key: val if torch.is_tensor(val) else torch.tensor(val)
+                for key, val in text.items()
+            })
+            justificativa = None
+            num_tokens = len(tokens["input_ids"])
 
         minibatches = self._build_minibatches(
             tokens=tokens,
