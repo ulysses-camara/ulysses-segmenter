@@ -7,12 +7,11 @@ import flask_cors
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
 
-data = [
-    {"token": "foo", "label": "0"},
-    {"token": "bar", "label": "1"},
-    {"token": "baz", "label": "2"},
-    {"token": "quz", "label": "0"},
-]
+data = list(map(lambda item: {"token": item[0], "label": item[1]}, zip(
+    "Please use the Python API to send (and retrieve) "
+    "data to this front-end ('python_api.py' module).".split(),
+    9 * [0] + [1] + 3 * [0] + [2, 3],
+)))
 
 modified: list[bool] = []
 
