@@ -17,8 +17,8 @@ h2 {
 }
 
 .label-box {
-  margin-right: 12px;
-  margin-left: 12px;
+  margin-right: 5px;
+  margin-left: 5px;
   font-size: 16px;
   padding: 8px 16px;
   border-radius: 4px;
@@ -53,7 +53,7 @@ h2 {
   display: inline-block;
 }
 
-.segment-board {
+#segment-board {
   width: 100%;
   clear: left;
   padding-top: 20px;
@@ -92,7 +92,7 @@ h2 {
   padding-left: 4px;
 }
 
-.action-board {
+#action-board {
   font-size: 30px;
   text-align: center;
   padding-top: 30px;
