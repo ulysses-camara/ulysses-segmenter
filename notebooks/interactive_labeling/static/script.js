@@ -200,7 +200,7 @@ fetch(fetch_url)
     .data(data);
   
   domP.enter().append("span")
-    .text(function(d) { return d["token"]; })
+    .text(function(d) { return d["token"].replace("##", "᠊"); })
     .classed("token", true)
     .classed("hoverable", true)
     .attr("original-label", function(d) { return d["label"]; })
