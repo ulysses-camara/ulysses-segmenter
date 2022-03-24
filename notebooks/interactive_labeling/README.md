@@ -2,9 +2,11 @@
 This is an *ad-hoc* front-end tool for legal text segmentation label adjustment.
 
 ---
+
 <img src="./images/refinery_img_01.png" alt="Front-end illustration 01."></img>
 <p align="center">...</p>
 <img src="./images/refinery_img_02.png" alt="Front-end illustration 02."></img>
+
 ---
 
 ### Usage:
