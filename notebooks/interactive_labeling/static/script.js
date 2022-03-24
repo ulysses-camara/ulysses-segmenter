@@ -143,12 +143,59 @@ function fn_insertSegmentStartElements(elements) {
   newElements
     .append("hr")
     .classed("segment-start-rule", true);
-  
+
   newElements
     .append("span")
     .classed("segment-start-numbering", true);
 }
 
+function fn_setTokenNewLabel(node, newLabel, totalTokens) {
+  if (node.attr("disabled")) { return; }
+
+  const prevLabel = node.attr("label");
+
+  if (newLabel == node.attr("label")) {
+    node.attr("label", 0);
+  } else {
+    node.attr("label", newLabel);
+  }
+
+  if (prevLabel == 1 && node.attr("label") != 1) {
+    d3.select("#segment-start-" + node.attr("token-index")).remove();
+  }
+
+  if (prevLabel != 1 && node.attr("label") == 1) {
+    fn_insertSegmentStartElements(node);
+  }
+
+  if (prevLabel == 1 || node.attr("label") == 1) {
+    fn_updateSegmentNumbering();
+  }
+
+  if (prevLabel != node.attr("label")) {
+    if (node.attr("label") == node.attr("original-label")) {
+      totalModifiedTokens -= 1;
+    } else if (prevLabel == node.attr("original-label")) {
+      totalModifiedTokens += 1;
+    }
+
+    fn_updateTotalModifiedTokens(totalTokens);
+  }
+
+  if (node.attr("label") == node.attr("original-label")) {
+    node
+      .style("border-color", "#CCCCCC")
+      .style("border-width", "thin")
+      .style("border-style", "dotted");
+  } else {
+    node
+      .style("border-color", "#FCF65E")
+      .style("border-style", "solid")
+      .style("border-width", "1.5px");
+  }
+
+  fn_setTokensTextColor(node);
+}
 
 d3.selectAll(".label-box")
   .on("click", function() {
@@ -199,7 +246,7 @@ fetch(fetch_url_data)
   const domSegmentBoard = d3.select("#segment-board");
   const domP = domSegmentBoard.selectAll("span")
     .data(data);
-  
+
   domP.enter().append("span")
     .text(function(d) { return d["token"].replace("##", "᠊"); })
     .classed("token", true)
@@ -216,58 +263,15 @@ fetch(fetch_url_data)
       }
     })
     .on("mouseout", fn_setTokenBackgroundColor)
-    .on("click", function() {
+    .on("contextmenu", function(e) {
+      e.preventDefault();
       const node = d3.select(this);
-  
-      if (node.attr("disabled")) {
-        return;
-      }
-  
-      const prevLabel = node.attr("label");
-  
-      if (selectedClass == node.attr("label")) {
-        node.attr("label", 0);
-      } else {
-        node.attr("label", selectedClass);
-      }
-  
-      if (prevLabel == 1 && node.attr("label") != 1) {
-        d3.select("#segment-start-" + node.attr("token-index")).remove();
-      }
-  
-      if (prevLabel != 1 && node.attr("label") == 1) {
-        fn_insertSegmentStartElements(node);
-      }
-  
-      if (prevLabel == 1 || node.attr("label") == 1) {
-        fn_updateSegmentNumbering();
-      }
-  
-      if (prevLabel != node.attr("label")) {
-        if (node.attr("label") == node.attr("original-label")) {
-          totalModifiedTokens -= 1;
-        } else if (prevLabel == node.attr("original-label")) {
-          totalModifiedTokens += 1;
-        }
-  
-        fn_updateTotalModifiedTokens(totalTokens);
-      }
-  
-      if (node.attr("label") == node.attr("original-label")) {
-        node
-          .style("border-color", "#CCCCCC")
-          .style("border-width", "thin")
-          .style("border-style", "dotted");
-      } else {
-        node
-          .style("border-color", "#FCF65E")
-          .style("border-style", "solid")
-          .style("border-width", "1.5px");
-      }
-
-      fn_setTokensTextColor(node);
+      fn_setTokenNewLabel(node, node.attr("original-label"), totalTokens)
+    })
+    .on("click", function() {
+      fn_setTokenNewLabel(d3.select(this), selectedClass, totalTokens);
     });
-  
+
   domP.exit().remove();
 
   if ("margin" in data[0]) {
