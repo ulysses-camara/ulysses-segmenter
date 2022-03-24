@@ -14,6 +14,7 @@ data = list(map(lambda item: {"token": item[0], "label": item[1]}, zip(
 )))
 
 modified: list[bool] = []
+need_refresh: bool = False
 
 
 @app.route("/refinery-data-transfer", methods=["GET", "POST"])
@@ -25,6 +26,21 @@ def data_transfer():
 
     get_response = flask.jsonify(data)
     get_response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return get_response
+
+
+@app.route("/call-for-refresh", methods=["GET", "POST"])
+def call_for_refresh():
+    global need_refresh
+
+    if flask.request.method == "POST":
+        need_refresh = True
+        return ("OK", 200)
+
+    get_response = flask.jsonify({"need_refresh": need_refresh})
+    get_response.headers.add('Access-Control-Allow-Origin', '*')
+    need_refresh = False
 
     return get_response
 

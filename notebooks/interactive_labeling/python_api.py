@@ -2,6 +2,7 @@ import os
 import typing as t
 import json as json_package
 import collections
+import warnings
 
 import numpy as np
 import numpy.typing as npt
@@ -53,6 +54,20 @@ def open_example(
 
     global DATA_WAS_SENT
     DATA_WAS_SENT = True
+
+    rep = requests.post(
+        os.path.join(f"http://localhost:{FLASK_PORT}/", "call-for-refresh"),
+        json=data,
+    )
+
+    if rep.status_code != 200:
+        warnings.warn(
+            message=(
+                "Data was sent to front-end, but auto-refresh could not be triggered. "
+                "You need to reload manually."
+            ),
+            category=UserWarning,
+        )
 
 
 def retrieve_refined_example(return_modified_list: bool = True) -> dict[str, list]:

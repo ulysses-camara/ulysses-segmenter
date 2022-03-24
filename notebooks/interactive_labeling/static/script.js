@@ -1,10 +1,11 @@
 /* Setup */
-const fetch_url = "http://127.0.0.1:5000/refinery-data-transfer";
+const fetch_url_data = "http://127.0.0.1:5000/refinery-data-transfer";
+const fetch_url_refresh = "http://127.0.0.1:5000/call-for-refresh";
 
 const input_uri = "input_content.tsv";
 
 const htmlModTokens = d3.select("#value-total-modified-tokens");
-  
+
 let selectedClass = 1;
 let totalModifiedTokens = 0;
 let marginHeatmapEnabled = true;
@@ -68,7 +69,7 @@ function fn_saveModifications() {
     body: JSON.stringify(tokensData),
   };
 
-  fetch(fetch_url, post_response)
+  fetch(fetch_url_data, post_response)
     .then(function (response) { return response.status; })
     .then(function (status_code) {
       if (status_code == 200) {
@@ -191,7 +192,7 @@ d3.selectAll(".label-box, .label-box-commands")
 fn_highlightSelectedClass();
 
 /* Segment section */
-fetch(fetch_url)
+fetch(fetch_url_data)
   .then(function(response) {return response.json(); })
   .then(function(data) {
   const totalTokens = data.length;
@@ -339,3 +340,14 @@ fetch(fetch_url)
   fn_setTokensTextColor();
   fn_updateTotalModifiedTokens(totalTokens);
 });
+
+
+const interval = setInterval(function() {
+  fetch(fetch_url_refresh)
+    .then((response) => response.json())
+    .then((response_content) => {
+      if (response_content["need_refresh"]) {
+        window.location.reload();
+      }
+    });
+}, 5000);
