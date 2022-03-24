@@ -1,5 +1,5 @@
 ## Interactive label refinery
-This is an *ad-hoc* front-end tool for legal text segmentation label adjustment.
+This is an *ad-hoc* front-end tool for legal text segmentation label adjustment. It is used in [6_refine_labels_interactively.ipynb notebook](../6_refine_labels_interactively.ipynb) to curate a test subset.
 
 ---
 
