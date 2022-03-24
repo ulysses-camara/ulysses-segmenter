@@ -9,11 +9,16 @@ body {
 }
 
 h2 {
+  clear: both;
   font-size: 18px;
   font-style: italic;
   margin-top: 32px;
   background-color: #333333;
   text-align: left;
+}
+
+.column h2 {
+  margin-top: 4px;
 }
 
 .label-box {
@@ -79,7 +84,8 @@ h2 {
 .column {
   width: 50%;
   float: left;
-  padding: 8px;
+  padding-bottom: 8px;
+  padding-right: 8px;
 }
 
 .column ul {
@@ -139,4 +145,30 @@ button:disabled {
 
 #button-save:disabled {
   border-color: #111111;
+}
+
+#label-help-menu {
+  margin-top: 16px;
+  padding-left: 8px;
+  margin-left: 16px;
+  text-align: left;
+}
+
+#label-help-menu li {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: #AAAAAA;
+  font-size: 16px;
+}
+
+#hint-message-box {
+  width: 100%;
+  color: #AAAAAA;
+  font-size: 14px;
+  margin-top: 32px;
+}
+
+#hint-message-box a:link, #hint-message-box a:visited {
+  text-decoration: none;
+  color: #AAAAAA;
 }
