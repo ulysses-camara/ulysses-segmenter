@@ -2,6 +2,10 @@
 This is an *ad-hoc* front-end tool for legal text segmentation label adjustment.
 
 ---
+<img src="./images/refinery_img_01.png" alt="Front-end illustration 01."></img>
+<p align="center">...</p>
+<img src="./images/refinery_img_02.png" alt="Front-end illustration 02."></img>
+---
 
 ### Usage:
 The usage of this tool is simple. No need to install any dependency (the only external dependency of this tool is [D3](https://d3js.org/), which will be set-up automatically).
