@@ -16,6 +16,8 @@ export FLASK_APP=app.py
 flask run
 ```
 
+Open the front-end in your web browser in the http://localhost:5000 address.
+
 Then, import the package in your Jupyter Notebook:
 ```python
 import interactive_labeling
