@@ -95,7 +95,7 @@ function fn_setTokenBackgroundColor() {
 }
 
 
-function fn_highlightSelectedClass() { 
+function fn_highlightSelectedClass() {
   /* Label section */
   d3.selectAll(".label-box")
     .each(function(d, i) {
@@ -333,16 +333,22 @@ fetch(fetch_url_data)
     .filter(function(d, i) {
       return i == 0 || d3.select(this).attr("label") == 1;
     });
-  
+
   fn_insertSegmentStartElements(htmlSegStartTokens);
-  
+
   d3.select("#button-save")
     .on("click", fn_saveModifications);
-  
+
   /* Setup */
   fn_updateSegmentNumbering();
   fn_setTokensTextColor();
   fn_updateTotalModifiedTokens(totalTokens);
+
+  d3.select("#segment-start-0")
+    .selectChild(".segment-start-rule")
+      .style("margin-top", "0px")
+      .style("margin-bottom", "0px")
+      .style("color", "#222222");
 });
 
 
