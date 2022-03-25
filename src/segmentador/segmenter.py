@@ -283,6 +283,9 @@ class _BaseSegmenter:
             segs: list[str] = ret_vals[0]
             return segs
 
+        # Note: pylint config below is due to a weird, possible buggy, error that only
+        # occurs with Python 3.9 @ GitHub.
+        # pylint: disable=unused-variable
         ret_type = collections.namedtuple("SegmentationResults", ret_keys)  # type: ignore
 
         return ret_type(*ret_vals)
