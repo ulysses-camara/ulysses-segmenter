@@ -71,6 +71,8 @@ warn_return_any = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 warn_incomplete_stub = true
+non_interactive = true
+install_types = true
 
 [tool.pytest.ini_options]
 addopts = """
@@ -120,6 +122,7 @@ commands =
 basepython = python3.9
 deps = mypy
 commands =
+	python -m mypy --install-types --non-interactive src/
 	python -m mypy src/
 
 [testenv:pylint]
