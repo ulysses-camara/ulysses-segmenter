@@ -13,7 +13,7 @@ import numpy.typing as npt
 import requests
 
 
-FLASK_PORT = os.environ.get("FLASK_PORT", 5000)
+FLASK_PORT = os.environ.get("FLASK_PORT", 6767)
 DATA_WAS_SENT = False
 
 
