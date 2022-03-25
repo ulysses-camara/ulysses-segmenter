@@ -1,6 +1,8 @@
 /* Setup */
-const fetch_url_data = "http://127.0.0.1:5000/refinery-data-transfer";
-const fetch_url_refresh = "http://127.0.0.1:5000/call-for-refresh";
+const FLASK_PORT = 6767;
+
+const fetch_url_data = "http://127.0.0.1:" + FLASK_PORT + "/refinery-data-transfer";
+const fetch_url_refresh = "http://127.0.0.1:" + FLASK_PORT + "/call-for-refresh";
 
 const input_uri = "input_content.tsv";
 
