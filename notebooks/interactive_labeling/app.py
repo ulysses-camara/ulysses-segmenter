@@ -7,11 +7,16 @@ import flask_cors
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
 
-data = list(map(lambda item: {"token": item[0], "label": item[1]}, zip(
-    "Please use the Python API to send (and retrieve) "
-    "data to this front-end ('python_api.py' module).".split(),
-    9 * [0] + [1] + 3 * [0] + [2, 3],
-)))
+data = list(
+    map(
+        lambda item: {"token": item[0], "label": item[1]},
+        zip(
+            "Please use the Python API to send (and retrieve) "
+            "data to this front-end ('python_api.py' module).".split(),
+            9 * [0] + [1] + 3 * [0] + [2, 3],
+        ),
+    )
+)
 
 modified: list[bool] = []
 need_refresh: bool = False
@@ -25,7 +30,7 @@ def data_transfer():
         return ("Ok", 200)
 
     get_response = flask.jsonify(data)
-    get_response.headers.add('Access-Control-Allow-Origin', '*')
+    get_response.headers.add("Access-Control-Allow-Origin", "*")
 
     return get_response
 
@@ -39,7 +44,7 @@ def call_for_refresh():
         return ("OK", 200)
 
     get_response = flask.jsonify({"need_refresh": need_refresh})
-    get_response.headers.add('Access-Control-Allow-Origin', '*')
+    get_response.headers.add("Access-Control-Allow-Origin", "*")
     need_refresh = False
 
     return get_response
