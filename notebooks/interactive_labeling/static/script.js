@@ -91,7 +91,7 @@ function fn_setTokenBackgroundColor() {
     const redValue =  (1 - margin) * 255 + margin * 34;
     node.style("background-color", "rgb(" + redValue + ", 34, 34)");
   } else {
-    node.style("background-color", "#222222");
+    node.style("background-color", "#232526");
   }
   return node.style("background-color");
 }
@@ -235,7 +235,7 @@ d3.selectAll(".label-box, .label-box-commands")
     }
   })
   .on("mouseout", function() {
-    d3.select(this).style("background-color", "#222222");
+    d3.select(this).style("background-color", "#232526");
   });
 
 fn_highlightSelectedClass();
@@ -350,7 +350,7 @@ fetch(fetch_url_data)
     .selectChild(".segment-start-rule")
       .style("margin-top", "0px")
       .style("margin-bottom", "0px")
-      .style("color", "#222222");
+      .style("color", "#232526");
 });
 
 const intervalInMilliseconds = 5000;

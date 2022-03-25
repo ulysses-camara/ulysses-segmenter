@@ -3,7 +3,7 @@
 }
 
 body {
-  background-color: #222222;
+  background-color: #232526;
   color: white;
   max-width: 100%;
 }
@@ -132,7 +132,7 @@ button:hover {
 }
 
 button:disabled {
-  background-color: #222222;
+  background-color: #232526;
   border-style: solid;
   border-color: #111111;
   color: gray;
@@ -163,14 +163,16 @@ button:disabled {
 
 #hint-message-box {
   width: 100%;
-  color: #AAAAAA;
+  color: #888888;
   font-size: 14px;
   margin-top: 32px;
+  text-align: left;
+  margin-bottom: 8px;
 }
 
 #hint-message-box a:link, #hint-message-box a:visited {
   text-decoration: none;
-  color: #AAAAAA;
+  color: #888888;
 }
 
 #refresh-countdown-panel {
