@@ -1,3 +1,7 @@
+"""Jupyter Notebook API to the interactive label refinery.
+
+Send data between Jupyter Notebook and front-end interface.
+"""
 import os
 import typing as t
 import json as json_package
@@ -9,23 +13,32 @@ import numpy.typing as npt
 import requests
 
 
-os.environ.get("FLASK_PORT", 5000)
+FLASK_PORT = os.environ.get("FLASK_PORT", 5000)
 DATA_WAS_SENT = False
+
+
+# pylint: disable=global-statement
 
 
 def _compute_margin(
     logits: npt.NDArray[np.float64],
     apply_softmax_to_logits: bool = True,
 ) -> npt.NDArray[np.float64]:
-    def softmax(x):
-        x = np.array(x, dtype=np.float64)
-        x -= np.max(x, axis=-1, keepdims=True)
-        x -= np.log(np.sum(np.exp(x), axis=-1, keepdims=True))
-        return np.exp(x)
+    """Compute token-wise class margins (largest activation minus second largest activation)."""
+
+    def softmax(vals: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+        vals = np.array(vals, dtype=np.float64)
+        vals -= np.max(vals, axis=-1, keepdims=True)
+        vals -= np.log(np.sum(np.exp(vals), axis=-1, keepdims=True))
+        return np.exp(vals)
 
     activations = softmax(logits) if apply_softmax_to_logits else logits
-    rank_1, rank_2 = np.quantile(activations, q=(1.0, 0.75), interpolation="nearest", axis=-1)
-    return (rank_1 - rank_2).squeeze()
+    rank_1, rank_2 = np.quantile(activations, q=(1.0, 0.99), method="lower", axis=-1)
+
+    margins = np.asfarray(rank_1 - rank_2).squeeze()
+    margins = np.atleast_1d(margins)
+
+    return margins
 
 
 def open_example(
@@ -34,6 +47,30 @@ def open_example(
     logits: t.Optional[npt.NDArray[np.float64]] = None,
     apply_softmax_to_logits: bool = True,
 ) -> None:
+    """Send example from Jupyter Notebook to interactive front-end.
+
+    Parameters
+    ----------
+    tokens : list of str
+        Subword input text tokens.
+
+    labels : list of t.Union[int, str]
+        Token-wise labels.
+
+    logits : npt.NDArray[np.float64] or None, default=None
+        Token-wise logits from a pivot model. Used to compute class margins, which
+        in turn are translated as a token-wise heatmap in front-end, highlighting
+        tokens that the pivot model is unsure about its classification.
+
+    apply_softmax_to_logits : bool, default=True
+        If False, assume that `logits` are class activations (softmaxed logits) instead
+        of proper logits.
+
+    Raises
+    ------
+    ConnectionError
+        If connection with flask application was not successful.
+    """
     data = [{"token": tok, "label": lab} for tok, lab in zip(tokens, labels)]
 
     if logits is not None:
@@ -70,7 +107,33 @@ def open_example(
         )
 
 
-def retrieve_refined_example(return_modified_list: bool = True) -> dict[str, list]:
+def retrieve_refined_example(
+    return_modified_list: bool = True,
+) -> dict[str, list[t.Union[bool, str, int]]]:
+    """Recover refined data from front-end to Jupyter Notebook.
+
+    This function must be invoked after `open_example`.
+
+    Parameters
+    ----------
+    return_modified_list : bool, default=True
+        If True, include the `modified` boolean value in return dictionary,
+        indicating which labels where effectively modified.
+
+    Returns
+    -------
+    refined_example : dict of list
+        Dictionary containing refined example data. Will have the keys `tokens` and `labels`
+        and, optionally, the key `modified` if `return_modified_list=True`.
+
+    Raises
+    ------
+    ValueError
+        If this function is called before `open_example`.
+
+    ConnectionError
+        If connection with flask application was not successful.
+    """
     if not DATA_WAS_SENT:
         raise ValueError(
             "No data was not sent to front-end. Please use 'open_example' "
