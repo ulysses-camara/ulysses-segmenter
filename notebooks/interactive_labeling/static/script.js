@@ -353,13 +353,24 @@ fetch(fetch_url_data)
       .style("color", "#222222");
 });
 
+const intervalInMilliseconds = 5000;
+let intervalInSeconds = intervalInMilliseconds * 0.001;
+d3.select("#refresh-countdown-panel-value")
+  .text(Math.round(intervalInSeconds));
 
-const interval = setInterval(function() {
+const intervalCountdown = setInterval(function() {
+  intervalInSeconds = Math.max(0, intervalInSeconds - 1);
+  d3.select("#refresh-countdown-panel-value")
+    .text(Math.round(intervalInSeconds));
+}, 1000);
+
+const intervalRefresh = setInterval(function() {
   fetch(fetch_url_refresh)
     .then((response) => response.json())
     .then((response_content) => {
       if (response_content["need_refresh"]) {
         window.location.reload();
       }
+      intervalInSeconds = intervalInMilliseconds * 0.001;
     });
-}, 5000);
+}, intervalInMilliseconds);

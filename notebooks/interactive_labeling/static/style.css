@@ -172,3 +172,11 @@ button:disabled {
   text-decoration: none;
   color: #AAAAAA;
 }
+
+#refresh-countdown-panel {
+  clear: both;
+  font-size: 14px;
+  color: #888888;
+  text-align: center;
+  margin-bottom: 8px;
+}
