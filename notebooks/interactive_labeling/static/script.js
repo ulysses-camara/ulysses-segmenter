@@ -29,6 +29,11 @@ function fn_eventHandlerKeyup(event) {
   if (keyName == "2") { newSelectedClass = 2; }
   if (keyName == "3") { newSelectedClass = 3; }
 
+  if (keyName == " ") {
+    const scrollingElement = (document.scrollingElement || document.body);
+    scrollingElement.scrollTop = scrollingElement.scrollHeight;
+  }
+
   if (newSelectedClass !== selectedClass) {
     selectedClass = newSelectedClass;
     fn_highlightSelectedClass();
