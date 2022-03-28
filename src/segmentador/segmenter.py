@@ -300,7 +300,7 @@ class _BaseSegmenter:
         return_justificativa: bool = False,
         return_labels: bool = False,
         return_logits: bool = False,
-        show_progress_bar : bool = False,
+        show_progress_bar: bool = False,
     ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
         """Segment legal `text`.
 
@@ -442,10 +442,12 @@ class _BaseSegmenter:
             num_tokens = tokens.pop("length")
         else:
 
-            tokens = transformers.tokenization_utils_base.BatchEncoding({
-                key: val if torch.is_tensor(val) else torch.tensor(val)
-                for key, val in text.items()
-            })
+            tokens = transformers.tokenization_utils_base.BatchEncoding(
+                {
+                    key: val if torch.is_tensor(val) else torch.tensor(val)
+                    for key, val in text.items()
+                }
+            )
             justificativa = None
             num_tokens = len(tokens["input_ids"])
 
@@ -689,7 +691,7 @@ class LSTMSegmenter(_BaseSegmenter):
     uri_model : str
         URI to load pretrained model from.
 
-    uri_tokenizer : str or None
+    uri_tokenizer : str
         URI to pretrained text Tokenizer.
 
     lstm_hidden_layer_size : int
@@ -735,7 +737,7 @@ class LSTMSegmenter(_BaseSegmenter):
     def __init__(
         self,
         uri_model: str,
-        uri_tokenizer: t.Optional[str],
+        uri_tokenizer: str,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
