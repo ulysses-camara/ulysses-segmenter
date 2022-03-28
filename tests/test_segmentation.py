@@ -27,6 +27,8 @@ def test_inference_pooling_operation_argument_with_short_text_and_lstm(
         uri_tokenizer="tokenizers/6000_subwords",
         inference_pooling_operation=pooling_operation,
         device="cpu",
+        lstm_hidden_layer_size=128,
+        lstm_num_layers=1,
         local_files_only=True,
     )
     segs = model(fixture_legal_text_short)
