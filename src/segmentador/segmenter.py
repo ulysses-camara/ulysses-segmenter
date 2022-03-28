@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.nn
 import numpy as np
 import numpy.typing as npt
+import tqdm.auto
 
 from . import poolers
 
@@ -299,6 +300,7 @@ class _BaseSegmenter:
         return_justificativa: bool = False,
         return_labels: bool = False,
         return_logits: bool = False,
+        show_progress_bar : bool = False,
     ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
         """Segment legal `text`.
 
@@ -342,6 +344,9 @@ class _BaseSegmenter:
 
         return_logits : bool, default=False
             If True, return logit array for each token.
+
+        show_progress_bar : bool, default=False
+            If True, show segmentation progress bar.
 
         Returns
         -------
@@ -456,7 +461,7 @@ class _BaseSegmenter:
         all_logits: list[npt.NDArray[np.float64]] = []
 
         with torch.no_grad():
-            for minibatch in minibatches:
+            for minibatch in tqdm.auto.tqdm(minibatches, disable=not show_progress_bar):
                 minibatch = minibatch.to(self.device)
                 model_out = self._model(**minibatch)
                 model_out = model_out["logits"]
