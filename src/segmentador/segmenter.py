@@ -598,18 +598,14 @@ class BERTSegmenter(_BaseSegmenter):
             regex_justificativa=regex_justificativa,
         )
 
-        labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
-
         if config is None:
+            labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
             config = transformers.BertConfig.from_pretrained(uri_model)
             config.max_position_embeddings = 1024
             config.num_hidden_layers = num_hidden_layers
             config.num_labels = num_labels
             config.label2id = dict(zip(labels, range(num_labels)))
             config.id2label = dict(zip(range(num_labels), labels))
-
-        if device == "cuda" and not torch.cuda.is_available():
-            device = "cpu"
 
         if init_from_pretrained_weights:
             model = transformers.AutoModelForTokenClassification.from_pretrained(
