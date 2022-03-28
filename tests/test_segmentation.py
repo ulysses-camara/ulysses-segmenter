@@ -25,8 +25,6 @@ def test_inference_pooling_operation_argument_with_short_text_and_lstm(
     model = segmentador.LSTMSegmenter(
         uri_model="pretrained_segmenter_model/128_6000_1_lstm/checkpoints/epoch=3-step=3591.ckpt",
         uri_tokenizer="tokenizers/6000_subwords",
-        lstm_hidden_layer_size=128,
-        lstm_num_layers=1,
         inference_pooling_operation=pooling_operation,
         device="cpu",
         local_files_only=True,
