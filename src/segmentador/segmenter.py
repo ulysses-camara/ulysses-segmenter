@@ -736,13 +736,13 @@ class LSTMSegmenter(_BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str],
-        lstm_hidden_layer_size: int,
-        lstm_num_layers: int,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
+        lstm_hidden_layer_size: t.Optional[int] = None,
+        lstm_num_layers: t.Optional[int] = None,
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
@@ -755,6 +755,20 @@ class LSTMSegmenter(_BaseSegmenter):
             regex_justificativa=regex_justificativa,
         )
 
+        state_dict = torch.load(uri_model, map_location=device)
+
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+
+        if lstm_hidden_layer_size is None:
+            _, doubled_hidden_size = state_dict["lin_out.weight"].shape
+            lstm_hidden_layer_size = doubled_hidden_size // 2
+
+        if lstm_num_layers is None:
+            re_find_layer_inds = regex.compile(r"(?<=lstm\..*_l)([0-9]+)(?=_)")
+            all_layer_inds = {int(re_find_layer_inds.match(key) or 0) for key in state_dict.keys()}
+            lstm_num_layers = 1 + max(all_layer_inds)
+
         self._model = _LSTMSegmenterTorchModule(
             lstm_hidden_layer_size=lstm_hidden_layer_size,
             lstm_num_layers=lstm_num_layers,
@@ -762,11 +776,6 @@ class LSTMSegmenter(_BaseSegmenter):
             pad_id=int(self._tokenizer.pad_token_id or 0),
             num_classes=self.NUM_CLASSES,
         )
-
-        state_dict = torch.load(uri_model)
-
-        if "state_dict" in state_dict:
-            state_dict = state_dict["state_dict"]
 
         self._model.load_state_dict(state_dict)
         self._model = self._model.to(device)
