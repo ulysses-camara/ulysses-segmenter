@@ -767,8 +767,18 @@ class LSTMSegmenter(_BaseSegmenter):
             lstm_hidden_layer_size = doubled_hidden_size // 2
 
         if lstm_num_layers is None:
-            re_find_layer_inds = regex.compile(r"(?<=lstm\..*_l)([0-9]+)(?=_)")
-            all_layer_inds = {int(re_find_layer_inds.match(key) or 0) for key in state_dict.keys()}
+            re_find_layer_inds = regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
+
+            lstm_ind_matches = [re_find_layer_inds.search(key) for key in state_dict.keys()]
+            all_layer_inds = {int(match.group(1)) for match in lstm_ind_matches if match}
+
+            if not all_layer_inds:
+                warnings.warn(
+                    "Could not infer lstm number of layers (parameter 'lstm_num_layers')"
+                    "From checkpoint file. Will set it to '1'."
+                )
+                all_layer_inds = {0}
+
             lstm_num_layers = 1 + max(all_layer_inds)
 
         self._model = _LSTMSegmenterTorchModule(
