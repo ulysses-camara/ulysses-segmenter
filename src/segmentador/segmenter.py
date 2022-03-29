@@ -757,7 +757,7 @@ class LSTMSegmenter(_BaseSegmenter):
             regex_justificativa=regex_justificativa,
         )
 
-        state_dict = torch.load(uri_model, map_location=device)
+        state_dict = torch.load(uri_model, map_location="cpu")
 
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
