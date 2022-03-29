@@ -52,7 +52,7 @@ The data labeling process is semi-automatic, employing several *ad-hoc* regular 
 TODO.
 
 ### Experimental results
-Experimental results are available in [a notebook in this repository](./notebooks/5_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
+Experimental results are available in [a notebook in this repository](./notebooks/6_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
 
 ### Train data
 TODO.
