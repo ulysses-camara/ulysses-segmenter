@@ -171,3 +171,4 @@ segmenter_checkpoint/
 train_logs/
 **/figures/
 **/lightning_logs/
+curated_results/
