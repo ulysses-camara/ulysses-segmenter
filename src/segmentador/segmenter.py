@@ -2,9 +2,11 @@
 import typing as t
 import warnings
 import collections
+import pickle
 
 import regex
 import transformers
+import datasets
 import torch
 import torch.nn.functional as F
 import torch.nn
@@ -648,6 +650,68 @@ class BERTSegmenter(_BaseSegmenter):
 
 # Alias for 'BERTSegmenter'.
 Segmenter = BERTSegmenter
+
+
+class QONNXBERTSegmenter(_BaseSegmenter):
+    def __init__(
+        self,
+        uri_model: str,
+        uri_onnx_config: str,
+        uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
+        local_files_only: bool = True,
+        device: str = "cpu",
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
+    ):
+        super().__init__(
+            uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            device=device,
+            cache_dir_tokenizer=cache_dir_tokenizer,
+            regex_justificativa=regex_justificativa,
+        )
+
+        with open(uri_onnx_config, "rb") as f_in:
+            onnx_config = pickle.load(f_in)
+
+        try:
+            import optimum.onnxruntime
+
+        except ImportError as e_import:
+            raise ImportError(
+                "Optinal dependency 'optimum.onnxruntime' not found, which is necessary to "
+                "use a quantized segmenter model. Please install it with the following "
+                "command:\n\n"
+                "python -m pip install optimum[onnxruntime]\n\n"
+                "See https://huggingface.co/docs/optimum/index for more information."
+            ) from e_import
+
+        self._model: optimum.onnxruntime.ORTModel = optimum.onnxruntime.ORTModel(
+            uri_model,
+            onnx_config,
+        )
+
+    def eval(self) -> "QONNXBERTSegmenter":
+        """No-op method, created only to keep API consistent."""
+        return self
+
+    def train(self) -> "QONNXBERTSegmenter":
+        """No-op method, created only to keep API consistent."""
+        return self
+
+    def _predict_minibatch(
+        self, minibatch: transformers.tokenization_utils_base.BatchEncoding
+    ) -> npt.NDArray[np.float64]:
+        """Predict a tokenized minibatch."""
+        minibatch = datasets.Dataset.from_dict(minibatch)
+        model_out = self.model.evaluation_loop(minibatch)
+        model_out = model_out.predictions
+        model_out = np.asfarray(model_out)
+        return model_out
 
 
 class _LSTMSegmenterTorchModule(torch.nn.Module):
