@@ -301,6 +301,16 @@ class _BaseSegmenter:
 
         return ret_type(*ret_vals)
 
+    def _predict_minibatch(
+        self, minibatch: transformers.tokenization_utils_base.BatchEncoding
+    ) -> npt.NDArray[np.float64]:
+        """Predict a tokenized minibatch."""
+        model_out = self._model(**minibatch)
+        model_out = model_out["logits"]
+        model_out = model_out.cpu().numpy()
+        model_out = model_out.astype(np.float64, copy=False)
+        return model_out
+
     def segment_legal_text(
         self,
         text: t.Union[str, dict[str, list[int]]],
@@ -475,9 +485,7 @@ class _BaseSegmenter:
         with torch.no_grad():
             for minibatch in tqdm.auto.tqdm(minibatches, disable=not show_progress_bar):
                 minibatch = minibatch.to(self.device)
-                model_out = self._model(**minibatch)
-                model_out = model_out["logits"]
-                model_out = model_out.cpu().numpy()
+                model_out = self._predict_minibatch(minibatch)
                 all_logits.append(model_out)
 
         logits = np.vstack(all_logits)
