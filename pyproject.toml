@@ -16,6 +16,7 @@ dependencies = [
 	"numpy == 1.22.3",
 	"torch == 1.11.0",
 	"transformers == 4.16.2",
+	"optimum[onnxruntime] == 1.1.0",
 ]
 
 [project.optional-dependencies]
@@ -94,7 +95,8 @@ disable = """
 	too-many-locals,
 	too-many-arguments,
 	too-many-statements,
-	too-many-branches
+	too-many-branches,
+	import-outside-toplevel
 """
 
 [tool.black]
