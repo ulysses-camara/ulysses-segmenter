@@ -8,8 +8,8 @@ import regex
 import transformers
 import datasets
 import torch
-import torch.nn.functional as F
 import torch.nn
+import torch.nn.functional as F
 import numpy as np
 import numpy.typing as npt
 import tqdm.auto
@@ -231,6 +231,9 @@ class _BaseSegmenter:
 
         for minibatch in minibatches:
             for key, vals in minibatch.items():
+                if torch.is_tensor(vals):
+                    continue
+
                 for i in reversed(range(len(vals))):
                     cur_len = int(max(vals[i].size()))
 
@@ -462,8 +465,8 @@ class _BaseSegmenter:
             )
 
             num_tokens = tokens.pop("length")
-        else:
 
+        else:
             tokens = transformers.tokenization_utils_base.BatchEncoding(
                 {
                     key: val if torch.is_tensor(val) else torch.tensor(val)
@@ -657,12 +660,11 @@ class QONNXBERTSegmenter(_BaseSegmenter):
         self,
         uri_model: str,
         uri_onnx_config: str,
-        uri_tokenizer: t.Optional[str] = None,
+        uri_tokenizer: str,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
-        device: str = "cpu",
         cache_dir_tokenizer: str = "../cache/tokenizers",
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
@@ -670,7 +672,7 @@ class QONNXBERTSegmenter(_BaseSegmenter):
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
-            device=device,
+            device="cpu",
             cache_dir_tokenizer=cache_dir_tokenizer,
             regex_justificativa=regex_justificativa,
         )
@@ -724,8 +726,12 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
         num_embeddings: int,
         pad_id: int,
         num_classes: int,
+        quantize: bool = False,
     ):
         super().__init__()
+
+        fn_factory_lstm = torch.nn.quantized.dynamic.LSTM if quantize else torch.nn.LSTM
+        fn_factory_linear = torch.nn.quantized.dynamic.Linear if quantize else torch.nn.Linear
 
         self.embeddings = torch.nn.Embedding(
             num_embeddings=num_embeddings,
@@ -733,16 +739,15 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
             padding_idx=pad_id,
         )
 
-        self.lstm = torch.nn.LSTM(
+        self.lstm = fn_factory_lstm(
             input_size=768,
             hidden_size=lstm_hidden_layer_size,
             num_layers=lstm_num_layers,
             batch_first=True,
             bidirectional=True,
-            proj_size=0,
         )
 
-        self.lin_out = torch.nn.Linear(
+        self.lin_out = fn_factory_linear(
             2 * lstm_hidden_layer_size,
             num_classes,
         )
@@ -776,12 +781,6 @@ class LSTMSegmenter(_BaseSegmenter):
     uri_tokenizer : str
         URI to pretrained text Tokenizer.
 
-    lstm_hidden_layer_size : int
-        Dimension of LSTM model hidden layer.
-
-    lstm_num_layers : int
-        Number of layers in LSTM model.
-
     inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
             default="assymetric-max"
         Specify the strategy used to combine logits during model inference for documents
@@ -807,6 +806,15 @@ class LSTMSegmenter(_BaseSegmenter):
     device : {'cpu', 'cuda'}, default="cpu"
         Device to segment document content.
 
+    quantize_weights : bool, default=False
+        TODO.
+
+    lstm_hidden_layer_size : int
+        Dimension of LSTM model hidden layer.
+
+    lstm_num_layers : int
+        Number of layers in LSTM model.
+
     cache_dir_tokenizer : str, default="../cache/tokenizers"
         Cache directory for text tokenizer.
 
@@ -825,6 +833,7 @@ class LSTMSegmenter(_BaseSegmenter):
         ] = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
+        quantize_weights: bool = False,
         lstm_hidden_layer_size: t.Optional[int] = None,
         lstm_num_layers: t.Optional[int] = None,
         cache_dir_tokenizer: str = "../cache/tokenizers",
@@ -869,6 +878,7 @@ class LSTMSegmenter(_BaseSegmenter):
             num_embeddings=self._tokenizer.vocab_size,
             pad_id=int(self._tokenizer.pad_token_id or 0),
             num_classes=self.NUM_CLASSES,
+            quantize=quantize_weights,
         )
 
         self._model.load_state_dict(state_dict)
