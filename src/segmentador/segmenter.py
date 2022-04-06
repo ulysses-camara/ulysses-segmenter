@@ -101,6 +101,16 @@ class _BaseSegmenter:
 
         return "\n".join(strs)
 
+    def eval(self) -> "_BaseSegmenter":
+        """Set model to evaluation mode."""
+        self.model.eval()
+        return self
+
+    def train(self) -> "_BaseSegmenter":
+        """Set model to train mode."""
+        self.model.train()
+        return self
+
     @property
     def model(
         self,
@@ -459,7 +469,7 @@ class _BaseSegmenter:
             window_shift_size=int(window_shift_size),
         )
 
-        self._model.eval()
+        self.eval()
         all_logits: list[npt.NDArray[np.float64]] = []
 
         with torch.no_grad():
