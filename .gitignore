@@ -172,3 +172,4 @@ train_logs/
 **/figures/
 **/lightning_logs/
 curated_results/
+**/quantized_models/
