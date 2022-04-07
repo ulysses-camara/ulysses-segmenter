@@ -1,3 +1,4 @@
+"""Handle different segmenter input types."""
 import typing as t
 import abc
 
@@ -5,20 +6,19 @@ import transformers
 import datasets
 import torch
 import numpy as np
-import numpy.typing as npt
 import regex
 
 
-InputHandlerOutputType = tuple[
-    transformers.tokenization_utils_base.BatchEncoding, t.Optional[list[str]], int
-]
+InputHandlerOutputType = tuple[transformers.BatchEncoding, t.Optional[list[str]], int]
 
 
 class _BaseInputHandler(abc.ABC):
-    pass
+    """Base class for Segmenter Input Handling."""
 
 
 class InputHandlerString(_BaseInputHandler):
+    """Handle string as segmenter input."""
+
     RE_BLANK_SPACES = regex.compile(r"\s+")
     RE_JUSTIFICATIVA = regex.compile(
         "|".join(
@@ -91,11 +91,46 @@ class InputHandlerString(_BaseInputHandler):
     def tokenize(
         cls,
         text: str,
-        tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast,
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
+        tokenizer: transformers.BertTokenizerFast,
         *args: t.Any,
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
         **kwargs: t.Any,
     ) -> InputHandlerOutputType:
+        """Split a string into tokens.
+
+        The returned value is the `tokenizer` output casted as key-tensor pairs
+        in Pytorch format.
+
+        Parameters
+        ----------
+        text : str
+            Input string to be tokenized.
+
+        tokenizer : transformers.BertTokenizerFast
+            Tokenizer used to split `text` into tokens.
+
+        *args : tuple, optional
+            Ignored.
+
+        regex_justificativa : str or regex.Pattern or None, default=None
+            Regular expression to detect `justificativa` blocks. If `None`,
+            then `InputHandlerString.RE_JUSTIFICATIVA` is used by default.
+
+        **kwargs : dict, optional
+            Ignored.
+
+        Returns
+        -------
+        tokens : transformers.BatchEncoding
+            Input `text` split into tokens by `tokenizer`.
+
+        justificativa : list[str] or None
+            Detected `justificativa` blocks by `regex_justificativa`.
+
+        num_tokens : int
+            Total length of `tokens`.
+        """
+        # pylint: disable='unused-argument'
         text, justificativa = cls.preprocess_legal_text(
             text,
             regex_justificativa=regex_justificativa,
@@ -115,8 +150,10 @@ class InputHandlerString(_BaseInputHandler):
 
 
 class InputHandlerMapping(_BaseInputHandler):
+    """Reformat input as a generic mapping into the intended segmenter input format."""
+
     @classmethod
-    def _val_to_tensor(cls, val: t.Any, *args: t.Any, **kwargs: t.Any) -> torch.Tensor:
+    def _val_to_tensor(cls, val: t.Any) -> torch.Tensor:
         if torch.is_tensor(val):
             return val  # type: ignore
 
@@ -138,7 +175,36 @@ class InputHandlerMapping(_BaseInputHandler):
         *args: t.Any,
         **kwargs: t.Any,
     ) -> InputHandlerOutputType:
-        tokens = transformers.tokenization_utils_base.BatchEncoding(
+        """Reformat a generic mapping into key-tensor pairs (Pytorch format).
+
+        The entire mapping is interpreted as a single document. If this is not
+        the intended behaviour, you must feed separated documents into the
+        Segmenter model.
+
+        Parameters
+        ----------
+        text : dict[str, list[int]]
+            Mapping of key to input ids.
+
+        *args : tuple, optional
+            Ignored.
+
+        **kwargs : dict, optional
+            Ignored.
+
+        Returns
+        -------
+        tokens : transformers.BatchEncoding
+            Input `text` split into tokens by `tokenizer`.
+
+        justificativa : None
+            Returned just to keep consistency with InputHandler* API.
+
+        num_tokens : int
+            Total length of `tokens`.
+        """
+        # pylint: disable='unused-argument'
+        tokens = transformers.BatchEncoding(
             {key: cls._val_to_tensor(val) for key, val in text.items()}
         )
         justificativa = None
@@ -148,14 +214,51 @@ class InputHandlerMapping(_BaseInputHandler):
 
 
 class InputHandlerDataset(_BaseInputHandler):
+    """Reformat the input as a huggingface Dataset into the segmenter input format."""
+
     @classmethod
     def tokenize(
         cls, text: datasets.Dataset, *args: t.Any, **kwargs: t.Any
     ) -> InputHandlerOutputType:
+        """Reformat a huggingface Dataset into key-tensor pairs (Pytorch format).
+
+        The entire mapping is interpreted as a single document. If this is not
+        the intended behaviour, you must feed separated documents into the
+        Segmenter model.
+
+        Parameters
+        ----------
+        text : datasets.Dataset
+            Huggingface Dataset to be reformatted.
+
+        *args : tuple, optional
+            Ignored.
+
+        **kwargs : dict, optional
+            Ignored.
+
+        Returns
+        -------
+        tokens : transformers.BatchEncoding
+            Input `text` split into tokens by `tokenizer`.
+
+        justificativa : None
+            Returned just to keep consistency with InputHandler* API.
+
+        num_tokens : int
+            Total length of `tokens`.
+        """
+        # pylint: disable='unused-argument'
         return InputHandlerMapping.tokenize(text.to_dict())  # type: ignore
 
 
 def tokenize_input(text: t.Any, *args: t.Any, **kwargs: t.Any) -> InputHandlerOutputType:
+    """Reformat `text` into the segmenter intended input format.
+
+    The correct strategy is chosen automatically by this method, if possible.
+    The supported formats are string (`str`), huggingface Datasets (`datasets.Dataset`),
+    or a generic key-value mapping (such as `dict` or `tran.
+    """
     if isinstance(text, str):
         return InputHandlerString.tokenize(text, *args, **kwargs)
 

@@ -35,11 +35,10 @@ class _BaseSegmenter:
         local_files_only: bool = True,
         device: str = "cpu",
         cache_dir_tokenizer: str = "../cache/tokenizers",
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
         self.local_files_only = bool(local_files_only)
 
-        self._tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = (
+        self._tokenizer: transformers.BertTokenizerFast = (
             transformers.AutoTokenizer.from_pretrained(
                 uri_tokenizer,
                 local_files_only=self.local_files_only,
@@ -110,13 +109,14 @@ class _BaseSegmenter:
     @property
     def tokenizer(
         self,
-    ) -> transformers.models.bert.tokenization_bert_fast.BertTokenizerFast:
+    ) -> transformers.BertTokenizerFast:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
     @property
     def RE_JUSTIFICATIVA(self) -> regex.Pattern:
         """Regular expression used to detect 'justificativa' blocks."""
+        # pylint: disable='invalid-name'
         return input_handlers.InputHandlerString.RE_JUSTIFICATIVA
 
     @classmethod
@@ -170,15 +170,15 @@ class _BaseSegmenter:
 
     def _build_minibatches(
         self,
-        tokens: transformers.tokenization_utils_base.BatchEncoding,
+        tokens: transformers.BatchEncoding,
         num_tokens: int,
         batch_size: int,
         moving_window_size: int,
         window_shift_size: int,
-    ) -> list[transformers.tokenization_utils_base.BatchEncoding]:
+    ) -> list[transformers.BatchEncoding]:
         """Break BatchEncoding items into proper smaller minibatches."""
-        minibatches: list[transformers.tokenization_utils_base.BatchEncoding] = []
-        minibatch = transformers.tokenization_utils_base.BatchEncoding()
+        minibatches: list[transformers.BatchEncoding] = []
+        minibatch = transformers.BatchEncoding()
 
         total_minibatches = 1 + max(
             0, int(np.ceil((num_tokens - moving_window_size) / window_shift_size))
@@ -196,7 +196,7 @@ class _BaseSegmenter:
 
             if (i + 1) % batch_size == 0:
                 minibatches.append(minibatch)
-                minibatch = transformers.tokenization_utils_base.BatchEncoding()
+                minibatch = transformers.BatchEncoding()
 
         if minibatch:
             minibatches.append(minibatch)
@@ -225,7 +225,7 @@ class _BaseSegmenter:
 
     def _generate_segments_from_labels(
         self,
-        tokens: transformers.tokenization_utils_base.BatchEncoding,
+        tokens: transformers.BatchEncoding,
         num_tokens: int,
         label_ids: npt.NDArray[np.int32],
     ) -> list[str]:
@@ -278,9 +278,7 @@ class _BaseSegmenter:
 
         return ret_type(*ret_vals)
 
-    def _predict_minibatch(
-        self, minibatch: transformers.tokenization_utils_base.BatchEncoding
-    ) -> npt.NDArray[np.float64]:
+    def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         model_out = self._model(**minibatch)
         model_out = model_out["logits"]
@@ -300,6 +298,7 @@ class _BaseSegmenter:
         return_labels: bool = False,
         return_logits: bool = False,
         show_progress_bar: bool = False,
+        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
         """Segment legal `text`.
 
@@ -346,6 +345,11 @@ class _BaseSegmenter:
 
         show_progress_bar : bool, default=False
             If True, show segmentation progress bar.
+
+        regex_justificativa : str, regex.Pattern or None, default=None
+            Regular expression specifying how the `justificativa` portion from legal
+            documents should be detected. If None, will use the pattern predefined in
+            `Segmenter.RE_JUSTIFICATIVA` class attribute.
 
         Returns
         -------
@@ -420,6 +424,7 @@ class _BaseSegmenter:
         tokens, justificativa, num_tokens = input_handlers.tokenize_input(
             text=text,
             tokenizer=self.tokenizer,
+            regex_justificativa=regex_justificativa,
         )
 
         minibatches = self._build_minibatches(
@@ -536,11 +541,6 @@ class BERTSegmenter(_BaseSegmenter):
 
     cache_dir_tokenizer : str, default="../cache/tokenizers"
         Cache directory for text tokenizer.
-
-    regex_justificativa : str, regex.Pattern or None, default=None
-        Regular expression specifying how the `justificativa` portion from legal
-        documents should be detected. If None, will use the pattern predefined in
-        `Segmenter.RE_JUSTIFICATIVA` class attribute.
     """
 
     def __init__(
@@ -558,7 +558,6 @@ class BERTSegmenter(_BaseSegmenter):
         num_hidden_layers: int = 6,
         cache_dir_model: str = "../cache/models",
         cache_dir_tokenizer: str = "../cache/tokenizers",
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
@@ -566,7 +565,6 @@ class BERTSegmenter(_BaseSegmenter):
             inference_pooling_operation=inference_pooling_operation,
             device=device,
             cache_dir_tokenizer=cache_dir_tokenizer,
-            regex_justificativa=regex_justificativa,
         )
 
         if config is None:
@@ -602,6 +600,52 @@ Segmenter = BERTSegmenter
 
 
 class QONNXBERTSegmenter(_BaseSegmenter):
+    """Quantized ONNX BERT segmenter for PT-br legal text data.
+
+    Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
+    The pretrained models support texts up to 1024 subwords. Texts larger than this
+    value are pre-segmented into 1024 subword blocks, and each block is feed to the
+    segmenter individually.
+
+    Parameters
+    ----------
+    uri_model : str
+        URI to load pretrained model from. If `local_files_only=True`, then it must
+        be a local file.
+
+    uri_tokenizer : str
+        URI to pretrained text Tokenizer.
+
+    uri_onnx_config : str
+        URI to pickled ONNX configuration.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default="assymetric-max"
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    cache_dir_model : str, default="../cache/models"
+        Cache directory for transformer encoder model.
+
+    cache_dir_tokenizer : str, default="../cache/tokenizers"
+        Cache directory for text tokenizer.
+    """
     def __init__(
         self,
         uri_model: str,
@@ -612,7 +656,6 @@ class QONNXBERTSegmenter(_BaseSegmenter):
         ] = "assymetric-max",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "../cache/tokenizers",
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
@@ -620,7 +663,6 @@ class QONNXBERTSegmenter(_BaseSegmenter):
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
             cache_dir_tokenizer=cache_dir_tokenizer,
-            regex_justificativa=regex_justificativa,
         )
 
         with open(uri_onnx_config, "rb") as f_in:
@@ -653,7 +695,7 @@ class QONNXBERTSegmenter(_BaseSegmenter):
 
     def _predict_minibatch(
         self,
-        minibatch: t.Union[datasets.Dataset, transformers.tokenization_utils_base.BatchEncoding],
+        minibatch: t.Union[datasets.Dataset, transformers.BatchEncoding],
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         if not isinstance(minibatch, datasets.Dataset):
@@ -769,11 +811,6 @@ class LSTMSegmenter(_BaseSegmenter):
 
     cache_dir_tokenizer : str, default="../cache/tokenizers"
         Cache directory for text tokenizer.
-
-    regex_justificativa : str, regex.Pattern or None, default=None
-        Regular expression specifying how the `justificativa` portion from legal
-        documents should be detected. If None, will use the pattern predefined in
-        `Segmenter.RE_JUSTIFICATIVA` class attribute.
     """
 
     def __init__(
@@ -789,7 +826,6 @@ class LSTMSegmenter(_BaseSegmenter):
         lstm_hidden_layer_size: t.Optional[int] = None,
         lstm_num_layers: t.Optional[int] = None,
         cache_dir_tokenizer: str = "../cache/tokenizers",
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer,
@@ -797,7 +833,6 @@ class LSTMSegmenter(_BaseSegmenter):
             inference_pooling_operation=inference_pooling_operation,
             device=device,
             cache_dir_tokenizer=cache_dir_tokenizer,
-            regex_justificativa=regex_justificativa,
         )
 
         state_dict = torch.load(uri_model, map_location="cpu")
