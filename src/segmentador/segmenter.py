@@ -285,8 +285,10 @@ class _BaseSegmenter:
         model_out = self._model(**minibatch)
         model_out = model_out["logits"]
         model_out = model_out.cpu().numpy()
-        model_out = model_out.astype(np.float64, copy=False)
-        return model_out
+
+        logits: npt.NDArray[np.float64] = model_out.astype(np.float64, copy=False)
+
+        return logits
 
     def segment_legal_text(
         self,
@@ -650,14 +652,19 @@ class QONNXBERTSegmenter(_BaseSegmenter):
         return self
 
     def _predict_minibatch(
-        self, minibatch: transformers.tokenization_utils_base.BatchEncoding
+        self,
+        minibatch: t.Union[datasets.Dataset, transformers.tokenization_utils_base.BatchEncoding],
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
-        minibatch = datasets.Dataset.from_dict(minibatch)
-        model_out = self.model.evaluation_loop(minibatch)
+        if not isinstance(minibatch, datasets.Dataset):
+            minibatch = datasets.Dataset.from_dict(minibatch)  # type: ignore
+
+        model_out = self._model.evaluation_loop(minibatch)
         model_out = model_out.predictions
-        model_out = np.asfarray(model_out)
-        return model_out
+
+        logits = np.asfarray(model_out).astype(np.float64, copy=False)
+
+        return logits
 
 
 class _LSTMSegmenterTorchModule(torch.nn.Module):

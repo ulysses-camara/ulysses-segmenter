@@ -93,8 +93,8 @@ class InputHandlerString(_BaseInputHandler):
         text: str,
         tokenizer: transformers.models.bert.tokenization_bert_fast.BertTokenizerFast,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
-        *args,
-        **kwargs,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> InputHandlerOutputType:
         text, justificativa = cls.preprocess_legal_text(
             text,
@@ -116,11 +116,9 @@ class InputHandlerString(_BaseInputHandler):
 
 class InputHandlerMapping(_BaseInputHandler):
     @classmethod
-    def _val_to_tensor(
-        cls, val: t.Sequence[int], *args, **kwargs
-    ) -> t.Union[npt.NDArray[torch.Tensor], torch.Tensor]:
+    def _val_to_tensor(cls, val: t.Any, *args: t.Any, **kwargs: t.Any) -> torch.Tensor:
         if torch.is_tensor(val):
-            return val
+            return val  # type: ignore
 
         if isinstance(val, np.ndarray):
             return torch.from_numpy(val)
@@ -136,9 +134,9 @@ class InputHandlerMapping(_BaseInputHandler):
     @classmethod
     def tokenize(
         cls,
-        text: t.MutableMapping[str, t.Union[list[int], torch.Tensor]],
-        *args,
-        **kwargs,
+        text: t.MutableMapping[str, t.Sequence[int]],
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> InputHandlerOutputType:
         tokens = transformers.tokenization_utils_base.BatchEncoding(
             {key: cls._val_to_tensor(val) for key, val in text.items()}
@@ -151,15 +149,17 @@ class InputHandlerMapping(_BaseInputHandler):
 
 class InputHandlerDataset(_BaseInputHandler):
     @classmethod
-    def tokenize(cls, text: datasets.Dataset, *args, **kwargs) -> InputHandlerOutputType:
-        return InputHandlerMapping.tokenize(text.to_dict())
+    def tokenize(
+        cls, text: datasets.Dataset, *args: t.Any, **kwargs: t.Any
+    ) -> InputHandlerOutputType:
+        return InputHandlerMapping.tokenize(text.to_dict())  # type: ignore
 
 
-def tokenize_input(text: str, *args: t.Any, **kwargs: t.Any) -> InputHandlerOutputType:
+def tokenize_input(text: t.Any, *args: t.Any, **kwargs: t.Any) -> InputHandlerOutputType:
     if isinstance(text, str):
         return InputHandlerString.tokenize(text, *args, **kwargs)
 
-    if isinstance(text, datasets.arrow_dataset.Dataset):
+    if isinstance(text, datasets.Dataset):
         return InputHandlerDataset.tokenize(text, *args, **kwargs)
 
     if hasattr(text, "items"):
