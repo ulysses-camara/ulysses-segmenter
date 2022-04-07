@@ -15,22 +15,13 @@ import numpy.typing as npt
 import tqdm.auto
 
 from . import poolers
+from . import input_handlers
 
 
 class _BaseSegmenter:
     """Base class for Segmenter models."""
 
     NUM_CLASSES = 4
-    RE_BLANK_SPACES = regex.compile(r"\s+")
-    RE_JUSTIFICATIVA = regex.compile(
-        "|".join(
-            (
-                r"\s*".join("JUSTIFICATIVA"),
-                r"\s*".join([*"JUSTIFICA", "[CÇ]", "[AÁÀÃÃ]", "O"]),
-                r"\s*".join("ANEXOS"),
-            )
-        )
-    )
 
     _RE_REPR_TOKENIZER_ADJUST_01 = regex.compile(r"(?<=[\(,]\s*)(?=[a-z_]+\s*=)")
     _RE_REPR_TOKENIZER_ADJUST_02 = regex.compile(r"(?<=[{,]\s*)(?=[a-z_']+\s*:)")
@@ -56,8 +47,6 @@ class _BaseSegmenter:
             )
         )
 
-        self.regex_justificativa = self.setup_regex_justificativa(regex_justificativa)
-
         self._moving_window_pooler = poolers.AutoMovingWindowPooler(
             pooling_operation=inference_pooling_operation,
         )
@@ -78,11 +67,6 @@ class _BaseSegmenter:
         strs: list[str] = []
 
         strs.append(f"{self.__class__.__name__} pipeline")
-        strs.append(" o Regex JUSTIFICATIVA pattern:")
-        strs.append(" |   '''")
-        strs.append(" |   " + self.regex_justificativa.pattern.replace("|", "|\n |   "))
-        strs.append(" |   '''")
-        strs.append(" | ")
         strs.append(f" o Device: {self.device}")
 
         strs.append(" | ")
@@ -130,23 +114,10 @@ class _BaseSegmenter:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
-    @classmethod
-    def setup_regex_justificativa(
-        cls,
-        regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
-    ) -> regex.Pattern:
-        """Compile or set default 'JUSTIFICATIVA' block regex.
-
-        If the provided regex is already compiled, this function simply returns its own
-        argument.
-        """
-        if regex_justificativa is None:
-            regex_justificativa = cls.RE_JUSTIFICATIVA
-
-        if isinstance(regex_justificativa, str):
-            regex_justificativa = regex.compile(regex_justificativa)
-
-        return regex_justificativa
+    @property
+    def RE_JUSTIFICATIVA(self) -> regex.Pattern:
+        """Regular expression used to detect 'justificativa' blocks."""
+        return input_handlers.InputHandlerString.RE_JUSTIFICATIVA
 
     @classmethod
     def preprocess_legal_text(
@@ -185,16 +156,17 @@ class _BaseSegmenter:
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
-        text = cls.RE_BLANK_SPACES.sub(" ", text)
-        text = text.strip()
-
-        regex_justificativa = cls.setup_regex_justificativa(regex_justificativa)
-        text, *justificativa = regex_justificativa.split(text)
+        ret = input_handlers.InputHandlerString.preprocess_legal_text(
+            text=text,
+            regex_justificativa=regex_justificativa,
+        )
 
         if return_justificativa:
-            return text, justificativa
+            return ret
 
-        return text
+        preprocessed_text, _ = ret
+
+        return preprocessed_text
 
     def _build_minibatches(
         self,
@@ -443,38 +415,10 @@ class _BaseSegmenter:
             )
             window_shift_size = moving_window_size
 
-        if isinstance(text, str):
-            preproc_result = self.preprocess_legal_text(
-                text,
-                return_justificativa=return_justificativa,
-                regex_justificativa=self.regex_justificativa,
-            )
-
-            if isinstance(preproc_result, tuple):
-                text, justificativa = preproc_result
-
-            else:
-                text, justificativa = preproc_result, None
-
-            tokens = self._tokenizer(
-                text,
-                padding=False,
-                truncation=False,
-                return_tensors="pt",
-                return_length=True,
-            )
-
-            num_tokens = tokens.pop("length")
-
-        else:
-            tokens = transformers.tokenization_utils_base.BatchEncoding(
-                {
-                    key: val if torch.is_tensor(val) else torch.tensor(val)
-                    for key, val in text.items()
-                }
-            )
-            justificativa = None
-            num_tokens = len(tokens["input_ids"])
+        tokens, justificativa, num_tokens = input_handlers.tokenize_input(
+            text=text,
+            tokenizer=self.tokenizer,
+        )
 
         minibatches = self._build_minibatches(
             tokens=tokens,
