@@ -730,10 +730,11 @@ class _LSTMSegmenterTorchModule(torch.nn.Module):
     ):
         super().__init__()
 
+        fn_factory_emb = torch.nn.quantized.Embedding if quantize else torch.nn.Embedding
         fn_factory_lstm = torch.nn.quantized.dynamic.LSTM if quantize else torch.nn.LSTM
         fn_factory_linear = torch.nn.quantized.dynamic.Linear if quantize else torch.nn.Linear
 
-        self.embeddings = torch.nn.Embedding(
+        self.embeddings = fn_factory_emb(
             num_embeddings=num_embeddings,
             embedding_dim=768,
             padding_idx=pad_id,
