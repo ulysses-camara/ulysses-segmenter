@@ -207,6 +207,10 @@ class LSTMSegmenter(_base.BaseSegmenter):
             cache_dir_tokenizer=cache_dir_tokenizer,
         )
 
+        self.quantize_weights = bool(quantize_weights)
+        self.vocab_size = int(self._tokenizer.vocab_size)
+        self.pad_id = int(self._tokenizer.pad_token_id or 0)
+
         state_dict = torch.load(uri_model, map_location="cpu")
 
         if "state_dict" in state_dict:
@@ -215,22 +219,25 @@ class LSTMSegmenter(_base.BaseSegmenter):
         if lstm_hidden_layer_size is None:
             lstm_hidden_layer_size = self._infer_lstm_hidden_layer_size(
                 state_dict=state_dict,
-                quantize_weights=quantize_weights,
+                quantize_weights=self.quantize_weights,
             )
 
         if lstm_num_layers is None:
             lstm_num_layers = self._infer_lstm_num_layers(
                 state_dict=state_dict,
-                quantize_weights=quantize_weights,
+                quantize_weights=self.quantize_weights,
             )
 
+        self.lstm_hidden_layer_size = int(lstm_hidden_layer_size)
+        self.lstm_num_layers = int(lstm_num_layers)
+
         self._model = _base.LSTMSegmenterTorchModule(
-            lstm_hidden_layer_size=lstm_hidden_layer_size,
-            lstm_num_layers=lstm_num_layers,
-            num_embeddings=self._tokenizer.vocab_size,
-            pad_id=int(self._tokenizer.pad_token_id or 0),
+            lstm_hidden_layer_size=self.lstm_hidden_layer_size,
+            lstm_num_layers=self.lstm_num_layers,
+            num_embeddings=self.vocab_size,
+            pad_id=self.pad_id,
             num_classes=self.NUM_CLASSES,
-            quantize=quantize_weights,
+            quantize=self.quantize_weights,
         )
 
         self._model.load_state_dict(state_dict)
