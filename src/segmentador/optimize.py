@@ -1,3 +1,4 @@
+"""Apply quantization and hardware-specific optimizations in segmenter models."""
 import typing as t
 import pickle
 import os
@@ -127,6 +128,22 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
         return logits
 
 
+class QuantizeOutputBERT(t.NamedTuple):
+    """BERT quantization output paths."""
+
+    onnx_config_uri: str
+    onnx_base_uri: str
+    onnx_optimized_uri: str
+    onnx_quantized_uri: str
+    output_uri: str
+
+
+class QuantizeOutputLSTM(t.NamedTuple):
+    """LSTM quantization output paths."""
+
+    output_uri: str
+
+
 def quantize_bert_model(
     model: segmenter.BERTSegmenter,
     quantized_model_name: t.Optional[str] = None,
@@ -137,8 +154,9 @@ def quantize_bert_model(
     optimization_level: int = 99,
     check_cached: bool = True,
     verbose: bool = False,
-) -> None:
-    c_nhl = model.model.config.num_hidden_layers
+) -> QuantizeOutputBERT:
+    model_config: transformers.BertConfig = model.model.config  # type: ignore
+    c_nhl = model_config.num_hidden_layers
     c_vs = model.tokenizer.vocab_size
 
     quantized_model_name = (
@@ -159,20 +177,28 @@ def quantize_bert_model(
     onnx_optimized_uri = os.path.join(quantized_models_dir, intermediary_onnx_optimized_model_name)
     onnx_quantized_uri = os.path.join(quantized_models_dir, quantized_model_name)
 
+    ret = QuantizeOutputBERT(
+        onnx_config_uri=onnx_config_uri,
+        onnx_base_uri=onnx_base_uri,
+        onnx_optimized_uri=onnx_optimized_uri,
+        onnx_quantized_uri=onnx_quantized_uri,
+        output_uri=onnx_quantized_uri,
+    )
+
     if check_cached and os.path.isfile(onnx_quantized_uri):
         if verbose:
             print(f"Found cached model in '{onnx_quantized_uri}'. Skipping model quantization.")
 
-        return
+        return ret
 
     optimization_config = optimum.onnxruntime.configuration.OptimizationConfig(
         optimization_level=optimization_level,
     )
-    onnx_config = transformers.models.bert.BertOnnxConfig(model.model.config)
+    onnx_config = transformers.models.bert.BertOnnxConfig(model_config)
 
     transformers.onnx.export(
-        model=model.model,
-        tokenizer=model.tokenizer,
+        model=model.model,  # type: ignore
+        tokenizer=model.tokenizer,  # type: ignore
         config=onnx_config,
         opset=max(15, onnx_config.default_onnx_opset),
         output=pathlib.Path(onnx_base_uri),
@@ -206,35 +232,39 @@ def quantize_bert_model(
         pickle.dump(onnx_config, f_out, protocol=pickle.HIGHEST_PROTOCOL)
 
     if verbose:
-        C_YLW = colorama.Fore.YELLOW
-        C_BLU = colorama.Fore.BLUE
-        C_RST = colorama.Style.RESET_ALL
+        c_ylw = colorama.Fore.YELLOW
+        c_blu = colorama.Fore.BLUE
+        c_rst = colorama.Style.RESET_ALL
 
         print(
-            f"Saved quantized BERT (ONNX format) in {C_BLU}'{onnx_quantized_uri}'{C_RST}, and "
-            f"its configuration file in {C_BLU}'{onnx_config_uri}'{C_RST}. "
+            f"Saved quantized BERT (ONNX format) in {c_blu}'{onnx_quantized_uri}'{c_rst}, and "
+            f"its configuration file in {c_blu}'{onnx_config_uri}'{c_rst}. "
             "To use it, load a BERT segmenter model as:\n\n"
             f"{__name__}.{QONNXBERTSegmenter.__name__}(\n"
-            f"   {C_YLW}uri_model={C_BLU}'{onnx_quantized_uri}'{C_RST},\n"
+            f"   {c_ylw}uri_model={c_blu}'{onnx_quantized_uri}'{c_rst},\n"
             f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {C_YLW}uri_onnx_config={C_BLU}'{onnx_config_uri}'{C_RST},\n"
+            f"   {c_ylw}uri_onnx_config={c_blu}'{onnx_config_uri}'{c_rst},\n"
             "   ...,\n"
             ")"
         )
+
+    return ret
 
 
 def quantize_lstm_model(
     model: segmenter.LSTMSegmenter,
     quantized_model_name: t.Optional[str] = None,
     quantized_models_dir: str = "./quantized_models",
-    modules_to_quantize: tuple[torch.nn.Module, ...] = (
+    modules_to_quantize: t.Union[
+        set[t.Type[torch.nn.Module]], tuple[t.Type[torch.nn.Module], ...]
+    ] = (
         torch.nn.Embedding,
         torch.nn.LSTM,
         torch.nn.Linear,
     ),
     check_cached: bool = True,
     verbose: bool = False,
-) -> None:
+) -> QuantizeOutputLSTM:
     quantized_model_name = quantized_model_name or (
         f"q_{model.lstm_hidden_layer_size}_hidden_dim_"
         f"{model.vocab_size}_vocab_size_"
@@ -245,16 +275,20 @@ def quantize_lstm_model(
     pathlib.Path(quantized_models_dir).mkdir(exist_ok=True, parents=True)
     output_uri = os.path.join(quantized_models_dir, quantized_model_name)
 
+    ret = QuantizeOutputLSTM(output_uri=output_uri)
+
     if check_cached and os.path.isfile(output_uri):
         if verbose:
             print(f"Found cached model in '{output_uri}'. Skipping model quantization.")
 
-        return
+        return ret
 
     pytorch_module = model.model
 
     if torch.nn.Embedding in modules_to_quantize:
-        pytorch_module.embeddings.qconfig = torch.quantization.float_qparams_weight_only_qconfig
+        pytorch_module.embeddings.qconfig = (  # type: ignore
+            torch.quantization.float_qparams_weight_only_qconfig
+        )
 
     quantized_pytorch_module = torch.quantization.quantize_dynamic(
         pytorch_module,
@@ -269,20 +303,22 @@ def quantize_lstm_model(
     )
 
     if verbose:
-        C_YLW = colorama.Fore.YELLOW
-        C_BLU = colorama.Fore.BLUE
-        C_RST = colorama.Style.RESET_ALL
+        c_ylw = colorama.Fore.YELLOW
+        c_blu = colorama.Fore.BLUE
+        c_rst = colorama.Style.RESET_ALL
 
         print(
-            f"Saved quantized Pytorch module in {C_BLU}'{output_uri}'{C_RST}. "
+            f"Saved quantized Pytorch module in {c_blu}'{output_uri}'{c_rst}. "
             "To use it, load a LSTM segmenter model as:\n\n"
             f"LSTMSegmenter(\n"
-            f"   {C_YLW}uri_model={C_BLU}'{output_uri}'{C_RST},\n"
+            f"   {c_ylw}uri_model={c_blu}'{output_uri}'{c_rst},\n"
             f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {C_YLW}quantize_weights={C_BLU}True{C_RST},\n"
+            f"   {c_ylw}quantize_weights={c_blu}True{c_rst},\n"
             "   ...,\n"
             ")"
         )
+
+    return ret
 
 
 def quantize_model(
@@ -292,23 +328,22 @@ def quantize_model(
     optimization_level: int = 99,
     check_cached: bool = True,
     verbose: bool = False,
-) -> None:
+) -> t.Union[QuantizeOutputBERT, QuantizeOutputLSTM]:
     if not isinstance(model, (segmenter.BERTSegmenter, segmenter.LSTMSegmenter)):
         raise TypeError(
             f"Unknown segmenter type for quantization: '{type(model)}'. Please "
             "provide either BERTSegmenter or LSTMSegmenter."
         )
 
-    common_kwargs = dict(
+    common_kwargs: dict[str, t.Any] = dict(
         model=model,
-        check_cached=check_cached,
-        verbose=verbose,
         quantized_model_name=quantized_model_name,
         quantized_models_dir=quantized_models_dir,
+        check_cached=check_cached,
+        verbose=verbose,
     )
 
     if isinstance(model, segmenter.LSTMSegmenter):
         return quantize_lstm_model(**common_kwargs)
 
-    if isinstance(model, segmenter.BERTSegmenter):
-        return quantize_bert_model(**common_kwargs, optimization_level=optimization_level)
+    return quantize_bert_model(**common_kwargs, optimization_level=optimization_level)
