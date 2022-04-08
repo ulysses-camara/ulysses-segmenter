@@ -3,8 +3,8 @@ import typing as t
 import pickle
 import os
 import pathlib
+import warnings
 
-import colorama
 import onnxruntime
 import transformers
 import datasets
@@ -24,6 +24,21 @@ except ImportError as e_import:
         "python -m pip install optimum[onnxruntime]\n\n"
         "See https://huggingface.co/docs/optimum/index for more information."
     ) from e_import
+
+try:
+    import colorama
+
+except ImportError as e_import:
+    warnings.warn(
+        message= (
+            "Optional dependency 'colorama' not found. The quantization output will be colorless. "
+            "In order to (optionally) fix this issue, use the following command:\n\n"
+            "python -m pip install colorama\n\n"
+            "See https://pypi.org/project/colorama/ for more information."
+        ),
+        category=ImportWarning,
+    )
+    colorama = None
 
 from . import _base
 from . import segmenter
@@ -232,9 +247,9 @@ def quantize_bert_model(
         pickle.dump(onnx_config, f_out, protocol=pickle.HIGHEST_PROTOCOL)
 
     if verbose:
-        c_ylw = colorama.Fore.YELLOW
-        c_blu = colorama.Fore.BLUE
-        c_rst = colorama.Style.RESET_ALL
+        c_ylw = colorama.Fore.YELLOW if colorama else ""
+        c_blu = colorama.Fore.BLUE if colorama else ""
+        c_rst = colorama.Style.RESET_ALL if colorama else ""
 
         print(
             f"Saved quantized BERT (ONNX format) in {c_blu}'{onnx_quantized_uri}'{c_rst}, and "
@@ -303,9 +318,9 @@ def quantize_lstm_model(
     )
 
     if verbose:
-        c_ylw = colorama.Fore.YELLOW
-        c_blu = colorama.Fore.BLUE
-        c_rst = colorama.Style.RESET_ALL
+        c_ylw = colorama.Fore.YELLOW if colorama else ""
+        c_blu = colorama.Fore.BLUE if colorama else ""
+        c_rst = colorama.Style.RESET_ALL if colorama else ""
 
         print(
             f"Saved quantized Pytorch module in {c_blu}'{output_uri}'{c_rst}. "
