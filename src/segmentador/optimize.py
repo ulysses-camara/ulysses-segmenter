@@ -1,3 +1,4 @@
+import typing as t
 import pickle
 
 import onnxruntime
@@ -5,6 +6,7 @@ import onnx
 import transformers
 import datasets
 import numpy as np
+import numpy.typing as npt
 
 try:
     import optimum.onnxruntime
@@ -109,7 +111,7 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         if not isinstance(minibatch, datasets.Dataset):
-            minibatch = datasets.Dataset.from_dict(minibatch)
+            minibatch = datasets.Dataset.from_dict(minibatch)  # type: ignore
 
         model_out = self._model.evaluation_loop(minibatch)
         model_out = model_out.predictions

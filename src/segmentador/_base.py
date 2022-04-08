@@ -86,12 +86,12 @@ class BaseSegmenter:
 
         return "\n".join(strs)
 
-    def eval(self) -> "_BaseSegmenter":
+    def eval(self) -> "BaseSegmenter":
         """Set model to evaluation mode."""
         self.model.eval()
         return self
 
-    def train(self) -> "_BaseSegmenter":
+    def train(self) -> "BaseSegmenter":
         """Set model to train mode."""
         self.model.train()
         return self
