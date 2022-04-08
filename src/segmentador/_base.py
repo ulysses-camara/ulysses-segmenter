@@ -1,12 +1,9 @@
 """Base classes for segmenter models."""
 import typing as t
 import warnings
-import collections
-import pickle
 
 import regex
 import transformers
-import datasets
 import torch
 import torch.nn
 import numpy as np
@@ -49,10 +46,7 @@ class BaseSegmenter:
             pooling_operation=inference_pooling_operation,
         )
 
-        self._model: t.Union[
-            torch.nn.Module,
-            transformers.models.bert.modeling_bert.BertForTokenClassification,
-        ]
+        self._model: t.Union[torch.nn.Module, transformers.BertForTokenClassification]
 
         self.device = device
 
@@ -96,19 +90,12 @@ class BaseSegmenter:
         return self
 
     @property
-    def model(
-        self,
-    ) -> t.Union[
-        torch.nn.Module,
-        transformers.models.bert.modeling_bert.BertForTokenClassification,
-    ]:
+    def model(self) -> t.Union[torch.nn.Module, transformers.BertForTokenClassification]:
         # pylint: disable='missing-function-docstring'
         return self._model
 
     @property
-    def tokenizer(
-        self,
-    ) -> transformers.BertTokenizerFast:
+    def tokenizer(self) -> transformers.BertTokenizerFast:
         # pylint: disable='missing-function-docstring'
         return self._tokenizer
 
