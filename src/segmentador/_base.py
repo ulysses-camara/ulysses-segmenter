@@ -13,7 +13,7 @@ import numpy as np
 import numpy.typing as npt
 import tqdm.auto
 
-from . import poolers
+from . import output_handlers
 from . import input_handlers
 
 
@@ -45,7 +45,7 @@ class BaseSegmenter:
             )
         )
 
-        self._moving_window_pooler = poolers.AutoMovingWindowPooler(
+        self._moving_window_pooler = output_handlers.AutoMovingWindowPooler(
             pooling_operation=inference_pooling_operation,
         )
 
@@ -195,32 +195,6 @@ class BaseSegmenter:
                 segs.append(seg)
 
         return segs
-
-    @staticmethod
-    def _pack_results(
-        keys: list[str], vals: list[t.Any], inclusion: list[bool]
-    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
-        """Build result tuple (if more than one value) or return segment list."""
-        ret_keys: list[str] = []
-        ret_vals: list[t.Any] = []
-
-        for key, val, inc in zip(keys, vals, inclusion):
-            if not inc:
-                continue
-
-            ret_keys.append(key)
-            ret_vals.append(val)
-
-        if len(ret_vals) == 1:
-            segs: list[str] = ret_vals[0]
-            return segs
-
-        # Note: pylint config below is due to a weird, possible buggy, error that only
-        # occurs with Python 3.9 @ GitHub.
-        # pylint: disable=unused-variable
-        ret_type = collections.namedtuple("SegmentationResults", ret_keys)  # type: ignore
-
-        return ret_type(*ret_vals)
 
     def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
@@ -410,7 +384,7 @@ class BaseSegmenter:
 
         assert label_ids.size == logits.shape[0]
 
-        ret = self._pack_results(
+        ret = output_handlers.pack_results(
             keys=["segments", "justificativa", "labels", "logits"],
             vals=[segs, justificativa, label_ids, logits],
             inclusion=[True, return_justificativa, return_labels, return_logits],
