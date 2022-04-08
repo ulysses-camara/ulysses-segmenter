@@ -1,10 +1,15 @@
 import typing as t
 import pickle
+import os
+import pathlib
 
+import colorama
 import onnxruntime
 import onnx
 import transformers
 import datasets
+import torch
+import torch.nn
 import numpy as np
 import numpy.typing as npt
 
@@ -21,6 +26,7 @@ except ImportError as e_import:
     ) from e_import
 
 from . import _base
+from . import segmenter
 
 
 class QONNXBERTSegmenter(_base.BaseSegmenter):
@@ -70,6 +76,7 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
     cache_dir_tokenizer : str, default="../cache/tokenizers"
         Cache directory for text tokenizer.
     """
+
     def __init__(
         self,
         uri_model: str,
@@ -119,3 +126,96 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
         logits = np.asfarray(model_out).astype(np.float64, copy=False)
 
         return logits
+
+
+def quantize_bert_model(
+    model: segmenter.BERTSegmenter, optimization_level: int = 99, verbose: bool = False
+) -> None:
+    pass
+
+
+def quantize_lstm_model(
+    model: segmenter.LSTMSegmenter,
+    quantized_model_name: t.Optional[str] = None,
+    quantized_models_dir: str = "./quantized_models",
+    modules_to_quantize: tuple[torch.nn.Module, ...] = (
+        torch.nn.Embedding,
+        torch.nn.LSTM,
+        torch.nn.Linear,
+    ),
+    check_cached: bool = True,
+    verbose: bool = False,
+) -> None:
+    pathlib.Path(quantized_models_dir).mkdir(exist_ok=True, parents=True)
+
+    if quantized_model_name is None:
+        quantized_model_name = (
+            f"q_{model.lstm_hidden_layer_size}_"
+            f"{model.vocab_size}_{model.lstm_num_layers}_"
+            f"lstm.pt"
+        )
+
+    output_uri = os.path.join(quantized_models_dir, quantized_model_name)
+
+    if check_cached and os.path.isfile(output_uri):
+        if verbose:
+            print(f"Found cached model in '{output_uri}'. Skipping model quantization.")
+
+        return
+
+    pytorch_module = model.model
+
+    if torch.nn.Embedding in modules_to_quantize:
+        pytorch_module.embeddings.qconfig = torch.quantization.float_qparams_weight_only_qconfig
+
+    quantized_pytorch_module = torch.quantization.quantize_dynamic(
+        pytorch_module,
+        set(modules_to_quantize),
+        dtype=torch.qint8,
+    )
+
+    torch.save(
+        obj=quantized_pytorch_module.state_dict(),
+        f=output_uri,
+        pickle_protocol=pickle.HIGHEST_PROTOCOL,
+    )
+
+    if verbose:
+        C_YLW = colorama.Fore.YELLOW
+        C_BLU = colorama.Fore.BLUE
+        C_RST = colorama.Style.RESET_ALL
+
+        print(
+            f"Saved quantized Pytorch module in {C_BLU}'{output_uri}'{C_RST}. "
+            "To use it, load a LSTM segmenter model as:\n\n"
+            "LSTMSegmenter(\n"
+            f"   {C_YLW}uri_model={C_BLU}'{output_uri}'{C_RST},\n"
+            f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
+            f"   {C_YLW}quantize_weights={C_BLU}True{C_RST},\n"
+            "   ...,\n"
+            ")"
+        )
+
+
+def quantize_model(
+    model: t.Union[segmenter.BERTSegmenter, segmenter.LSTMSegmenter],
+    optimization_level: int = 99,
+    check_cached: bool = True,
+    verbose: bool = False,
+) -> None:
+    common_kwargs = dict(
+        model=model,
+        check_cached=check_cached,
+        verbose=verbose,
+    )
+
+    if isinstance(model, segmenter.LSTMSegmenter):
+        return quantize_lstm_model(**common_kwargs)
+
+    if isinstance(model, segmenter.BERTSegmenter):
+        return quantize_bert_model(**common_kwargs, optimization_level=optimization_level)
+
+    raise TypeError(
+        f"Unknown segmenter type for quantization: '{type(model)}'. Please "
+        "provide either BERTSegmenter or LSTMSegmenter."
+    )
