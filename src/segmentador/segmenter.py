@@ -191,7 +191,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         uri_tokenizer: str,
         inference_pooling_operation: t.Literal[
             "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        ] = "gaussian",
         local_files_only: bool = True,
         device: str = "cpu",
         quantize_weights: bool = False,
