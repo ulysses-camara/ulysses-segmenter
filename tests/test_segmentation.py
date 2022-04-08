@@ -1,5 +1,7 @@
 """General tests for arguments, model instantiation and segmentation."""
 import pytest
+import pandas as pd
+import datasets
 
 import segmentador
 
@@ -68,16 +70,14 @@ def test_justificativa_regex_standard(
     ],
 )
 def test_justificativa_regex_custom(
-    regex_justificativa: str, fake_legal_text: str, expected_justificativa_length: int
+    fixture_model_2_layers: segmentador.Segmenter,
+    regex_justificativa: str,
+    fake_legal_text: str,
+    expected_justificativa_length: int,
 ):
-    model = segmentador.Segmenter(
-        uri_model="pretrained_segmenter_model/2_6000_layer_model",
-        regex_justificativa=regex_justificativa,
-        device="cpu",
-        local_files_only=True,
+    _, justificativa = fixture_model_2_layers(
+        fake_legal_text, return_justificativa=True, regex_justificativa=regex_justificativa
     )
-
-    _, justificativa = model(fake_legal_text, return_justificativa=True)
 
     return len(justificativa) == expected_justificativa_length
 
@@ -110,3 +110,41 @@ def test_window_shift_size(
 ):
     segments = fixture_model_2_layers(fixture_legal_text_long, window_shift_size=window_shift_size)
     assert len(segments) >= 59
+
+
+@pytest.mark.parametrize("input_type_fn", [tuple, list, pd.Series])
+def test_input_type(fixture_model_2_layers: segmentador.Segmenter, input_type_fn):
+    with pytest.warns(UserWarning):
+        segs = fixture_model_2_layers(
+            input_type_fn(["Projeto de Lei (do XYZ).", "Artigo 10: abc xyz", "a) 0 abc b) xyz"])
+        )
+
+    assert len(segs) > 0
+
+
+def test_input_type_pandas_df(fixture_model_2_layers: segmentador.Segmenter):
+    with pytest.raises(TypeError):
+        pandas_df = pd.DataFrame.from_dict({"a": ["Artigo 1: abc", "Artigo 2: xyz"]})
+        fixture_model_2_layers(pandas_df)
+
+
+@pytest.mark.parametrize("return_tensors", (None, "pt", "np"))
+def test_input_type_pre_tokenized(
+    fixture_model_2_layers: segmentador.Segmenter,
+    fixture_legal_text_short: str,
+    return_tensors: str,
+):
+    preproc_text = fixture_model_2_layers.preprocess_legal_text(fixture_legal_text_short)
+    tokenized_input = fixture_model_2_layers.tokenizer(preproc_text, return_tensors=return_tensors)
+    segs = fixture_model_2_layers(tokenized_input)
+    assert len(segs) == 9
+
+
+def test_input_type_huggingface_dataset(
+    fixture_model_2_layers: segmentador.Segmenter, fixture_legal_text_short: str
+):
+    preproc_text = fixture_model_2_layers.preprocess_legal_text(fixture_legal_text_short)
+    tokenized_input = fixture_model_2_layers.tokenizer(preproc_text)
+    dataset = datasets.Dataset.from_dict(tokenized_input)
+    segs = fixture_model_2_layers(dataset)
+    assert len(segs) == 9
