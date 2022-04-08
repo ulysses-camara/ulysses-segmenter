@@ -104,6 +104,7 @@ disable = """
 	too-many-branches,
 	import-outside-toplevel
 """
+min-similarity-lines=10
 
 [tool.black]
 line-length=100
