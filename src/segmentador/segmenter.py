@@ -213,23 +213,16 @@ class LSTMSegmenter(_base.BaseSegmenter):
             state_dict = state_dict["state_dict"]
 
         if lstm_hidden_layer_size is None:
-            _, doubled_hidden_size = state_dict["lin_out.weight"].shape
-            lstm_hidden_layer_size = doubled_hidden_size // 2
+            lstm_hidden_layer_size = self._infer_lstm_hidden_layer_size(
+                state_dict=state_dict,
+                quantize_weights=quantize_weights,
+            )
 
         if lstm_num_layers is None:
-            re_find_layer_inds = regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
-
-            lstm_ind_matches = [re_find_layer_inds.search(key) for key in state_dict.keys()]
-            all_layer_inds = {int(match.group(1)) for match in lstm_ind_matches if match}
-
-            if not all_layer_inds:
-                warnings.warn(
-                    "Could not infer lstm number of layers (parameter 'lstm_num_layers')"
-                    "From checkpoint file. Will set it to '1'."
-                )
-                all_layer_inds = {0}
-
-            lstm_num_layers = 1 + max(all_layer_inds)
+            lstm_num_layers = self._infer_lstm_num_layers(
+                state_dict=state_dict,
+                quantize_weights=quantize_weights,
+            )
 
         self._model = _base.LSTMSegmenterTorchModule(
             lstm_hidden_layer_size=lstm_hidden_layer_size,
@@ -242,3 +235,50 @@ class LSTMSegmenter(_base.BaseSegmenter):
 
         self._model.load_state_dict(state_dict)
         self._model = self._model.to(device)
+
+    @staticmethod
+    def _infer_lstm_hidden_layer_size(state_dict: dict[str, t.Any], quantize_weights: bool) -> int:
+        """Infer 'lstm_hidden_layer_size' when not provided by user."""
+        try:
+            weight_shape = (
+                state_dict["lin_out._packed_params._packed_params"][0]
+                if quantize_weights else
+                state_dict["lin_out.weight"]
+            ).shape
+
+        except (KeyError, IndexError) as e_shape:
+            raise RuntimeError(
+                "Could not infer 'lstm_hidden_layer_size' from loaded weights. Please "
+                "specify it manually."
+            ) from e_shape
+
+        _, doubled_hidden_size = weight_shape
+        lstm_hidden_layer_size = doubled_hidden_size // 2
+        return int(lstm_hidden_layer_size)
+
+    @staticmethod
+    def _infer_lstm_num_layers(state_dict: dict[str, t.Any], quantize_weights: bool) -> int:
+        """Infer 'lstm_num_layers' when not provided by user."""
+        re_find_layer_inds = (
+            regex.compile(r"(?<=lstm\._all_weight_values\.)([0-9]+)")
+            if quantize_weights else
+            regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
+        )
+
+        lstm_ind_matches = [re_find_layer_inds.search(key) for key in state_dict.keys()]
+        all_layer_inds = {int(match.group(1)) for match in lstm_ind_matches if match}
+
+        if not all_layer_inds:
+            warnings.warn(
+                "Could not infer lstm number of layers (parameter 'lstm_num_layers')"
+                "From checkpoint file. Will set it to '1'."
+            )
+            all_layer_inds = {0}
+
+        lstm_num_layers = 1 + max(all_layer_inds)
+
+        if quantize_weights:
+            lstm_num_layers //= 2
+            assert lstm_num_layers > 0, "Something went wrong while deducing 'lstm_num_layers'."
+
+        return int(lstm_num_layers)
