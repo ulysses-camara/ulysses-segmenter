@@ -242,8 +242,8 @@ class LSTMSegmenter(_base.BaseSegmenter):
         try:
             weight_shape = (
                 state_dict["lin_out._packed_params._packed_params"][0]
-                if quantize_weights else
-                state_dict["lin_out.weight"]
+                if quantize_weights
+                else state_dict["lin_out.weight"]
             ).shape
 
         except (KeyError, IndexError) as e_shape:
@@ -261,8 +261,8 @@ class LSTMSegmenter(_base.BaseSegmenter):
         """Infer 'lstm_num_layers' when not provided by user."""
         re_find_layer_inds = (
             regex.compile(r"(?<=lstm\._all_weight_values\.)([0-9]+)")
-            if quantize_weights else
-            regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
+            if quantize_weights
+            else regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
         )
 
         lstm_ind_matches = [re_find_layer_inds.search(key) for key in state_dict.keys()]

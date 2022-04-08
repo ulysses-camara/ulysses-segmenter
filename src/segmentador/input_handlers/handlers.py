@@ -230,9 +230,7 @@ class InputHandlerDataset(_BaseInputHandler):
     """Reformat the input as a huggingface Dataset into the segmenter input format."""
 
     @classmethod
-    def tokenize(
-        cls, text: t.Any, *args: t.Any, **kwargs: t.Any
-    ) -> InputHandlerOutputType:
+    def tokenize(cls, text: t.Any, *args: t.Any, **kwargs: t.Any) -> InputHandlerOutputType:
         """Reformat a huggingface Dataset into key-tensor pairs (Pytorch format).
 
         The entire mapping is interpreted as a single document. If this is not

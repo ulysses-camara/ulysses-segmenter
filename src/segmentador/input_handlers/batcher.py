@@ -1,3 +1,4 @@
+"""Build minibatches for segmenter inference."""
 import transformers
 import numpy as np
 import torch
