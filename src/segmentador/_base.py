@@ -9,7 +9,6 @@ import transformers
 import datasets
 import torch
 import torch.nn
-import torch.nn.functional as F
 import numpy as np
 import numpy.typing as npt
 import tqdm.auto
@@ -167,61 +166,6 @@ class BaseSegmenter:
         preprocessed_text, _ = ret
 
         return preprocessed_text
-
-    def _build_minibatches(
-        self,
-        tokens: transformers.BatchEncoding,
-        num_tokens: int,
-        batch_size: int,
-        moving_window_size: int,
-        window_shift_size: int,
-    ) -> list[transformers.BatchEncoding]:
-        """Break BatchEncoding items into proper smaller minibatches."""
-        minibatches: list[transformers.BatchEncoding] = []
-        minibatch = transformers.BatchEncoding()
-
-        total_minibatches = 1 + max(
-            0, int(np.ceil((num_tokens - moving_window_size) / window_shift_size))
-        )
-
-        for i in range(total_minibatches):
-            i_start = i * window_shift_size
-            i_end = i_start + moving_window_size
-
-            for key, vals in tokens.items():
-                slice_ = vals[..., i_start:i_end]
-
-                minibatch.setdefault(key, [])
-                minibatch[key].append(slice_)
-
-            if (i + 1) % batch_size == 0:
-                minibatches.append(minibatch)
-                minibatch = transformers.BatchEncoding()
-
-        if minibatch:
-            minibatches.append(minibatch)
-
-        for minibatch in minibatches:
-            for key, vals in minibatch.items():
-                if torch.is_tensor(vals):
-                    continue
-
-                for i in reversed(range(len(vals))):
-                    cur_len = int(max(vals[i].size()))
-
-                    if cur_len >= moving_window_size:
-                        break
-
-                    vals[i] = F.pad(
-                        input=vals[i],
-                        pad=(0, moving_window_size - cur_len),
-                        mode="constant",
-                        value=int(self._tokenizer.pad_token_id or 0),
-                    )
-
-                minibatch[key] = torch.vstack(vals)
-
-        return minibatches
 
     def _generate_segments_from_labels(
         self,
@@ -427,12 +371,13 @@ class BaseSegmenter:
             regex_justificativa=regex_justificativa,
         )
 
-        minibatches = self._build_minibatches(
+        minibatches = input_handlers.build_minibatches(
             tokens=tokens,
             num_tokens=num_tokens,
             batch_size=batch_size,
             moving_window_size=moving_window_size,
             window_shift_size=int(window_shift_size),
+            pad_id=int(self._tokenizer.pad_token_id or 0),
         )
 
         self.eval()
