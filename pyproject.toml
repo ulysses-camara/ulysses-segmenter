@@ -124,6 +124,7 @@ whitelist_externals = flit
 commands =
 	pip install .
 	pip install '.[test]'
+	pip install '.[optimize]'
 	python -m pytest
 	python -m pytest src/ --doctest-modules --doctest-glob="**/*.py"
 
