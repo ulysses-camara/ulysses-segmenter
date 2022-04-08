@@ -16,11 +16,15 @@ dependencies = [
 	"numpy == 1.22.3",
 	"torch == 1.11.0",
 	"transformers == 4.16.2",
-	"optimum[onnxruntime] == 1.1.0",
 ]
 
 [project.optional-dependencies]
-general = [
+optimize = [
+	"optimum[onnxruntime] == 1.1.0",
+	"colorama == 0.4.4",
+]
+
+codestyle = [
 	"black == 22.1.0",
 ]
 
