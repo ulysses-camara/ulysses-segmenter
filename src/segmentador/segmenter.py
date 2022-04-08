@@ -699,7 +699,7 @@ class QONNXBERTSegmenter(_BaseSegmenter):
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         if not isinstance(minibatch, datasets.Dataset):
-            minibatch = datasets.Dataset.from_dict(minibatch)  # type: ignore
+            minibatch = datasets.Dataset.from_dict(minibatch)
 
         model_out = self._model.evaluation_loop(minibatch)
         model_out = model_out.predictions
