@@ -1,12 +1,25 @@
 """Handle different segmenter input types."""
 import typing as t
 import abc
+import warnings
+import collections
 
 import transformers
-import datasets
 import torch
 import numpy as np
 import regex
+
+try:
+    import datasets
+
+except ImportError:
+    pass
+
+try:
+    import pandas as pd
+
+except ImportError:
+    pass
 
 
 InputHandlerOutputType = tuple[transformers.BatchEncoding, t.Optional[list[str]], int]
@@ -218,7 +231,7 @@ class InputHandlerDataset(_BaseInputHandler):
 
     @classmethod
     def tokenize(
-        cls, text: datasets.Dataset, *args: t.Any, **kwargs: t.Any
+        cls, text: t.Any, *args: t.Any, **kwargs: t.Any
     ) -> InputHandlerOutputType:
         """Reformat a huggingface Dataset into key-tensor pairs (Pytorch format).
 
@@ -249,7 +262,7 @@ class InputHandlerDataset(_BaseInputHandler):
             Total length of `tokens`.
         """
         # pylint: disable='unused-argument'
-        return InputHandlerMapping.tokenize(text.to_dict())  # type: ignore
+        return InputHandlerMapping.tokenize(text.to_dict())
 
 
 def tokenize_input(text: t.Any, *args: t.Any, **kwargs: t.Any) -> InputHandlerOutputType:
@@ -262,13 +275,48 @@ def tokenize_input(text: t.Any, *args: t.Any, **kwargs: t.Any) -> InputHandlerOu
     if isinstance(text, str):
         return InputHandlerString.tokenize(text, *args, **kwargs)
 
-    if isinstance(text, datasets.Dataset):
+    try:
+        is_hugginface_dataset = isinstance(text, datasets.Dataset)
+
+    except NameError:
+        is_hugginface_dataset = False
+
+    if is_hugginface_dataset:
         return InputHandlerDataset.tokenize(text, *args, **kwargs)
+
+    try:
+        is_pandas_dataframe = isinstance(text, pd.DataFrame)
+        is_pandas_series = isinstance(text, pd.Series)
+
+    except NameError:
+        is_pandas_dataframe = False
+        is_pandas_series = False
+
+    if is_pandas_dataframe:
+        raise TypeError(
+            "pandas.DataFrame as input is not supported, as it is ambigous which "
+            "column should be used. Please provide the input as a pandas.Series or "
+            "a list."
+        )
+
+    if is_pandas_series:
+        text = text.tolist()
 
     if hasattr(text, "items"):
         return InputHandlerMapping.tokenize(text, *args, **kwargs)
 
+    if isinstance(text, collections.abc.Iterable):
+        warnings.warn(
+            message=(
+                "Provided input is an iterable, which will be concatenated into a single text. "
+                "If the intended behaviour is to feed multiple, independent documents, please "
+                "provide them separately."
+            ),
+            category=UserWarning,
+        )
+        return InputHandlerString.tokenize("\n".join(text), *args, **kwargs)
+
     raise TypeError(
         f"Unrecognized 'text' type: {type(text)}. Please cast your text input to "
-        "a string, datasets.Dataset, or a valid key-value mapping."
+        "a string, datasets.Dataset, a valid key-value mapping, or a generic iterable."
     )
