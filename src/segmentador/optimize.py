@@ -167,13 +167,13 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
             cache_dir_tokenizer=cache_dir_tokenizer,
         )
 
-        self._model = onnxruntime.InferenceSession(uri_model)
+        self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(uri_model)
 
-    def eval(self) -> "ONNXBERTSegmenter":
+    def eval(self) -> "ONNXLSTMSegmenter":
         """No-op method, created only to keep API consistent."""
         return self
 
-    def train(self) -> "ONNXBERTSegmenter":
+    def train(self) -> "ONNXLSTMSegmenter":
         """No-op method, created only to keep API consistent."""
         return self
 
@@ -182,11 +182,20 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         minibatch: t.Union[datasets.Dataset, transformers.BatchEncoding],
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
-        input_ids = minibatch["input_ids"].detach().cpu().numpy()
+        input_ids = minibatch["input_ids"]
+
+        if isinstance(input_ids, torch.Tensor):
+            input_ids = input_ids.detach().cpu().numpy()
+
         input_ids = np.atleast_2d(input_ids)
 
-        logits = self._model.run(["logits"], dict(input_ids=input_ids))
-        logits = np.asfarray(logits).astype(np.float64, copy=False)
+        model_out: list[npt.NDArray[np.float64]] = self._model.run(
+            output_names=["logits"],
+            input_feed=dict(input_ids=input_ids),
+            run_options=None,
+        )
+
+        logits = np.asfarray(model_out).astype(np.float64, copy=False)
 
         if logits.ndim > 3:
             logits = logits.squeeze(0)
@@ -208,6 +217,9 @@ class QuantizationOutputTorch(t.NamedTuple):
     """Quantization output paths as Torch format."""
 
     output_uri: str
+
+
+QuantizationOutput = t.Union[QuantizationOutputONNX, QuantizationOutputTorch]
 
 
 def _build_onnx_default_uris(
@@ -242,7 +254,7 @@ def _build_onnx_default_uris(
     onnx_optimized_uri = os.path.join(quantized_models_dir, intermediary_onnx_optimized_model_name)
     onnx_quantized_uri = os.path.join(quantized_models_dir, quantized_model_name)
 
-    paths_dict: dict[str, t.Optional[str]] = dict(
+    paths_dict: dict[str, str] = dict(
         onnx_base_uri=onnx_base_uri,
         onnx_optimized_uri=onnx_optimized_uri,
         onnx_quantized_uri=onnx_quantized_uri,
@@ -356,7 +368,7 @@ def quantize_bert_model_as_onnx(
         ),
     )
 
-    with open(paths.onnx_config_uri, "wb") as f_out:
+    with open(paths.onnx_config_uri or (paths.output_uri + ".config"), "wb") as f_out:
         pickle.dump(onnx_config, f_out, protocol=pickle.HIGHEST_PROTOCOL)
 
     if verbose:
@@ -542,7 +554,7 @@ def quantize_model(
     onnx_opset_version: int = 15,
     check_cached: bool = True,
     verbose: bool = False,
-) -> t.Union[QuantizationOutputONNX, QuantizationOutputTorch]:
+) -> QuantizationOutput:
     """Generate a quantized segmenter model from an existing segmenter model.
 
     Parameters
@@ -566,7 +578,7 @@ def quantize_model(
         99: All optimizations (incluing layer and hardware-specific optimizations).
         See [1]_ for more informations.
 
-    model_output_format : {"onnx", "torch"}, default="onnx"
+    model_output_format : {'onnx', 'torch'}, default='onnx'
         TODO.
 
     onnx_opset_version: int, default=15
@@ -596,8 +608,6 @@ def quantize_model(
             "provide either BERTSegmenter or LSTMSegmenter."
         )
 
-    model_output_format = str(model_output_format).lower()
-
     if model_output_format not in {"onnx", "torch"}:
         raise ValueError(
             f"Unsupported '{model_output_format=}'. Please choose either 'onnx' or 'torch'."
@@ -611,7 +621,9 @@ def quantize_model(
         verbose=verbose,
     )
 
-    fn_quantization_factory: dict[tuple[t.Type[_base.BaseSegmenter], str], t.Callable] = {
+    fn_quantization_factory: dict[
+        tuple[t.Type[_base.BaseSegmenter], str], t.Callable[..., QuantizationOutput]
+    ] = {
         (segmenter.BERTSegmenter, "onnx"): quantize_bert_model_as_onnx,
         (segmenter.LSTMSegmenter, "torch"): quantize_lstm_model_as_torch,
         (segmenter.LSTMSegmenter, "onnx"): quantize_lstm_model_as_onnx,
