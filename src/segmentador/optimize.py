@@ -143,6 +143,52 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
         return logits
 
 
+class ONNXLSTMSegmenter(_base.BaseSegmenter):
+    def __init__(
+        self,
+        uri_model: str,
+        uri_tokenizer: str,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "gaussian",
+        local_files_only: bool = True,
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+    ):
+        super().__init__(
+            uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            device="cpu",
+            cache_dir_tokenizer=cache_dir_tokenizer,
+        )
+
+        self._model = onnxruntime.InferenceSession(uri_model)
+
+    def eval(self) -> "ONNXBERTSegmenter":
+        """No-op method, created only to keep API consistent."""
+        return self
+
+    def train(self) -> "ONNXBERTSegmenter":
+        """No-op method, created only to keep API consistent."""
+        return self
+
+    def _predict_minibatch(
+        self,
+        minibatch: t.Union[datasets.Dataset, transformers.BatchEncoding],
+    ) -> npt.NDArray[np.float64]:
+        """Predict a tokenized minibatch."""
+        input_ids = minibatch["input_ids"].detach().cpu().numpy()
+        input_ids = np.atleast_2d(input_ids)
+
+        logits = self._model.run(["logits"], dict(input_ids=input_ids))
+        logits = np.asfarray(logits).astype(np.float64, copy=False)
+
+        if logits.ndim > 3:
+            logits = logits.squeeze(0)
+
+        return logits
+
+
 class QuantizeOutputBERT(t.NamedTuple):
     """BERT quantization output paths."""
 
