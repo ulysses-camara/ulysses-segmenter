@@ -19,7 +19,7 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     Parameters
     ----------
-    uri_model : str, default="neuralmind/bert-base-portuguese-cased"
+    uri_model : str, default='neuralmind/bert-base-portuguese-cased'
         URI to load pretrained model from. May be a Hugginface HUB URL (if
         `local_files_only=False`) or a local file.
 
@@ -28,7 +28,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         the `uri_model` path.
 
     inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
-            default="assymetric-max"
+            default='assymetric-max'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -48,7 +48,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    device : {'cpu', 'cuda'}, default="cpu"
+    device : {'cpu', 'cuda'}, default='cpu'
         Device to segment document content.
 
     init_from_pretrained_weights : bool, default=True
@@ -71,10 +71,10 @@ class BERTSegmenter(_base.BaseSegmenter):
         layers than the specified value in this parameter, later hidden layers will be
         removed.
 
-    cache_dir_model : str, default="../cache/models"
+    cache_dir_model : str, default='../cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default="../cache/tokenizers"
+    cache_dir_tokenizer : str, default='../cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -148,7 +148,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         URI to pretrained text Tokenizer.
 
     inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
-            default="assymetric-max"
+            default='assymetric-max'
         Specify the strategy used to combine logits during model inference for documents
         larger than `moving_window_size` subword tokens (see `LSTMSegmenter.segment_legal_text`
         documentation). Larger documents are sharded into possibly overlapping windows of
@@ -169,11 +169,12 @@ class LSTMSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    device : {'cpu', 'cuda'}, default="cpu"
+    device : {'cpu', 'cuda'}, default='cpu'
         Device to segment document content.
 
     from_quantized_weights : bool, default=False
-        TODO.
+        Set to True if the pretrained weights where previously quantized (from FP32 to UINT8).
+        Check ``optimize.quantize_model`` for more information.
 
     lstm_hidden_layer_size : int
         Dimension of LSTM model hidden layer.
@@ -181,8 +182,12 @@ class LSTMSegmenter(_base.BaseSegmenter):
     lstm_num_layers : int
         Number of layers in LSTM model.
 
-    cache_dir_tokenizer : str, default="../cache/tokenizers"
+    cache_dir_tokenizer : str, default='../cache/tokenizers'
         Cache directory for text tokenizer.
+
+    See Also
+    --------
+    optimize.quantize_model : create a quantized model from an existing Segmenter model.
     """
 
     def __init__(
