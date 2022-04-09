@@ -87,7 +87,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
 
         _optional_import_utils.load_required_module("optimum.onnxruntime")
 
-        import optimum.onnxruntime
+        import optimum.onnxruntime  # pylint: disable='import-error'
 
         self._model: optimum.onnxruntime.ORTModel = optimum.onnxruntime.ORTModel(
             uri_model,
@@ -183,7 +183,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
 
         _optional_import_utils.load_required_module("onnxruntime")
 
-        import onnxruntime
+        import onnxruntime  # pylint: disable='import-error'
 
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(uri_model)
 
