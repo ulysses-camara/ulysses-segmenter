@@ -468,6 +468,21 @@ def quantize_lstm_model_as_onnx(
         ),
     )
 
+    if verbose:
+        c_ylw = colorama.Fore.YELLOW if colorama else ""
+        c_blu = colorama.Fore.BLUE if colorama else ""
+        c_rst = colorama.Style.RESET_ALL if colorama else ""
+
+        print(
+            f"Saved quantized Pytorch module (ONNX format) in {c_blu}'{paths.output_uri}'{c_rst}. "
+            "To use it, load a LSTM segmenter model as:\n\n"
+            f"{__name__}.{ONNXLSTMSegmenter.__name__}(\n"
+            f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
+            f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
+            "   ...,\n"
+            ")"
+        )
+
     return paths
 
 
@@ -532,7 +547,7 @@ def quantize_lstm_model_as_torch(
         c_rst = colorama.Style.RESET_ALL if colorama else ""
 
         print(
-            f"Saved quantized Pytorch module in {c_blu}'{paths.output_uri}'{c_rst}. "
+            f"Saved quantized Pytorch module (Torch format) in {c_blu}'{paths.output_uri}'{c_rst}. "
             "To use it, load a LSTM segmenter model as:\n\n"
             f"LSTMSegmenter(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
