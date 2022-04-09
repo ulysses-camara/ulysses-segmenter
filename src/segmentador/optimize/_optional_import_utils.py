@@ -5,17 +5,6 @@ import warnings
 import types
 
 
-MAP_FACTORY_REQUIRED: dict[str, t.Callable[[], types.ModuleType]] = {
-    "onnx.onnxruntime": import_optimum_onnxruntime,
-    "onnxruntime": import_onnxruntime,
-}
-
-MAP_FACTORY: dict[str, t.Callable[[], t.Optional[types.ModuleType]]] = {
-    "colorama": import_colorama,
-    **MAP_FACTORY_REQUIRED,
-}
-
-
 def load_optional_module(module_name: str) -> t.Optional[types.ModuleType]:
     """Load an optional module, preventing any ImportErrors."""
     try:
@@ -77,3 +66,14 @@ def import_colorama() -> t.Optional[types.ModuleType]:
             category=ImportWarning,
         )
         return None
+
+
+MAP_FACTORY_REQUIRED: dict[str, t.Callable[[], types.ModuleType]] = {
+    "onnx.onnxruntime": import_optimum_onnxruntime,
+    "onnxruntime": import_onnxruntime,
+}
+
+MAP_FACTORY: dict[str, t.Callable[[], t.Optional[types.ModuleType]]] = {
+    "colorama": import_colorama,
+    **MAP_FACTORY_REQUIRED,
+}
