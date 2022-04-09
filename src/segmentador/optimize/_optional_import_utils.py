@@ -41,11 +41,11 @@ def import_onnxruntime() -> types.ModuleType:
 
     except ImportError as e_import:
         raise ImportError(
-            "Optinal dependency 'optimum.onnxruntime' not found, which is necessary to "
-            "produce ONNX BERT segmenter models. Please install it with the following "
+            "Optinal dependency 'onnxruntime' not found, which is necessary to "
+            "produce ONNX LSTM segmenter models. Please install it with the following "
             "command:\n\n"
-            "python -m pip install optimum[onnxruntime]\n\n"
-            "See https://huggingface.co/docs/optimum/index for more information."
+            "python -m pip install onnxruntime\n\n"
+            "See https://onnxruntime.ai/ for more information."
         ) from e_import
 
 
