@@ -7,7 +7,6 @@ import datasets
 import torch
 import numpy as np
 import numpy.typing as npt
-import onnxruntime
 
 from .. import _base
 from . import _optional_import_utils
@@ -181,6 +180,10 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
             device="cpu",
             cache_dir_tokenizer=cache_dir_tokenizer,
         )
+
+        _optional_import_utils.load_required_module("onnxruntime")
+
+        import onnxruntime
 
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(uri_model)
 
