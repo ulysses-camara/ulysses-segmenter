@@ -44,8 +44,11 @@ from . import _base
 from . import segmenter
 
 
-class QONNXBERTSegmenter(_base.BaseSegmenter):
-    """Quantized ONNX BERT segmenter for PT-br legal text data.
+class ONNXBERTSegmenter(_base.BaseSegmenter):
+    """BERT segmenter in ONNX format.
+
+    The ONNX format support faster inference, quantized and optimized models with
+    hardware-specific instructions.
 
     Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
     The pretrained models support texts up to 1024 subwords. Texts larger than this
@@ -119,11 +122,11 @@ class QONNXBERTSegmenter(_base.BaseSegmenter):
             onnx_config,
         )
 
-    def eval(self) -> "QONNXBERTSegmenter":
+    def eval(self) -> "ONNXBERTSegmenter":
         """No-op method, created only to keep API consistent."""
         return self
 
-    def train(self) -> "QONNXBERTSegmenter":
+    def train(self) -> "ONNXBERTSegmenter":
         """No-op method, created only to keep API consistent."""
         return self
 
@@ -301,7 +304,7 @@ def quantize_bert_model(
             f"Saved quantized BERT (ONNX format) in {c_blu}'{onnx_quantized_uri}'{c_rst}, and "
             f"its configuration file in {c_blu}'{onnx_config_uri}'{c_rst}. "
             "To use it, load a BERT segmenter model as:\n\n"
-            f"{__name__}.{QONNXBERTSegmenter.__name__}(\n"
+            f"{__name__}.{ONNXBERTSegmenter.__name__}(\n"
             f"   {c_ylw}uri_model={c_blu}'{onnx_quantized_uri}'{c_rst},\n"
             f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
             f"   {c_ylw}uri_onnx_config={c_blu}'{onnx_config_uri}'{c_rst},\n"
