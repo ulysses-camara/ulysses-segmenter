@@ -218,6 +218,7 @@ def _build_onnx_default_uris(
     intermediary_onnx_model_name: t.Optional[str] = None,
     intermediary_onnx_optimized_model_name: t.Optional[str] = None,
     onnx_config_name: t.Optional[str] = None,
+    include_config_uri: bool = True,
 ) -> QuantizationOutputONNX:
     if not quantized_model_name:
         attrs_to_name = "_".join("_".join(map(str, item)) for item in model_attributes.items())
@@ -241,13 +242,17 @@ def _build_onnx_default_uris(
     onnx_optimized_uri = os.path.join(quantized_models_dir, intermediary_onnx_optimized_model_name)
     onnx_quantized_uri = os.path.join(quantized_models_dir, quantized_model_name)
 
-    paths = QuantizationOutputONNX(
+    paths_dict: dict[str, t.Optional[str]] = dict(
         onnx_base_uri=onnx_base_uri,
         onnx_optimized_uri=onnx_optimized_uri,
         onnx_quantized_uri=onnx_quantized_uri,
         output_uri=onnx_quantized_uri,
-        onnx_config_uri=onnx_config_uri,
     )
+
+    if include_config_uri:
+        paths_dict["onnx_config_uri"] = onnx_config_uri
+
+    paths = QuantizationOutputONNX(**paths_dict)
 
     return paths
 
@@ -287,11 +292,13 @@ def quantize_bert_model_as_onnx(
 ) -> QuantizationOutputONNX:
     model_config: transformers.BertConfig = model.model.config  # type: ignore
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict((
-        ("num_layers", model_config.num_hidden_layers),
-        ("vocab_size", model.tokenizer.vocab_size),
-        ("opt_level", optimization_level),
-    ))
+    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+        (
+            ("num_layers", model_config.num_hidden_layers),
+            ("vocab_size", model.tokenizer.vocab_size),
+            ("opt_level", optimization_level),
+        )
+    )
 
     paths = _build_onnx_default_uris(
         model_name="bert",
@@ -303,9 +310,12 @@ def quantize_bert_model_as_onnx(
         onnx_config_name=onnx_config_name,
     )
 
-    if check_cached and os.path.isfile(onnx_quantized_uri):
+    if check_cached and os.path.isfile(paths.onnx_quantized_uri):
         if verbose:
-            print(f"Found cached model in '{onnx_quantized_uri}'. Skipping model quantization.")
+            print(
+                f"Found cached model in '{paths.onnx_quantized_uri}'. "
+                "Skipping model quantization."
+            )
 
         return paths
 
@@ -380,39 +390,73 @@ def quantize_lstm_model_as_onnx(
     check_cached: bool = True,
     verbose: bool = False,
 ) -> QuantizationOutputONNX:
-    model_attributes: dict[str, t.Any] = collections.OrderedDict((
-        ("hidden_layer_dim", model.lstm_hidden_layer_size),
-        ("vocab_size", model.tokenizer.vocab_size),
-        ("num_layers", model.lstm_num_layers),
-        ("opt_level", optimization_level),
-    ))
+    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+        (
+            ("hidden_layer_dim", model.lstm_hidden_layer_size),
+            ("vocab_size", model.tokenizer.vocab_size),
+            ("num_layers", model.lstm_num_layers),
+            ("opt_level", optimization_level),
+        )
+    )
+
+    paths = _build_onnx_default_uris(
+        model_name="lstm",
+        model_attributes=model_attributes,
+        quantized_models_dir=quantized_models_dir,
+        quantized_model_name=quantized_model_name,
+        intermediary_onnx_model_name=intermediary_onnx_model_name,
+        intermediary_onnx_optimized_model_name=intermediary_onnx_optimized_model_name,
+        include_config_uri=False,
+    )
+
+    if check_cached and os.path.isfile(paths.onnx_quantized_uri):
+        if verbose:
+            print(
+                f"Found cached model in '{paths.onnx_quantized_uri}'. "
+                "Skipping model quantization.",
+            )
+
+        return paths
 
     pytorch_module = model.model
 
     torch_sample_input = torch.ones(1, 256, dtype=torch.long)
-    torch_sample_input = torch_sample_input.to(segmenter_lstm.model.device)
+    torch_sample_input = torch_sample_input.to(model.device)
 
     torch.onnx.export(
-        model=segmenter_lstm.model,
+        model=pytorch_module,
         args=(torch_sample_input,),
-        f=intermediary_onnx_model_name,
+        f=paths.onnx_base_uri,
         input_names=["input_ids"],
         output_names=["logits"],
         opset_version=onnx_opset_version,
-        dynamic_axes={
-            "input_ids": {0: "batch_axis", 1: "sentence_length"},
-            "logits": {0: "batch_axis", 1: "sentence_length"},
-        },
+        dynamic_axes=dict(
+            input_ids={0: "batch_axis", 1: "sentence_length"},
+            logits={0: "batch_axis", 1: "sentence_length"},
+        ),
     )
 
-    sess_options = onnxruntime.SessionOptions()
-    sess_options.graph_optimization_level = optimization_level
-    sess_options.optimized_model_filepath = intermediary_onnx_optimized_model_name
-
-    session = onnxruntime.InferenceSession(
-        os.path.join(QUANTIZED_MODELS_DIR, "test_lstm_test.onnx"),
-        sess_options,
+    opt_sess_options = onnxruntime.SessionOptions()
+    opt_sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel(
+        optimization_level
     )
+    opt_sess_options.optimized_model_filepath = paths.onnx_optimized_uri
+
+    onnxruntime.InferenceSession(paths.onnx_base_uri, opt_sess_options)
+
+    onnxruntime.quantization.quantize_dynamic(
+        model_input=paths.onnx_optimized_uri,
+        model_output=paths.onnx_quantized_uri,
+        weight_type=onnxruntime.quantization.QuantType.QUInt8,
+        optimize_model=False,
+        per_channel=True,
+        extra_options=dict(
+            EnableSubgraph=True,
+            MatMulConstBOnly=True,
+        ),
+    )
+
+    return paths
 
 
 def quantize_lstm_model_as_torch(
@@ -430,11 +474,13 @@ def quantize_lstm_model_as_torch(
     verbose: bool = False,
 ) -> QuantizationOutputTorch:
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict((
-        ("num_layers", model.lstm_hidden_layer_size),
-        ("vocab_size", model.tokenizer.vocab_size),
-        ("num_layers", model.lstm_num_layers),
-    ))
+    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+        (
+            ("num_layers", model.lstm_hidden_layer_size),
+            ("vocab_size", model.tokenizer.vocab_size),
+            ("num_layers", model.lstm_num_layers),
+        )
+    )
 
     paths = _build_torch_default_uris(
         model_name="lstm",
@@ -443,9 +489,9 @@ def quantize_lstm_model_as_torch(
         quantized_model_name=quantized_model_name,
     )
 
-    if check_cached and os.path.isfile(output_uri):
+    if check_cached and os.path.isfile(paths.output_uri):
         if verbose:
-            print(f"Found cached model in '{output_uri}'. Skipping model quantization.")
+            print(f"Found cached model in '{paths.output_uri}'. Skipping model quantization.")
 
         return paths
 
@@ -548,6 +594,13 @@ def quantize_model(
         raise TypeError(
             f"Unknown segmenter type for quantization: '{type(model)}'. Please "
             "provide either BERTSegmenter or LSTMSegmenter."
+        )
+
+    model_output_format = str(model_output_format).lower()
+
+    if model_output_format not in {"onnx", "torch"}:
+        raise ValueError(
+            f"Unsupported '{model_output_format=}'. Please choose either 'onnx' or 'torch'."
         )
 
     kwargs: dict[str, t.Any] = dict(
