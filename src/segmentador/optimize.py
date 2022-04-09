@@ -552,7 +552,7 @@ def quantize_lstm_model_as_torch(
             f"LSTMSegmenter(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
             f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {c_ylw}quantize_weights={c_blu}True{c_rst},\n"
+            f"   {c_ylw}from_quantized_weights={c_blu}True{c_rst},\n"
             "   ...,\n"
             ")"
         )

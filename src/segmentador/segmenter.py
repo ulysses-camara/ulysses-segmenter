@@ -172,7 +172,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
     device : {'cpu', 'cuda'}, default="cpu"
         Device to segment document content.
 
-    quantize_weights : bool, default=False
+    from_quantized_weights : bool, default=False
         TODO.
 
     lstm_hidden_layer_size : int
@@ -194,7 +194,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         ] = "gaussian",
         local_files_only: bool = True,
         device: str = "cpu",
-        quantize_weights: bool = False,
+        from_quantized_weights: bool = False,
         lstm_hidden_layer_size: t.Optional[int] = None,
         lstm_num_layers: t.Optional[int] = None,
         cache_dir_tokenizer: str = "../cache/tokenizers",
@@ -207,7 +207,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
             cache_dir_tokenizer=cache_dir_tokenizer,
         )
 
-        self.quantize_weights = bool(quantize_weights)
+        self.from_quantized_weights = bool(from_quantized_weights)
         self.vocab_size = int(self._tokenizer.vocab_size)
         self.pad_id = int(self._tokenizer.pad_token_id or 0)
 
@@ -219,13 +219,13 @@ class LSTMSegmenter(_base.BaseSegmenter):
         if lstm_hidden_layer_size is None:
             lstm_hidden_layer_size = self._infer_lstm_hidden_layer_size(
                 state_dict=state_dict,
-                quantize_weights=self.quantize_weights,
+                from_quantized_weights=self.from_quantized_weights,
             )
 
         if lstm_num_layers is None:
             lstm_num_layers = self._infer_lstm_num_layers(
                 state_dict=state_dict,
-                quantize_weights=self.quantize_weights,
+                from_quantized_weights=self.from_quantized_weights,
             )
 
         self.lstm_hidden_layer_size = int(lstm_hidden_layer_size)
@@ -237,19 +237,21 @@ class LSTMSegmenter(_base.BaseSegmenter):
             num_embeddings=self.vocab_size,
             pad_id=self.pad_id,
             num_classes=self.NUM_CLASSES,
-            quantize=self.quantize_weights,
+            quantize=self.from_quantized_weights,
         )
 
         self._model.load_state_dict(state_dict)
         self._model = self._model.to(device)
 
     @staticmethod
-    def _infer_lstm_hidden_layer_size(state_dict: dict[str, t.Any], quantize_weights: bool) -> int:
+    def _infer_lstm_hidden_layer_size(
+        state_dict: dict[str, t.Any], from_quantized_weights: bool
+    ) -> int:
         """Infer 'lstm_hidden_layer_size' when not provided by user."""
         try:
             weight_shape = (
                 state_dict["lin_out._packed_params._packed_params"][0]
-                if quantize_weights
+                if from_quantized_weights
                 else state_dict["lin_out.weight"]
             ).shape
 
@@ -264,11 +266,11 @@ class LSTMSegmenter(_base.BaseSegmenter):
         return int(lstm_hidden_layer_size)
 
     @staticmethod
-    def _infer_lstm_num_layers(state_dict: dict[str, t.Any], quantize_weights: bool) -> int:
+    def _infer_lstm_num_layers(state_dict: dict[str, t.Any], from_quantized_weights: bool) -> int:
         """Infer 'lstm_num_layers' when not provided by user."""
         re_find_layer_inds = (
             regex.compile(r"(?<=lstm\._all_weight_values\.)([0-9]+)")
-            if quantize_weights
+            if from_quantized_weights
             else regex.compile(r"(?<=lstm\.weight.*_l)([0-9]+)")
         )
 
@@ -284,7 +286,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
 
         lstm_num_layers = 1 + max(all_layer_inds)
 
-        if quantize_weights:
+        if from_quantized_weights:
             lstm_num_layers //= 2
             assert lstm_num_layers > 0, "Something went wrong while deducing 'lstm_num_layers'."
 
