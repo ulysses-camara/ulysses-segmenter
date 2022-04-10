@@ -194,7 +194,9 @@ def quantize_bert_model_as_onnx(
        https://github.com/onnx/onnx/blob/main/docs/Operators.md
     """
     optimum_onnxruntime = _optional_import_utils.load_required_module("optimum.onnxruntime")
-    onnxruntime = _optional_import_utils.load_required_module("onnxruntime")
+    _optional_import_utils.load_required_module("onnxruntime")
+
+    import onnxruntime.quantization
 
     model_config: transformers.BertConfig = model.model.config  # type: ignore
 
@@ -364,6 +366,8 @@ def quantize_lstm_model_as_onnx(
        https://github.com/onnx/onnx/blob/main/docs/Operators.md
     """
     onnxruntime = _optional_import_utils.load_required_module("onnxruntime")
+
+    import onnxruntime.quantization
 
     model_attributes: dict[str, t.Any] = collections.OrderedDict(
         (
