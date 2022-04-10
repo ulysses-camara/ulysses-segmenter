@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 optimize = [
 	"optimum[onnxruntime] == 1.1.0",
+	"onnxruntime == 1.11.0",
 	"colorama == 0.4.4",
 ]
 
@@ -59,6 +60,7 @@ test = [
 	"pytest-html == 3.1.1",
 	"pandas == 1.4.1",
 	"datasets == 1.18.3",
+	"onnx == 1.11.0",
 ]
 
 doc = [
