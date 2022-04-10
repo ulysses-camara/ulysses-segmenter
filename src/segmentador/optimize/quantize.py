@@ -255,10 +255,11 @@ def quantize_bert_model_as_onnx(
         model_output=paths.onnx_quantized_uri,
         weight_type=onnxruntime.quantization.QuantType.QUInt8,
         optimize_model=False,
-        per_channel=True,
+        per_channel=False,
         extra_options=dict(
             EnableSubgraph=True,
-            MatMulConstBOnly=True,
+            MatMulConstBOnly=False,
+            ForceQuantizeNoInputCheck=True,
         ),
     )
 
@@ -404,6 +405,7 @@ def quantize_lstm_model_as_onnx(
         input_names=["input_ids"],
         output_names=["logits"],
         opset_version=onnx_opset_version,
+        export_params=True,
         dynamic_axes=dict(
             input_ids={0: "batch_axis", 1: "sentence_length"},
             logits={0: "batch_axis", 1: "sentence_length"},
@@ -423,10 +425,11 @@ def quantize_lstm_model_as_onnx(
         model_output=paths.onnx_quantized_uri,
         weight_type=onnxruntime.quantization.QuantType.QUInt8,
         optimize_model=False,
-        per_channel=True,
+        per_channel=False,
         extra_options=dict(
             EnableSubgraph=True,
-            MatMulConstBOnly=True,
+            MatMulConstBOnly=False,
+            ForceQuantizeNoInputCheck=True,
         ),
     )
 

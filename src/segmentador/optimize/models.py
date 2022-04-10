@@ -185,7 +185,13 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
 
         import onnxruntime  # pylint: disable='import-error'
 
-        self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(uri_model)
+        sess_options = onnxruntime.SessionOptions()
+        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
+
+        self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
+            path_or_bytes=uri_model,
+            sess_options=sess_options,
+        )
 
     def eval(self) -> "ONNXLSTMSegmenter":
         """No-op method, created only to keep API consistent."""
