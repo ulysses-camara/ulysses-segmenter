@@ -5,7 +5,7 @@ import segmentador
 
 
 @pytest.fixture(scope="session")
-def fixture_model_2_layers() -> segmentador.Segmenter:
+def fixture_model_bert_2_layers() -> segmentador.Segmenter:
     model = segmentador.Segmenter(
         uri_model="pretrained_segmenter_model/2_6000_layer_model",
         inference_pooling_operation="assymetric-max",

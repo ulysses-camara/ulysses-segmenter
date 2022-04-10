@@ -5,8 +5,8 @@ import regex
 import segmentador
 
 
-def test_segmenter_model_to_string(fixture_model_2_layers: segmentador.Segmenter):
-    assert isinstance(str(fixture_model_2_layers), str)
+def test_segmenter_model_to_string(fixture_model_bert_2_layers: segmentador.Segmenter):
+    assert isinstance(str(fixture_model_bert_2_layers), str)
 
 
 def test_lstm_instantiation_infer_model_parameters():
@@ -21,11 +21,11 @@ def test_lstm_instantiation_infer_model_parameters():
 
 @pytest.mark.parametrize("regex_justificativa", [None, "ABC"])
 def test_model_preprocessing_no_justificativa(
-    fixture_model_2_layers: segmentador.Segmenter,
+    fixture_model_bert_2_layers: segmentador.Segmenter,
     fixture_legal_text_short: str,
     regex_justificativa: str,
 ):
-    preproc_text = fixture_model_2_layers.preprocess_legal_text(
+    preproc_text = fixture_model_bert_2_layers.preprocess_legal_text(
         fixture_legal_text_short,
         return_justificativa=False,
         regex_justificativa=regex_justificativa,
@@ -46,12 +46,12 @@ def test_model_preprocessing_no_justificativa(
     ],
 )
 def test_model_preprocessing_with_justificativa(
-    fixture_model_2_layers: segmentador.Segmenter,
+    fixture_model_bert_2_layers: segmentador.Segmenter,
     fixture_legal_text_short: str,
     regex_justificativa: str,
     expected_just_length: int,
 ):
-    preproc_text, justificativa = fixture_model_2_layers.preprocess_legal_text(
+    preproc_text, justificativa = fixture_model_bert_2_layers.preprocess_legal_text(
         fixture_legal_text_short, return_justificativa=True, regex_justificativa=regex_justificativa
     )
     double_spaces = "  "
