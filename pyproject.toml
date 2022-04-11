@@ -142,6 +142,7 @@ deps =
 	pylint
 	pytest
 	datasets
+	onnx
 	onnxruntime
 commands =
 	python -m pylint src/
