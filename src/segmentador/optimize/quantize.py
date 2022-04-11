@@ -219,7 +219,7 @@ def quantize_bert_model_as_onnx(
     )
 
     if check_cached and os.path.isfile(paths.onnx_quantized_uri):
-        if verbose:
+        if verbose:  # pragma: no cover
             print(
                 f"Found cached model in '{paths.onnx_quantized_uri}'. "
                 "Skipping model quantization."
@@ -268,7 +268,7 @@ def quantize_bert_model_as_onnx(
     with open(paths.onnx_config_uri or (paths.output_uri + ".config"), "wb") as f_out:
         pickle.dump(onnx_config, f_out, protocol=pickle.HIGHEST_PROTOCOL)
 
-    if verbose:
+    if verbose:  # pragma: no cover
         c_ylw = colorama.Fore.YELLOW if colorama else ""
         c_blu = colorama.Fore.BLUE if colorama else ""
         c_rst = colorama.Style.RESET_ALL if colorama else ""
@@ -389,7 +389,7 @@ def quantize_lstm_model_as_onnx(
     )
 
     if check_cached and os.path.isfile(paths.onnx_quantized_uri):
-        if verbose:
+        if verbose:  # pragma: no cover
             print(
                 f"Found cached model in '{paths.onnx_quantized_uri}'. "
                 "Skipping model quantization.",
@@ -437,7 +437,7 @@ def quantize_lstm_model_as_onnx(
         ),
     )
 
-    if verbose:
+    if verbose:  # pragma: no cover
         c_ylw = colorama.Fore.YELLOW if colorama else ""
         c_blu = colorama.Fore.BLUE if colorama else ""
         c_rst = colorama.Style.RESET_ALL if colorama else ""
@@ -526,7 +526,7 @@ def quantize_lstm_model_as_torch(
     )
 
     if check_cached and os.path.isfile(paths.output_uri):
-        if verbose:
+        if verbose:  # pragma: no cover
             print(f"Found cached model in '{paths.output_uri}'. Skipping model quantization.")
 
         return paths
@@ -550,7 +550,7 @@ def quantize_lstm_model_as_torch(
         pickle_protocol=pickle.HIGHEST_PROTOCOL,
     )
 
-    if verbose:
+    if verbose:  # pragma: no cover
         c_ylw = colorama.Fore.YELLOW if colorama else ""
         c_blu = colorama.Fore.BLUE if colorama else ""
         c_rst = colorama.Style.RESET_ALL if colorama else ""
