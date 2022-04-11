@@ -21,12 +21,13 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 2. [Trained models](#trained-models)
 3. [Installation](#installation)
 4. [Usage examples](#usage-examples)
-	1. [Standard models (Torch format, Huggingface compatible)](#standard-models)
-	2. [ONNX format (with support for weight quantization)](#onnx-models-with-weight-quantization)
+    1. [Standard models (Torch format, Huggingface compatible)](#standard-models)
+    2. [ONNX format (with support for weight quantization)](#onnx-models-with-weight-quantization)
 5. [Experimental results](#experimental-results)
 6. [Train data](#train-data)
 7. [Package tests](#package-tests)
 8. [License](#license)
+9. [Citation](#citation)
 
 ---
 
@@ -36,7 +37,7 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 The trained models are Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens for BERT models. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword windows automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
 
 <p align="center">
-	<img src="./diagrams/segmenter_inference_pipeline.png" alt="Full segmenter inference pipeline."></img>
+    <img src="./diagrams/segmenter_inference_pipeline.png" alt="Full segmenter inference pipeline."></img>
 </p>
 
 The *pooling* operations can be one of the following:
@@ -74,6 +75,7 @@ import segmentador
 seg_model_bert = segmentador.BERTSegmenter(
     uri_model="<pretrained_model_path>",
     device="cpu",  # or 'cuda' for GPU
+    inference_pooling_operation="assymetric-max",
 )
 
 sample_text = """
@@ -116,8 +118,9 @@ import segmentador
 
 seg_model_lstm = segmentador.LSTMSegmenter(
     uri_model="<pretrained_model_uri>",
-	uri_tokenizer="<pretrained_tokenize_uri>",
+    uri_tokenizer="<pretrained_tokenize_uri>",
     device="cpu",  # or 'cuda' for GPU
+    inference_pooling_operation="gaussian",
 )
 
 sample_text = """
@@ -160,15 +163,16 @@ First, in order to use models in ONNX format you need to install some optional d
 ```python
 import segmentador.optimize
 
+# Load BERT Torch model
 seg_model_bert = segmentador.BERTSegmenter(
     uri_model="<pretrained_model_uri>",
     device="cpu",
 )
 
+# Create ONNX BERT model
 quantized_model_paths = segmentador.optimize.quantize_model(
     segmenter_bert,
-	format="onnx",
-    check_cached=True,
+    format="onnx",
     verbose=True,
 )
 ```
@@ -176,10 +180,11 @@ quantized_model_paths = segmentador.optimize.quantize_model(
 Lastly, load the optimized models with appropriate classes from `segmentador.optimize` module. While the init configuration of ONNX segmenter models may differ from their standard (Torch format) version, its usage for inference remains exactly the same:
 
 ```python
+# Load ONNX model
 seg_model_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
-   uri_model=quantized_bert_paths.output_uri,
-   uri_tokenizer=seg_model_bert.tokenizer.name_or_path,
-   uri_onnx_config=quantized_bert_paths.onnx_config_uri,
+    uri_model=quantized_bert_paths.output_uri,
+    uri_tokenizer=seg_model_bert.tokenizer.name_or_path,
+    uri_onnx_config=quantized_bert_paths.onnx_config_uri,
 )
 
 seg_result = seg_model_bert_quantized(sample_text, return_logits=True)
@@ -190,24 +195,24 @@ The procedure shown above is analogous for ONNX Bi-LSTM models:
 ```python
 import segmentador.optimize
 
-# Create ONNX Bi-LSTM model
+# Load Bi-LSTM standard model
 seg_model_lstm = segmentador.LSTMSegmenter(
     uri_model="<pretrained_model_uri>",
     uri_tokenizer="<pretrained_tokenizer_uri>",
     device="cpu",
 )
 
+# Create ONNX Bi-LSTM model
 quantized_lstm_paths = segmentador.optimize.quantize_model(
     seg_model_lstm,
     model_output_format="onnx",
-    check_cached=True,
     verbose=True,
 )
 
-# Load created model
+# Load ONNX model
 seg_model_lstm_quantized = segmentador.optimizer.ONNXLSTMSegmenter(
-   uri_model=quantized_lstm_paths.output_uri,
-   uri_tokenizer=seg_model_lstm.tokenizer.name_or_path,
+    uri_model=quantized_lstm_paths.output_uri,
+    uri_tokenizer=seg_model_lstm.tokenizer.name_or_path,
 )
 
 seg_result = seg_model_lstm_quantized(curated_df_subsample, return_logits=True)
@@ -217,7 +222,6 @@ Bi-LSTM models can also be quantized as Torch format by setting `segmentador.opt
 quantized_lstm_torch_paths = segmentador.optimize.quantize_model(
     seg_model_lstm,
     model_output_format="torch",
-    check_cached=True,
     verbose=True,
 )
 
@@ -241,3 +245,12 @@ Tests for this package are run using Tox and Pytest.
 
 ### License
 [MIT.](./LICENSE)
+
+### Citation
+```bibtex
+@inproceedings{
+    paper="",
+    author="",
+    date="",
+}
+```
