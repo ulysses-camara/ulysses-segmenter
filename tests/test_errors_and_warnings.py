@@ -2,6 +2,7 @@
 import pytest
 
 import segmentador
+import segmentador.optimize
 
 
 @pytest.mark.parametrize("batch_size", (0, -1, -100))
@@ -63,4 +64,22 @@ def test_invalid_inference_pooling_operation(inference_pooling_operation: str):
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
             local_files_only=True,
+        )
+
+
+def test_invalid_quantization_output_format(fixture_model_lstm_1_layer: segmentador.LSTMSegmenter):
+    with pytest.raises(ValueError):
+        segmentador.optimize.quantize_model(
+            model=fixture_model_lstm_1_layer,
+            model_output_format="invalid",
+        )
+
+
+def test_invalid_quantization_model_format(
+    fixture_quantized_model_lstm_onnx: segmentador.optimize.ONNXLSTMSegmenter,
+):
+    with pytest.raises(TypeError):
+        segmentador.optimize.quantize_model(
+            model=fixture_quantized_model_lstm_onnx,
+            model_output_format="onnx",
         )
