@@ -5,12 +5,12 @@ import datasets
 
 import segmentador
 
-from . import conftest
+from . import paths
 
 
 @pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
 def test_inference_pooling_operation_argument_with_long_text_and_bert(
-    pooling_operation: str, fixture_test_paths: conftest.TestPaths, fixture_legal_text_long: str
+    pooling_operation: str, fixture_test_paths: paths.TestPaths, fixture_legal_text_long: str
 ):
     model = segmentador.Segmenter(
         uri_model=fixture_test_paths.model_bert,
@@ -24,7 +24,7 @@ def test_inference_pooling_operation_argument_with_long_text_and_bert(
 
 @pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
 def test_inference_pooling_operation_argument_with_short_text_and_lstm(
-    pooling_operation: str, fixture_test_paths: conftest.TestPaths, fixture_legal_text_short: str
+    pooling_operation: str, fixture_test_paths: paths.TestPaths, fixture_legal_text_short: str
 ):
     model = segmentador.LSTMSegmenter(
         uri_model=fixture_test_paths.model_lstm,
