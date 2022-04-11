@@ -52,8 +52,8 @@ train = [
 ]
 
 test = [
-	"mypy == 0.931",
-	"pylint == 2.12.2",
+	"mypy == 0.942",
+	"pylint == 2.13.5",
 	"pytest == 7.1.0",
 	"pytest-cov == 3.0.0",
 	"tox == 3.24.5",
@@ -142,6 +142,7 @@ deps =
 	pylint
 	pytest
 	datasets
+	onnxruntime
 commands =
 	python -m pylint src/
 	python -m pylint --disable='missing-function-docstring' tests/
