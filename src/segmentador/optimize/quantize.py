@@ -365,8 +365,9 @@ def quantize_lstm_model_as_onnx(
     .. [2] ONNX Operator Schemas. Available at:
        https://github.com/onnx/onnx/blob/main/docs/Operators.md
     """
-    onnxruntime = _optional_import_utils.load_required_module("onnxruntime")
+    _optional_import_utils.load_required_module("onnxruntime")
 
+    import onnxruntime
     import onnxruntime.quantization
 
     model_attributes: dict[str, t.Any] = collections.OrderedDict(
