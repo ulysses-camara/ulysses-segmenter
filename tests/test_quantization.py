@@ -143,9 +143,10 @@ def test_create_bert_model_with_default_name_onnx(
     )
 
     assert os.path.isfile(output_paths.output_uri)
+    assert os.path.isfile(output_paths.onnx_config_uri)
 
-    for path in set(output_paths):
-        os.remove(path)
+    os.remove(output_paths.output_uri)
+    os.remove(output_paths.onnx_config_uri)
 
 
 def test_create_lstm_model_with_default_name_torch(
@@ -161,7 +162,4 @@ def test_create_lstm_model_with_default_name_torch(
     )
 
     assert os.path.isfile(output_paths.output_uri)
-
-    for path in set(output_paths):
-        if path:
-            os.remove(path)
+    os.remove(output_paths.output_uri)
