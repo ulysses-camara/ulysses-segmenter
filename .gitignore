@@ -173,3 +173,4 @@ train_logs/
 **/lightning_logs/
 curated_results/
 **/quantized_models/
+**/performance_logs/
