@@ -72,7 +72,7 @@ python -m pip install "segmentador[optimize] @ git+https://github.com/FelSiq/uly
 ```python
 import segmentador
 
-seg_model_bert = segmentador.BERTSegmenter(
+segmenter_bert = segmentador.BERTSegmenter(
     uri_model="<pretrained_model_path>",
     device="cpu",  # or 'cuda' for GPU
     inference_pooling_operation="assymetric-max",
@@ -89,7 +89,7 @@ Artigo 1. Este projeto de lei não tem efeito.
 Artigo 2. Esta lei passa a vigorar na data de sua publicação.
 """
 
-seg_result = seg_model_bert(sample_text, return_logits=True)
+seg_result = segmenter_bert(sample_text, return_logits=True)
 
 print(seg_result.segments)
 # [
@@ -116,7 +116,7 @@ print(seg_result.logits)
 ```python
 import segmentador
 
-seg_model_lstm = segmentador.LSTMSegmenter(
+segmenter_lstm = segmentador.LSTMSegmenter(
     uri_model="<pretrained_model_uri>",
     uri_tokenizer="<pretrained_tokenize_uri>",
     device="cpu",  # or 'cuda' for GPU
@@ -134,7 +134,7 @@ Artigo 1. Este projeto de lei não tem efeito.
 Artigo 2. Esta lei passa a vigorar na data de sua publicação.
 """
 
-seg_result = seg_model_lstm(sample_text, return_logits=True)
+seg_result = segmenter_lstm(sample_text, return_logits=True)
 
 print(seg_result.segments)
 # [
@@ -164,7 +164,7 @@ First, in order to use models in ONNX format you need to install some optional d
 import segmentador.optimize
 
 # Load BERT Torch model
-seg_model_bert = segmentador.BERTSegmenter(
+segmenter_bert = segmentador.BERTSegmenter(
     uri_model="<pretrained_model_uri>",
     device="cpu",
 )
@@ -172,7 +172,7 @@ seg_model_bert = segmentador.BERTSegmenter(
 # Create ONNX BERT model
 quantized_model_paths = segmentador.optimize.quantize_model(
     segmenter_bert,
-    format="onnx",
+    model_output_format="onnx",
     verbose=True,
 )
 ```
@@ -181,13 +181,13 @@ Lastly, load the optimized models with appropriate classes from `segmentador.opt
 
 ```python
 # Load ONNX model
-seg_model_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
+segmenter_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
     uri_model=quantized_bert_paths.output_uri,
-    uri_tokenizer=seg_model_bert.tokenizer.name_or_path,
+    uri_tokenizer=segmenter_bert.tokenizer.name_or_path,
     uri_onnx_config=quantized_bert_paths.onnx_config_uri,
 )
 
-seg_result = seg_model_bert_quantized(sample_text, return_logits=True)
+seg_result = segmenter_bert_quantized(sample_text, return_logits=True)
 ```
 
 The procedure shown above is analogous for ONNX Bi-LSTM models:
@@ -196,7 +196,7 @@ The procedure shown above is analogous for ONNX Bi-LSTM models:
 import segmentador.optimize
 
 # Load Bi-LSTM standard model
-seg_model_lstm = segmentador.LSTMSegmenter(
+segmenter_lstm = segmentador.LSTMSegmenter(
     uri_model="<pretrained_model_uri>",
     uri_tokenizer="<pretrained_tokenizer_uri>",
     device="cpu",
@@ -204,30 +204,30 @@ seg_model_lstm = segmentador.LSTMSegmenter(
 
 # Create ONNX Bi-LSTM model
 quantized_lstm_paths = segmentador.optimize.quantize_model(
-    seg_model_lstm,
+    segmenter_lstm,
     model_output_format="onnx",
     verbose=True,
 )
 
 # Load ONNX model
-seg_model_lstm_quantized = segmentador.optimizer.ONNXLSTMSegmenter(
+segmenter_lstm_quantized = segmentador.optimizer.ONNXLSTMSegmenter(
     uri_model=quantized_lstm_paths.output_uri,
-    uri_tokenizer=seg_model_lstm.tokenizer.name_or_path,
+    uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
 )
 
-seg_result = seg_model_lstm_quantized(curated_df_subsample, return_logits=True)
+seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
 ```
 Bi-LSTM models can also be quantized as Torch format by setting `segmentador.optimize.quantize_model(model, model_output_format="torch", ...)`:
 ```Python
 quantized_lstm_torch_paths = segmentador.optimize.quantize_model(
-    seg_model_lstm,
+    segmenter_lstm,
     model_output_format="torch",
     verbose=True,
 )
 
 segmenter_lstm_torch_quantized = segmentador.LSTMSegmenter(
    uri_model=quantized_lstm_torch_paths.output_uri,
-   uri_tokenizer=seg_model_lstm.tokenizer.name_or_path,
+   uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
    from_quantized_weights=True,
 )
 
