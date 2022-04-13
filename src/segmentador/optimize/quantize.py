@@ -256,6 +256,8 @@ def quantize_bert_model_as_onnx(
 
         optimization_config = optimum_onnxruntime.configuration.OptimizationConfig(
             optimization_level=optimization_level,
+            optimize_for_gpu=torch.device(model.device).type == "cuda",
+            enable_gelu_approximation=True,
         )
 
         optimizer.export(
