@@ -205,12 +205,20 @@ def quantize_bert_model_as_onnx(
     import onnxruntime.quantization
 
     model_config: transformers.BertConfig = model.model.config  # type: ignore
+    is_pruned = bool(model_config.pruned_heads)
+
+    if is_pruned:
+        raise RuntimeError(
+            "BERT with pruned attention heads will not work in ONNX format. Please use Torch "
+            "format instead (with quantize_bert_model_as_torch(...) function or by using "
+            "quantize_model(..., model_output_format='torch')."
+        )
 
     model_attributes: dict[str, t.Any] = collections.OrderedDict(
         (
             ("num_layers", model_config.num_hidden_layers),
             ("vocab_size", model.tokenizer.vocab_size),
-            ("pruned", bool(model_config.pruned_heads)),
+            ("pruned", is_pruned),
         )
     )
 
