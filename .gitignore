@@ -174,3 +174,6 @@ train_logs/
 curated_results/
 **/quantized_models/
 **/performance_logs/
+**/head_pruning/
+**.onnx
+**/todo.txt
