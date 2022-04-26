@@ -210,6 +210,7 @@ def quantize_bert_model_as_onnx(
         (
             ("num_layers", model_config.num_hidden_layers),
             ("vocab_size", model.tokenizer.vocab_size),
+            ("pruned", bool(model_config.pruned_heads)),
         )
     )
 
