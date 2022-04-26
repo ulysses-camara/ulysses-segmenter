@@ -494,6 +494,125 @@ def quantize_lstm_model_as_onnx(
     return paths
 
 
+def quantize_bert_model_as_torch(
+    model: segmenter.BERTSegmenter,
+    quantized_model_filename: t.Optional[str] = None,
+    quantized_model_dirpath: str = "./quantized_models",
+    modules_to_quantize: t.Union[
+        set[t.Type[torch.nn.Module]], tuple[t.Type[torch.nn.Module], ...]
+    ] = (
+        torch.nn.Embedding,
+        torch.nn.Linear,
+    ),
+    check_cached: bool = True,
+    verbose: bool = False,
+) -> QuantizationOutputTorch:
+    """Create a quantized BERTSegmenter model as Torch format.
+
+    Models created from this format can be loaded for inference as:
+
+    BERTSegmenter(
+        uri_model="[quantized_model_uri]",
+        uri_tokenizer=...,
+        from_quantized_weights=True,
+        ...,
+    )
+
+    Parameters
+    ----------
+    model : segmenter.BERTSegmenter
+        BERTSegmenter model to be quantized.
+
+    quantized_model_filename : t.Optional[str], default=None
+        Output filename. If None, a long and descriptive name will be derived from model's
+        parameters.
+
+    quantized_model_dirpath : str, default='./quantized_models'
+        Path to output file directory, which the resulting quantized model will be stored,
+        alongside any possible coproducts also generated during the quantization procedure.
+
+    modules_to_quantize : tuple[t.Type[torch.nn.Module], ...], \
+        default=(torch.nn.Embedding, torch.nn.BERT, torch.nn.Linear)
+
+    check_cached : bool, default=True
+        If True, check whether a model with the same model exists before quantization.
+        If this happens to be the case, this function will not produce any new models.
+
+    verbose : bool, default=False
+        If True, print information regarding the results.
+
+    Returns
+    -------
+    paths : tuple[str, ...]
+        File URIs related from generated files during the quantization procedure. The
+        final model URI can be accessed from the `output_uri` attribute.
+    """
+    model_config: transformers.BertConfig = model.model.config  # type: ignore
+
+    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+        (
+            ("num_layers", model_config.num_hidden_layers),
+            ("vocab_size", model.tokenizer.vocab_size),
+            ("pruned", bool(model_config.pruned_heads)),
+        )
+    )
+
+    paths = _build_torch_default_uris(
+        model_name="bert",
+        model_attributes=model_attributes,
+        quantized_model_dirpath=quantized_model_dirpath,
+        quantized_model_filename=quantized_model_filename,
+    )
+
+    if check_cached and os.path.isfile(paths.output_uri):
+        if verbose:  # pragma: no cover
+            print(f"Found cached model in '{paths.output_uri}'. Skipping model quantization.")
+
+        return paths
+
+    pytorch_module = model.model
+
+    if torch.nn.Embedding in modules_to_quantize:
+        embedding_modules = [
+            pytorch_module.bert.embeddings.word_embeddings,
+            pytorch_module.bert.embeddings.position_embeddings,
+            pytorch_module.bert.embeddings.token_type_embeddings,
+        ]
+
+        for module in embedding_modules:
+            module.qconfig = torch.quantization.float_qparams_weight_only_qconfig  # type: ignore
+
+    quantized_pytorch_module = torch.quantization.quantize_dynamic(
+        pytorch_module,
+        set(modules_to_quantize),
+        dtype=torch.qint8,
+    )
+
+    torch.save(
+        obj=quantized_pytorch_module.state_dict(),
+        f=paths.output_uri,
+        pickle_protocol=pickle.HIGHEST_PROTOCOL,
+    )
+
+    if verbose:  # pragma: no cover
+        c_ylw = colorama.Fore.YELLOW if colorama else ""
+        c_blu = colorama.Fore.BLUE if colorama else ""
+        c_rst = colorama.Style.RESET_ALL if colorama else ""
+
+        print(
+            f"Saved quantized Pytorch module (Torch format) in {c_blu}'{paths.output_uri}'{c_rst}. "
+            "To use it, load a BERT segmenter model as:\n\n"
+            f"BERTSegmenter(\n"
+            f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
+            f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
+            f"   {c_ylw}from_quantized_weights={c_blu}True{c_rst},\n"
+            "   ...,\n"
+            ")"
+        )
+
+    return paths, quantized_pytorch_module
+
+
 def quantize_lstm_model_as_torch(
     model: segmenter.LSTMSegmenter,
     quantized_model_filename: t.Optional[str] = None,
@@ -676,6 +795,7 @@ def quantize_model(
     quantize_lstm_model_as_onnx : quantize LSTMSegmenter as model_output_format='onnx'.
     quantize_lstm_model_as_torch : quantize LSTMSegmenter as model_output_format='torch'.
     quantize_bert_model_as_onnx : quantize BERTSegmenter as model_output_format='onnx'.
+    quantize_bert_model_as_torch : quantize BERTSegmenter as model_output_format='torch'.
 
     References
     ----------
@@ -710,6 +830,7 @@ def quantize_model(
         (segmenter.BERTSegmenter, "onnx"): quantize_bert_model_as_onnx,
         (segmenter.LSTMSegmenter, "torch"): quantize_lstm_model_as_torch,
         (segmenter.LSTMSegmenter, "onnx"): quantize_lstm_model_as_onnx,
+        (segmenter.BERTSegmenter, "torch"): quantize_bert_model_as_torch,
     }
 
     try:
