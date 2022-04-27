@@ -101,16 +101,14 @@ def fn_fixture_quantized_model_lstm_torch(
         model=fixture_model_lstm_1_layer,
         quantized_model_filename=fixture_test_paths.quantized_test_model_lstm_torch,
         quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
-        model_output_format="torch",
+        model_output_format="torch_jit",
         check_cached=False,
         verbose=False,
     )
 
-    torch_lstm_model = segmentador.LSTMSegmenter(
+    torch_lstm_model = segmentador.optimize.TorchJITLSTMSegmenter(
         uri_model=output_paths.output_uri,
         uri_tokenizer=fixture_model_lstm_1_layer.tokenizer.name_or_path,
-        from_quantized_weights=True,
-        device="cpu",
     )
 
     yield torch_lstm_model

@@ -156,7 +156,7 @@ def test_create_lstm_model_with_default_name_torch(
     output_paths = segmentador.optimize.quantize_model(
         model=fixture_model_lstm_1_layer,
         quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
-        model_output_format="torch",
+        model_output_format="torch_jit",
         check_cached=False,
         verbose=False,
     )
