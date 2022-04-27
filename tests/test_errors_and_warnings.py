@@ -4,6 +4,8 @@ import pytest
 import segmentador
 import segmentador.optimize
 
+from . import paths
+
 
 @pytest.mark.parametrize("batch_size", (0, -1, -100))
 def test_invalid_batch_size(
@@ -81,5 +83,20 @@ def test_invalid_quantization_model_format(
     with pytest.raises(TypeError):
         segmentador.optimize.quantize_model(
             model=fixture_quantized_model_lstm_onnx,
+            model_output_format="onnx",
+        )
+
+
+def test_invalid_onnx_format_for_pruned_bert(fixture_test_paths: paths.TestPaths):
+    model_pruned = segmentador.BERTSegmenter(
+        uri_model=fixture_test_paths.model_bert,
+        device="cpu",
+        local_files_only=True,
+    )
+    model_pruned.model.prune_heads({0: [1, 2, 5], 1: [4, 5]})
+
+    with pytest.raises(RuntimeError):
+        segmentador.optimize.quantize_model(
+            model=model_pruned,
             model_output_format="onnx",
         )

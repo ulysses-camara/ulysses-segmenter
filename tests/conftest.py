@@ -108,7 +108,6 @@ def fn_fixture_quantized_model_lstm_torch(
 
     torch_lstm_model = segmentador.optimize.TorchJITLSTMSegmenter(
         uri_model=output_paths.output_uri,
-        uri_tokenizer=fixture_model_lstm_1_layer.tokenizer.name_or_path,
     )
 
     yield torch_lstm_model
@@ -149,6 +148,36 @@ def fn_fixture_quantized_model_bert_onnx(
     )
 
     yield onnx_bert_model
+
+    for path in set(output_paths):
+        if path:
+            os.remove(path)
+
+    try:
+        os.rmdir(fixture_test_paths.quantized_test_model_dirname)
+
+    except OSError:
+        pass
+
+
+@pytest.fixture(name="fixture_quantized_model_bert_torch", scope="session")
+def fn_fixture_quantized_model_bert_torch(
+    fixture_test_paths: paths.TestPaths, fixture_model_bert_2_layers: segmentador.BERTSegmenter
+) -> segmentador.optimize.TorchJITBERTSegmenter:
+    output_paths = segmentador.optimize.quantize_model(
+        model=fixture_model_bert_2_layers,
+        quantized_model_filename=fixture_test_paths.quantized_test_model_bert_torch,
+        quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
+        model_output_format="torch_jit",
+        check_cached=False,
+        verbose=False,
+    )
+
+    torch_bert_model = segmentador.optimize.TorchJITBERTSegmenter(
+        uri_model=output_paths.output_uri,
+    )
+
+    yield torch_bert_model
 
     for path in set(output_paths):
         if path:

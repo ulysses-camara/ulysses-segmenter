@@ -14,6 +14,7 @@ class TestPaths(t.NamedTuple):
     legal_text_short: str = "tests/resources/test_legal_text_short.txt"
 
     quantized_test_model_dirname: str = "tests/temp_quantization_models"
-    quantized_test_model_lstm_torch: str = "onnx_temp_torch"
+    quantized_test_model_lstm_torch: str = "torch_temp_lstm"
     quantized_test_model_lstm_onnx: str = "onnx_temp_lstm"
+    quantized_test_model_bert_torch: str = "torch_temp_bert"
     quantized_test_model_bert_onnx: str = "onnx_temp_bert"

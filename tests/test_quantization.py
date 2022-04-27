@@ -128,6 +128,36 @@ def test_model_bert_inference_time_standard_vs_quantized_onnx(
     assert best_time_quantized < best_time_standard
 
 
+def test_model_bert_inference_time_standard_vs_quantized_torch(
+    fixture_quantized_model_bert_torch: segmentador.optimize.TorchJITBERTSegmenter,
+    fixture_model_bert_2_layers: segmentador.BERTSegmenter,
+    fixture_legal_text_long: str,
+):
+    common_kwargs = dict(
+        number=10,
+        repeat=3,
+        globals=dict(
+            fixture_quantized_model_bert_torch=fixture_quantized_model_bert_torch,
+            fixture_legal_text_long=fixture_legal_text_long,
+            fixture_model_bert_2_layers=fixture_model_bert_2_layers,
+        ),
+    )
+
+    times_quantized = timeit.repeat(
+        "fixture_quantized_model_bert_torch(fixture_legal_text_long)",
+        **common_kwargs,
+    )
+    times_standard = timeit.repeat(
+        "fixture_model_bert_2_layers(fixture_legal_text_long)",
+        **common_kwargs,
+    )
+
+    best_time_quantized = min(times_quantized)
+    best_time_standard = min(times_standard)
+
+    assert best_time_quantized < best_time_standard
+
+
 def test_create_bert_model_with_default_name_onnx(
     fixture_test_paths: paths.TestPaths,
     fixture_model_bert_2_layers: segmentador.BERTSegmenter,
