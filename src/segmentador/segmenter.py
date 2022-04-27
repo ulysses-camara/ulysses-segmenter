@@ -9,6 +9,13 @@ import torch
 from . import _base
 
 
+__all__ = [
+    "BERTSegmenter",
+    "Segmenter",
+    "LSTMSegmenter",
+]
+
+
 class BERTSegmenter(_base.BaseSegmenter):
     """BERT segmenter for PT-br legal text data.
 

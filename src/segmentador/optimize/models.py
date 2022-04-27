@@ -12,6 +12,14 @@ from .. import _base
 from . import _optional_import_utils
 
 
+__all__ = [
+    "ONNXBERTSegmenter",
+    "ONNXLSTMSegmenter",
+    "TorchJITBERTSegmenter",
+    "TorchJITLSTMSegmenter",
+]
+
+
 class ONNXBERTSegmenter(_base.BaseSegmenter):
     """BERT segmenter in ONNX format.
 

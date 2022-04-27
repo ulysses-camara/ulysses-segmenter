@@ -19,6 +19,15 @@ from . import models
 colorama = _optional_import_utils.load_optional_module("colorama")
 
 
+__all__ = [
+    "quantize_bert_model_as_onnx",
+    "quantize_bert_model_as_torch",
+    "quantize_lstm_model_as_onnx",
+    "quantize_lstm_model_as_torch",
+    "quantize_model",
+]
+
+
 class QuantizationOutputONNX(t.NamedTuple):
     """Output paths for quantization as ONNX format."""
 
