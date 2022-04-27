@@ -21,8 +21,9 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 2. [Trained models](#trained-models)
 3. [Installation](#installation)
 4. [Usage examples](#usage-examples)
-    1. [Standard models (Torch format, Huggingface compatible)](#standard-models)
-    2. [ONNX format (with support for weight quantization)](#onnx-models-with-weight-quantization)
+    1. [Standard models (Torch format, Huggingface Transformers compatible)](#standard-models)
+    2. [Quantization in ONNX format](#quantization-in-onnx-format)
+    2. [Quantization in Torch JIT format](#quantization-in-torch-jit-format)
 5. [Experimental results](#experimental-results)
 6. [Train data](#train-data)
 7. [Package tests](#package-tests)
@@ -156,7 +157,7 @@ print(seg_result.logits)
 #  [  6.64764452  -2.28969622  -3.06246185  -8.4958601 ]
 #  [ -0.75093395   5.79272366   2.84845114  -8.5399065 ]]
 ```
-#### ONNX models (with weight quantization)
+#### Quantization in ONNX format
 We provide support for models in ONNX format (and also functions to convert from pytorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization.
 
 First, in order to use models in ONNX format you need to install some optional dependencies, as shown in [Installation](#installation) section. Then, you need to create the ONNX quantized model using the `segmentador.optimize` subpackage API:
@@ -177,7 +178,7 @@ quantized_model_paths = segmentador.optimize.quantize_model(
 )
 ```
 
-Lastly, load the optimized models with appropriate classes from `segmentador.optimize` module. While the init configuration of ONNX segmenter models may differ from their standard (Torch format) version, its usage for inference remains exactly the same:
+Lastly, load the optimized models with appropriate classes from `segmentador.optimize` module. While the ONNX segmenter model configuration may differ from their standard (Torch format) version, its inference usage remains the same:
 
 ```python
 # Load ONNX model
@@ -217,21 +218,38 @@ segmenter_lstm_quantized = segmentador.optimizer.ONNXLSTMSegmenter(
 
 seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
 ```
-Bi-LSTM models can also be quantized as Torch format by setting `segmentador.optimize.quantize_model(model, model_output_format="torch", ...)`:
+
+#### Quantization in Torch JIT format
+
+Models can also be quantized as Torch JIT format, by setting `segmentador.optimize.quantize_model(model, model_output_format="torch_jit", ...)`:
 ```Python
+# LSTM models quantized as Torch JIT format
 quantized_lstm_torch_paths = segmentador.optimize.quantize_model(
     segmenter_lstm,
-    model_output_format="torch",
+    model_output_format="torch_jit",
     verbose=True,
 )
 
-segmenter_lstm_torch_quantized = segmentador.LSTMSegmenter(
+segmenter_lstm_torch_quantized = segmentador.optimize.TorchJITLSTMSegmenter(
    uri_model=quantized_lstm_torch_paths.output_uri,
-   uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
-   from_quantized_weights=True,
 )
 
 segmenter_lstm_torch_quantized(sample_text)
+```
+
+```Python
+# BERT models quantized as Torch JIT format
+quantized_bert_torch_paths = segmentador.optimize.quantize_model(
+    segmenter_bert,
+    model_output_format="torch_jit",
+    verbose=True,
+)
+
+segmenter_bert_torch_quantized = segmentador.optimize.TorchJITLSTMSegmenter(
+   uri_model=quantized_bert_torch_paths.output_uri,
+)
+
+segmenter_bert_torch_quantized(sample_text)
 ```
 
 ### Experimental results
