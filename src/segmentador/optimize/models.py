@@ -56,10 +56,10 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    cache_dir_model : str, default='../cache/models'
+    cache_dir_model : str, default='./cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -72,7 +72,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
@@ -159,7 +159,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -171,7 +171,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
             "max", "sum", "gaussian", "assymetric-max"
         ] = "gaussian",
         local_files_only: bool = True,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
@@ -261,10 +261,10 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    cache_dir_model : str, default='../cache/models'
+    cache_dir_model : str, default='./cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -276,7 +276,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer,
@@ -346,10 +346,10 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    cache_dir_model : str, default='../cache/models'
+    cache_dir_model : str, default='./cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -361,7 +361,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
             "max", "sum", "gaussian", "assymetric-max"
         ] = "assymetric-max",
         local_files_only: bool = True,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_model=uri_model,
@@ -406,10 +406,10 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
-    cache_dir_model : str, default='../cache/models'
+    cache_dir_model : str, default='./cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -421,7 +421,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
             "max", "sum", "gaussian", "assymetric-max"
         ] = "gaussian",
         local_files_only: bool = True,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_model=uri_model,

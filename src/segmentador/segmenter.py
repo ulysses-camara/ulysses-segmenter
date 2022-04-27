@@ -71,10 +71,10 @@ class BERTSegmenter(_base.BaseSegmenter):
         layers than the specified value in this parameter, later hidden layers will be
         removed.
 
-    cache_dir_model : str, default='../cache/models'
+    cache_dir_model : str, default='./cache/models'
         Cache directory for transformer encoder model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
     """
 
@@ -91,8 +91,8 @@ class BERTSegmenter(_base.BaseSegmenter):
         config: t.Optional[t.Union[transformers.BertConfig, transformers.PretrainedConfig]] = None,
         num_labels: int = 4,
         num_hidden_layers: int = 6,
-        cache_dir_model: str = "../cache/models",
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_model: str = "./cache/models",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
@@ -182,7 +182,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
     lstm_num_layers : int
         Number of layers in LSTM model.
 
-    cache_dir_tokenizer : str, default='../cache/tokenizers'
+    cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
 
     See Also
@@ -202,7 +202,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         from_quantized_weights: bool = False,
         lstm_hidden_layer_size: t.Optional[int] = None,
         lstm_num_layers: t.Optional[int] = None,
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         super().__init__(
             uri_tokenizer=uri_tokenizer,

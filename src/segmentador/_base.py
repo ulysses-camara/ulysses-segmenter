@@ -30,7 +30,7 @@ class BaseSegmenter:
         ] = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
-        cache_dir_tokenizer: str = "../cache/tokenizers",
+        cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
         self.local_files_only = bool(local_files_only)
 
