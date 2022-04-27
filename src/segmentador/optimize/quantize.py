@@ -52,7 +52,7 @@ def _build_onnx_default_uris(
     """Build default URIs for quantized output in ONNX format."""
     if not intermediary_onnx_model_name:
         attrs_to_name = "_".join("_".join(map(str, item)) for item in model_attributes.items())
-        intermediary_onnx_model_name = f"{attrs_to_name}_{model_name}_model"
+        intermediary_onnx_model_name = f"segmenter_{attrs_to_name}_{model_name}_model"
 
     if not intermediary_onnx_optimized_model_name:
         intermediary_onnx_optimized_model_name = (
@@ -106,7 +106,7 @@ def _build_torch_default_uris(
     """Build default URIs for quantized output in Torch format."""
     if not quantized_model_filename:
         attrs_to_name = "_".join("_".join(map(str, item)) for item in model_attributes.items())
-        quantized_model_filename = f"q_{attrs_to_name}_{model_name}_model.pt"
+        quantized_model_filename = f"q_segmenter_{attrs_to_name}_{model_name}_model.pt"
 
     pathlib.Path(quantized_model_dirpath).mkdir(exist_ok=True, parents=True)
     output_uri = os.path.join(quantized_model_dirpath, quantized_model_filename)
