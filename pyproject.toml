@@ -127,8 +127,8 @@ commands =
 	pip install .
 	pip install '.[test]'
 	pip install '.[optimize]'
+	python -m pytest src/ --doctest-modules --doctest-glob='**/*.py'
 	python -m pytest
-	python -m pytest src/ --doctest-modules --doctest-glob="**/*.py"
 
 [testenv:mypy]
 basepython = python3.9
@@ -146,6 +146,6 @@ deps =
 	onnx
 	onnxruntime
 commands =
-	python -m pylint src/
 	python -m pylint --disable='missing-function-docstring' tests/
+	python -m pylint src/
 """
