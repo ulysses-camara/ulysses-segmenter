@@ -190,6 +190,7 @@ class BaseSegmenter:
 
         Can be used by subclasses. In this base class, this method is No-op/identity operator.
         """
+        # pylint: disable='no-self-use'
         return minibatch
 
     def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:

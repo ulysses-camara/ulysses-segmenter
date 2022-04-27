@@ -586,9 +586,9 @@ def quantize_bert_model_as_torch(
 
     if torch.nn.Embedding in modules_to_quantize:
         embedding_modules = [
-            pytorch_module.bert.embeddings.word_embeddings,
-            pytorch_module.bert.embeddings.position_embeddings,
-            pytorch_module.bert.embeddings.token_type_embeddings,
+            pytorch_module.get_submodule("bert.embeddings.word_embeddings"),
+            pytorch_module.get_submodule("bert.embeddings.position_embeddings"),
+            pytorch_module.get_submodule("bert.embeddings.token_type_embeddings"),
         ]
 
         for module in embedding_modules:
