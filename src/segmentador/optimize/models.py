@@ -225,3 +225,224 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
             logits = logits.squeeze(0)
 
         return logits
+
+
+class _TorchJITBaseSegmenter(_base.BaseSegmenter):
+    """Base segmenter in Torch JIT format.
+
+    Parameters
+    ----------
+    uri_model : str
+        URI to load pretrained model from. If `local_files_only=True`, then it must
+        be a local file.
+
+    uri_tokenizer : str or None, default=None
+        URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
+        alongside the JIT model.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default='assymetric-max'
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    cache_dir_model : str, default='../cache/models'
+        Cache directory for transformer encoder model.
+
+    cache_dir_tokenizer : str, default='../cache/tokenizers'
+        Cache directory for text tokenizer.
+    """
+
+    def __init__(
+        self,
+        uri_model: str,
+        uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
+        local_files_only: bool = True,
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+    ):
+        super().__init__(
+            uri_tokenizer=uri_tokenizer,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            device="cpu",
+            cache_dir_tokenizer=cache_dir_tokenizer,
+        )
+
+        map_jit: dict[str, t.Any] = {"tokenizer": None}
+        model = torch.jit.load(uri_model, _extra_files=map_jit)
+
+        if uri_tokenizer is None:
+            self._tokenizer = pickle.loads(map_jit["tokenizer"])
+
+        self._model: torch.jit.ScriptModule = model.to(self.device)
+
+    def _preprocess_minibatch(
+        self, minibatch: transformers.BatchEncoding
+    ) -> transformers.BatchEncoding:
+        """Perform necessary minibatch transformations before inference."""
+        if "label" in minibatch:
+            minibatch.pop("label")
+
+        if "labels" in minibatch:
+            minibatch.pop("labels")
+
+        return minibatch
+
+
+class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
+    """BERT segmenter in Torch JIT format.
+
+    Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
+    The pretrained models support texts up to 1024 subwords. Texts larger than this
+    value are pre-segmented into 1024 subword blocks, and each block is feed to the
+    segmenter individually.
+
+    Parameters
+    ----------
+    uri_model : str
+        URI to load pretrained model from. If `local_files_only=True`, then it must
+        be a local file.
+
+    uri_tokenizer : str or None, default=None
+        URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
+        alongside the JIT model.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default='assymetric-max'
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    cache_dir_model : str, default='../cache/models'
+        Cache directory for transformer encoder model.
+
+    cache_dir_tokenizer : str, default='../cache/tokenizers'
+        Cache directory for text tokenizer.
+    """
+
+    def __init__(
+        self,
+        uri_model: str,
+        uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "assymetric-max",
+        local_files_only: bool = True,
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+    ):
+        super().__init__(
+            uri_model=uri_model,
+            uri_tokenizer=uri_tokenizer,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            cache_dir_tokenizer=cache_dir_tokenizer,
+        )
+
+
+class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
+    """LSTM segmenter in Torch JIT format.
+
+    Parameters
+    ----------
+    uri_model : str
+        URI to load pretrained model from. If `local_files_only=True`, then it must
+        be a local file.
+
+    uri_tokenizer : str or None, default=None
+        URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
+        alongside the JIT model.
+
+    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+            default='assymetric-max'
+        Specify the strategy used to combine logits during model inference for documents
+        larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
+        windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
+        therefore, predictions) associated with it. This argument defines how exactly the
+        logits should be combined in order to derive the final verdict for that said token.
+        The possible choices for this argument are:
+        - `max`: take the maximum logit of each token;
+        - `sum`: sum the logits associated with the same token;
+        - `gaussian`: build a gaussian filter that weights higher logits based on how close
+            to the window center they are, diminishing its weights closer to the window
+            limits; and
+        - `assymetric-max`: take the maximum logit of each token for all classes other than
+            the `No-operation` class, which in turn receives the minimum among all corresponding
+            logits instead.
+
+    local_files_only : bool, default=True
+        If True, will search only for local pretrained model and tokenizers.
+        If False, may download models from Huggingface HUB, if necessary.
+
+    cache_dir_model : str, default='../cache/models'
+        Cache directory for transformer encoder model.
+
+    cache_dir_tokenizer : str, default='../cache/tokenizers'
+        Cache directory for text tokenizer.
+    """
+
+    def __init__(
+        self,
+        uri_model: str,
+        uri_tokenizer: t.Optional[str] = None,
+        inference_pooling_operation: t.Literal[
+            "max", "sum", "gaussian", "assymetric-max"
+        ] = "gaussian",
+        local_files_only: bool = True,
+        cache_dir_tokenizer: str = "../cache/tokenizers",
+    ):
+        super().__init__(
+            uri_model=uri_model,
+            uri_tokenizer=uri_tokenizer,
+            local_files_only=local_files_only,
+            inference_pooling_operation=inference_pooling_operation,
+            cache_dir_tokenizer=cache_dir_tokenizer,
+        )
+
+    def _preprocess_minibatch(
+        self, minibatch: transformers.BatchEncoding
+    ) -> transformers.BatchEncoding:
+        """Perform necessary minibatch transformations before inference."""
+        minibatch = super()._preprocess_minibatch(minibatch)
+
+        if "attention_mask" in minibatch:
+            minibatch.pop("attention_mask")
+
+        if "token_type_ids" in minibatch:
+            minibatch.pop("token_type_ids")
+
+        minibatch["indices"] = minibatch.pop("input_ids")
+
+        return minibatch
