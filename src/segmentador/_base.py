@@ -34,19 +34,19 @@ class BaseSegmenter:
     ):
         self.local_files_only = bool(local_files_only)
 
-        self._tokenizer: transformers.BertTokenizerFast = (
-            transformers.AutoTokenizer.from_pretrained(
+        self._model: t.Union[torch.nn.Module, transformers.BertForTokenClassification]
+        self._tokenizer: transformers.BertTokenizerFast
+
+        if uri_tokenizer:
+            self._tokenizer = transformers.AutoTokenizer.from_pretrained(
                 uri_tokenizer,
                 local_files_only=self.local_files_only,
                 cache_dir=cache_dir_tokenizer,
             )
-        )
 
         self._moving_window_pooler = output_handlers.AutoMovingWindowPooler(
             pooling_operation=inference_pooling_operation,
         )
-
-        self._model: t.Union[torch.nn.Module, transformers.BertForTokenClassification]
 
         self.device = device
 
