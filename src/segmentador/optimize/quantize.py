@@ -116,6 +116,20 @@ def _build_torch_default_uris(
     return paths
 
 
+def _gen_dummy_inputs_for_tracing(
+    batch_size: int, vocab_size: int, seq_length: int
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Generate dummy inputs for Torch JIT tracing."""
+    dummy_input_ids = torch.randint(
+        low=0, high=vocab_size, size=(batch_size, seq_length), dtype=torch.long
+    )
+    dummy_attention_mask = torch.randint(
+        low=0, high=2, size=(batch_size, seq_length), dtype=torch.long
+    )
+    dummy_token_type_ids = torch.zeros(batch_size, seq_length, dtype=torch.long)
+    return dummy_input_ids, dummy_attention_mask, dummy_token_type_ids
+
+
 def quantize_bert_model_as_onnx(
     model: segmenter.BERTSegmenter,
     quantized_model_filename: t.Optional[str] = None,
@@ -211,7 +225,7 @@ def quantize_bert_model_as_onnx(
         raise RuntimeError(
             "BERT with pruned attention heads will not work in ONNX format. Please use Torch "
             "format instead (with quantize_bert_model_as_torch(...) function or by using "
-            "quantize_model(..., model_output_format='torch')."
+            "quantize_model(..., model_output_format='torch_jit')."
         )
 
     model_attributes: dict[str, t.Any] = collections.OrderedDict(
@@ -511,10 +525,8 @@ def quantize_bert_model_as_torch(
 
     Models created from this format can be loaded for inference as:
 
-    BERTSegmenter(
+    optimize.TorchJITBERTSegmenter(
         uri_model="[quantized_model_uri]",
-        uri_tokenizer=...,
-        from_quantized_weights=True,
         ...,
     )
 
@@ -532,7 +544,7 @@ def quantize_bert_model_as_torch(
         alongside any possible coproducts also generated during the quantization procedure.
 
     modules_to_quantize : tuple[t.Type[torch.nn.Module], ...], \
-        default=(torch.nn.Embedding, torch.nn.BERT, torch.nn.Linear)
+        default=(torch.nn.Embedding, torch.nn.Linear)
 
     check_cached : bool, default=True
         If True, check whether a model with the same model exists before quantization.
@@ -588,10 +600,19 @@ def quantize_bert_model_as_torch(
         dtype=torch.qint8,
     )
 
-    torch.save(
-        obj=quantized_pytorch_module.state_dict(),
+    dummy_inputs = _gen_dummy_inputs_for_tracing(
+        batch_size=2,
+        vocab_size=model_config.vocab_size,
+        seq_length=model_config.max_position_embeddings,
+    )
+
+    jit_traced_model = torch.jit.trace(quantized_pytorch_module, dummy_inputs, strict=False)
+    pickled_tokenizer = pickle.dumps(model.tokenizer, protocol=pickle.HIGHEST_PROTOCOL)
+
+    torch.jit.save(
+        m=jit_traced_model,
         f=paths.output_uri,
-        pickle_protocol=pickle.HIGHEST_PROTOCOL,
+        _extra_files=dict(tokenizer=pickled_tokenizer),
     )
 
     if verbose:  # pragma: no cover
@@ -599,18 +620,19 @@ def quantize_bert_model_as_torch(
         c_blu = colorama.Fore.BLUE if colorama else ""
         c_rst = colorama.Style.RESET_ALL if colorama else ""
 
+        module_name = ".".join(__name__.split(".")[:-1])
+
         print(
-            f"Saved quantized Pytorch module (Torch format) in {c_blu}'{paths.output_uri}'{c_rst}. "
+            "Saved quantized Pytorch module (Torch JIT format) in "
+            f"{c_blu}'{paths.output_uri}'{c_rst}. "
             "To use it, load a BERT segmenter model as:\n\n"
-            f"BERTSegmenter(\n"
+            f"{module_name}.{models.TorchJITBERTSegmenter.__name__}(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
-            f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {c_ylw}from_quantized_weights={c_blu}True{c_rst},\n"
             "   ...,\n"
             ")"
         )
 
-    return paths, quantized_pytorch_module
+    return paths
 
 
 def quantize_lstm_model_as_torch(
@@ -631,10 +653,8 @@ def quantize_lstm_model_as_torch(
 
     Models created from this format can be loaded for inference as:
 
-    LSTMSegmenter(
+    optimize.TorchJITLSTMSegmenter(
         uri_model="[quantized_model_uri]",
-        uri_tokenizer=...,
-        from_quantized_weights=True,
         ...,
     )
 
@@ -702,10 +722,19 @@ def quantize_lstm_model_as_torch(
         dtype=torch.qint8,
     )
 
-    torch.save(
-        obj=quantized_pytorch_module.state_dict(),
+    dummy_input_ids, _, _ = _gen_dummy_inputs_for_tracing(
+        batch_size=2,
+        vocab_size=model.tokenizer.vocab_size,
+        seq_length=512,
+    )
+
+    jit_traced_model = torch.jit.trace(quantized_pytorch_module, (dummy_input_ids,), strict=False)
+    pickled_tokenizer = pickle.dumps(model.tokenizer, protocol=pickle.HIGHEST_PROTOCOL)
+
+    torch.jit.save(
+        m=jit_traced_model,
         f=paths.output_uri,
-        pickle_protocol=pickle.HIGHEST_PROTOCOL,
+        _extra_files=dict(tokenizer=pickled_tokenizer),
     )
 
     if verbose:  # pragma: no cover
@@ -713,13 +742,14 @@ def quantize_lstm_model_as_torch(
         c_blu = colorama.Fore.BLUE if colorama else ""
         c_rst = colorama.Style.RESET_ALL if colorama else ""
 
+        module_name = ".".join(__name__.split(".")[:-1])
+
         print(
-            f"Saved quantized Pytorch module (Torch format) in {c_blu}'{paths.output_uri}'{c_rst}. "
+            "Saved quantized Pytorch module (Torch JIT format) in "
+            f"{c_blu}'{paths.output_uri}'{c_rst}. "
             "To use it, load a LSTM segmenter model as:\n\n"
-            f"LSTMSegmenter(\n"
+            f"{module_name}.{models.TorchJITLSTMSegmenter.__name__}(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.output_uri}'{c_rst},\n"
-            f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {c_ylw}from_quantized_weights={c_blu}True{c_rst},\n"
             "   ...,\n"
             ")"
         )
@@ -732,7 +762,7 @@ def quantize_model(
     quantized_model_filename: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
     optimization_level: int = 99,
-    model_output_format: t.Literal["onnx", "torch"] = "onnx",
+    model_output_format: t.Literal["onnx", "torch_jit"] = "onnx",
     onnx_opset_version: int = 15,
     check_cached: bool = True,
     verbose: bool = False,
@@ -765,7 +795,7 @@ def quantize_model(
         - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
         See [1]_ for more information.
 
-    model_output_format : {'onnx', 'torch'}, default='onnx'
+    model_output_format : {'onnx', 'torch_jit'}, default='onnx'
         Output format of quantized model. This option also determines how exactly inference with
         the quantized model will be done. See ``See Also`` section for information about specific
         configuratins of model types and output formats.
@@ -793,9 +823,9 @@ def quantize_model(
     See Also
     --------
     quantize_lstm_model_as_onnx : quantize LSTMSegmenter as model_output_format='onnx'.
-    quantize_lstm_model_as_torch : quantize LSTMSegmenter as model_output_format='torch'.
+    quantize_lstm_model_as_torch : quantize LSTMSegmenter as model_output_format='torch_jit'.
     quantize_bert_model_as_onnx : quantize BERTSegmenter as model_output_format='onnx'.
-    quantize_bert_model_as_torch : quantize BERTSegmenter as model_output_format='torch'.
+    quantize_bert_model_as_torch : quantize BERTSegmenter as model_output_format='torch_jit'.
 
     References
     ----------
@@ -811,9 +841,9 @@ def quantize_model(
             "provide either BERTSegmenter or LSTMSegmenter."
         )
 
-    if model_output_format not in {"onnx", "torch"}:
+    if model_output_format not in {"onnx", "torch_jit"}:
         raise ValueError(
-            f"Unsupported '{model_output_format=}'. Please choose either 'onnx' or 'torch'."
+            f"Unsupported '{model_output_format=}'. Please choose either 'onnx' or 'torch_jit'."
         )
 
     fn_kwargs: dict[str, t.Any] = dict(
@@ -827,10 +857,10 @@ def quantize_model(
     fn_quantization_factory: dict[
         tuple[t.Type[_base.BaseSegmenter], str], t.Callable[..., QuantizationOutput]
     ] = {
+        (segmenter.BERTSegmenter, "torch_jit"): quantize_bert_model_as_torch,
         (segmenter.BERTSegmenter, "onnx"): quantize_bert_model_as_onnx,
-        (segmenter.LSTMSegmenter, "torch"): quantize_lstm_model_as_torch,
+        (segmenter.LSTMSegmenter, "torch_jit"): quantize_lstm_model_as_torch,
         (segmenter.LSTMSegmenter, "onnx"): quantize_lstm_model_as_onnx,
-        (segmenter.BERTSegmenter, "torch"): quantize_bert_model_as_torch,
     }
 
     try:
