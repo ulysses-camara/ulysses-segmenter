@@ -183,6 +183,15 @@ class BaseSegmenter:
 
         return segs
 
+    def _preprocess_minibatch(
+        self, minibatch: transformers.BatchEncoding
+    ) -> transformers.BatchEncoding:
+        """Perform necessary minibatch transformations before inference.
+
+        Can be used by subclasses. In this base class, this method is No-op/identity operator.
+        """
+        return minibatch
+
     def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         model_out = self._model(**minibatch)
@@ -346,6 +355,7 @@ class BaseSegmenter:
 
         with torch.no_grad():
             for minibatch in tqdm.auto.tqdm(minibatches, disable=not show_progress_bar):
+                minibatch = self._preprocess_minibatch(minibatch)
                 minibatch = minibatch.to(self.device)
                 model_out = self._predict_minibatch(minibatch)
                 all_logits.append(model_out)
