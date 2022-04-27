@@ -1,8 +1,30 @@
 name: Tests
 
 on:
-- push
-- pull_request
+  push:
+    branches: 
+      - master
+
+    paths-ignore:
+      - '**.md'
+      - 'docs/'
+      - '**.yaml'
+      - 'diagrams/'
+      - 'notebooks/'
+      - 'train_statistics/'
+      - '.gitignore'
+      - 'LICENSE'
+
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/'
+      - '**.yaml'
+      - 'diagrams/'
+      - 'notebooks/'
+      - 'train_statistics/'
+      - '.gitignore'
+      - 'LICENSE'
 
 jobs:
   test:
