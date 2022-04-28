@@ -81,12 +81,9 @@ segmenter_bert = segmentador.BERTSegmenter(
 
 sample_text = """
 PROJETO DE LEI N. 0123 (Da Sra. Alguém)
-Dispõe de algo.
-O Congresso Nacional decreta:
+Dispõe de algo. O Congresso Nacional decreta:
 Artigo 1. Este projeto de lei não tem efeito.
-    a) Item de exemplo;
-    b) Segundo item; ou
-    c) Terceiro item.
+    a) Item de exemplo; b) Segundo item; ou c) Terceiro item.
 Artigo 2. Esta lei passa a vigorar na data de sua publicação.
 """
 
@@ -126,12 +123,9 @@ segmenter_lstm = segmentador.LSTMSegmenter(
 
 sample_text = """
 PROJETO DE LEI N. 0123 (Da Sra. Alguém)
-Dispõe de algo.
-O Congresso Nacional decreta:
+Dispõe de algo. O Congresso Nacional decreta:
 Artigo 1. Este projeto de lei não tem efeito.
-    a) Item de exemplo;
-    b) Segundo item; ou
-    c) Terceiro item.
+    a) Item de exemplo; b) Segundo item; ou c) Terceiro item.
 Artigo 2. Esta lei passa a vigorar na data de sua publicação.
 """
 
@@ -234,7 +228,8 @@ segmenter_lstm_torch_quantized = segmentador.optimize.TorchJITLSTMSegmenter(
    uri_model=quantized_lstm_torch_paths.output_uri,
 )
 
-segmenter_lstm_torch_quantized(sample_text)
+seg_result = segmenter_lstm_torch_quantized(sample_text, return_logits=True)
+...
 ```
 
 ```Python
@@ -245,11 +240,12 @@ quantized_bert_torch_paths = segmentador.optimize.quantize_model(
     verbose=True,
 )
 
-segmenter_bert_torch_quantized = segmentador.optimize.TorchJITLSTMSegmenter(
+segmenter_bert_torch_quantized = segmentador.optimize.TorchJITBERTSegmenter(
    uri_model=quantized_bert_torch_paths.output_uri,
 )
 
-segmenter_bert_torch_quantized(sample_text)
+seg_result = segmenter_bert_torch_quantized(sample_text, return_logits=True)
+...
 ```
 
 ### Experimental results
