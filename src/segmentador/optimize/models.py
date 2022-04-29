@@ -121,7 +121,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         model_out = self._model.evaluation_loop(minibatch)
         model_out = model_out.predictions
 
-        logits = np.asfarray(model_out).astype(np.float64, copy=False)
+        logits = np.asfarray(model_out)
 
         return logits
 
@@ -227,7 +227,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
             run_options=None,
         )
 
-        logits = np.asfarray(model_out).astype(np.float64, copy=False)
+        logits = np.asfarray(model_out)
 
         if logits.ndim > 3:
             logits = logits.squeeze(0)
