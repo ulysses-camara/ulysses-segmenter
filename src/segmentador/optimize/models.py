@@ -194,7 +194,9 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         import onnxruntime  # pylint: disable='import-error'
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
+        sess_options.graph_optimization_level = (
+            onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        )
 
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
             path_or_bytes=uri_model,
