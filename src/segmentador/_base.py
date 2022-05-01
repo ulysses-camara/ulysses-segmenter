@@ -242,6 +242,7 @@ class BaseSegmenter:
         window_shift_size : int or float, default=0.5
             Moving window shift size, to feed documents larger than 1024 subwords tokens into
             the segmenter model.
+
             - If integer, specify exactly the shift size per step, and it must be in [1, 1024]
             range.
             - If float, the shift size is calculated from the corresponding fraction of the window
@@ -260,7 +261,8 @@ class BaseSegmenter:
             If True, return logit array for each token.
 
         remove_noise_subsegments : bool, default=False
-            If True, remove all tokens between tokens classified as `noise_start` and `noise_end`.
+            If True, remove all tokens between tokens classified as `noise_start` (inclusive) and
+            `noise_end` or `segment` (either exclusive), whichever occurs first.
 
             - Tokens classified as `noise_end` are kept. In other words, they are the first
               non-noise token past the previous noise subsegment.
