@@ -164,8 +164,7 @@ class BaseSegmenter:
         seg_cls_id: int
 
         try:
-            label2id = self._model.config.label2id  # type: ignore
-            seg_cls_id = label2id.get("SEG_START", 1)
+            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
 
         except AttributeError:
             seg_cls_id = 1
@@ -261,7 +260,14 @@ class BaseSegmenter:
             If True, return logit array for each token.
 
         remove_noise_subsegments : bool, default=False
-            If True, remove any tokens between tokens classified as `noise_start` and `noise_end`.
+            If True, remove all tokens between tokens classified as `noise_start` and `noise_end`.
+
+            - Tokens classified as `noise_end` are kept. In other words, they are the first
+              non-noise token past the previous noise subsegment.
+            - Tokens between `noise_start` and the sentence end are also removed.
+            - Tokens between the sentence end and `noise_end` are kept.
+            - Only the closest `noise_start` for every `noise_end` (or the sentence end) are
+              considered. In other words, redundant `noise_start` tokens are ignored.
 
         show_progress_bar : bool, default=False
             If True, show segmentation progress bar.
@@ -377,16 +383,18 @@ class BaseSegmenter:
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
-        tokens: dict[str, npt.NDArray[int]] = {
-            key: val.cpu().detach().numpy() for key, val in tokens.items()
-        }
+        tokens = transformers.BatchEncoding(
+            {key: val.cpu().detach().numpy() for key, val in tokens.items()}
+        )
+
+        label2id: dict[str, int]
 
         if remove_noise_subsegments:
             try:
                 label2id = self._model.config.label2id  # type: ignore
 
             except AttributeError:
-                label2id: dict[str, int] = dict(
+                label2id = dict(
                     seg_cls_id=1,
                     noise_start_cls_id=2,
                     noise_end_cls_id=3,

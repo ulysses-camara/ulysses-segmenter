@@ -1,3 +1,4 @@
+"""Handle noise subsegments."""
 import typing as t
 
 import numpy.typing as npt
@@ -10,10 +11,10 @@ __all__ = [
 
 
 def remove_noise_subsegments(
-    label_ids: npt.NDArray[int],
+    label_ids: npt.NDArray[np.int32],
     *args: npt.NDArray[t.Any],
     label2id: t.Optional[dict[str, int]] = None,
-) -> tuple[npt.NDArray[int], tuple[t.Sequence[t.Any]]]:
+) -> tuple[npt.NDArray[np.int32], tuple[npt.NDArray[t.Any], ...]]:
     """TODO"""
     label2id = label2id or {}
     seg_cls_id = label2id.get("NOISE_START", 1)
@@ -30,8 +31,9 @@ def remove_noise_subsegments(
         return label_ids, args
 
     j = 0
-    noise_subsegment_inds: list[int] = []
+    noise_subsegment_inds: list[tuple[int, int]] = []
 
+    # pylint: disable='consider-using-enumerate'
     for i in range(len(cand_noise_start_inds)):
         while j < len(noise_end_inds) and cand_noise_start_inds[i] > noise_end_inds[j]:
             # Note: skip spurious 'noise end' tokens.
@@ -54,7 +56,7 @@ def remove_noise_subsegments(
         non_noise_mask[i_start:i_end] = False
 
     label_ids = label_ids[non_noise_mask]
-    ret: list[t.Sequence[t.Any]] = []
+    ret: list[npt.NDArray[t.Any]] = []
 
     for seq in args:
         seq = seq.squeeze()
