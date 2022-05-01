@@ -12,6 +12,7 @@ class TestPaths(t.NamedTuple):
     tokenizer: str = "tokenizers/6000_subwords"
     legal_text_long: str = "tests/resources/test_legal_text_long.txt"
     legal_text_short: str = "tests/resources/test_legal_text_short.txt"
+    legal_text_with_noise: str = "tests/resources/test_legal_text_with_noise.txt"
 
     quantized_test_model_dirname: str = "tests/temp_quantization_models"
     quantized_test_model_lstm_torch: str = "torch_temp_lstm"

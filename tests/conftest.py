@@ -58,6 +58,14 @@ def fn_fixture_legal_text_short(fixture_test_paths: paths.TestPaths) -> str:
     return text
 
 
+@pytest.fixture(name="fixture_legal_text_with_noise", scope="session")
+def fn_fixture_legal_text_with_noise(fixture_test_paths: paths.TestPaths) -> str:
+    with open(fixture_test_paths.legal_text_with_noise, "r", encoding="utf-8") as f_in:
+        text = f_in.read()
+
+    return text
+
+
 @pytest.fixture(name="fixture_quantized_model_lstm_onnx", scope="session")
 def fn_fixture_quantized_model_lstm_onnx(
     fixture_test_paths: paths.TestPaths, fixture_model_lstm_1_layer: segmentador.LSTMSegmenter
