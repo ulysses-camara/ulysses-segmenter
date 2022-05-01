@@ -164,7 +164,8 @@ class BaseSegmenter:
         seg_cls_id: int
 
         try:
-            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
+            label2id = self._model.config.label2id  # type: ignore
+            seg_cls_id = label2id.get("SEG_START", 1)
 
         except AttributeError:
             seg_cls_id = 1
@@ -173,7 +174,7 @@ class BaseSegmenter:
         segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
         segs: list[str] = []
-        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].numpy().ravel()
+        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].ravel()
 
         for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
             split_ = np_token_ids[i:i_next]
@@ -212,6 +213,7 @@ class BaseSegmenter:
         return_justificativa: bool = False,
         return_labels: bool = False,
         return_logits: bool = False,
+        remove_noise_subsegments: bool = False,
         show_progress_bar: bool = False,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
@@ -258,6 +260,9 @@ class BaseSegmenter:
         return_logits : bool, default=False
             If True, return logit array for each token.
 
+        remove_noise_subsegments : bool, default=False
+            If True, remove any tokens between tokens classified as `noise_start` and `noise_end`.
+
         show_progress_bar : bool, default=False
             If True, show segmentation progress bar.
 
@@ -268,10 +273,10 @@ class BaseSegmenter:
 
         Returns
         -------
-        preprocessed_text : list[str]
-            Content from `text` after the preprocessing steps.
+        segments : list[str]
+            Segmented legal text.
 
-        justificativa_block : list[str]
+        justificativa : list[str]
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
 
@@ -372,8 +377,35 @@ class BaseSegmenter:
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
+        tokens: dict[str, npt.NDArray[int]] = {
+            key: val.cpu().detach().numpy() for key, val in tokens.items()
+        }
+
+        if remove_noise_subsegments:
+            try:
+                label2id = self._model.config.label2id  # type: ignore
+
+            except AttributeError:
+                label2id: dict[str, int] = dict(
+                    seg_cls_id=1,
+                    noise_start_cls_id=2,
+                    noise_end_cls_id=3,
+                )
+
+            label_ids, (logits, *tokens_vals) = output_handlers.remove_noise_subsegments(
+                label_ids,
+                logits,
+                *tokens.values(),
+                label2id=label2id,
+            )
+
+            for key, val in zip(tokens.keys(), tokens_vals):
+                tokens[key] = val
+
         segs = self._generate_segments_from_labels(
-            tokens=tokens, num_tokens=num_tokens, label_ids=label_ids
+            tokens=tokens,
+            num_tokens=num_tokens,
+            label_ids=label_ids,
         )
 
         label_ids = label_ids[:num_tokens]
