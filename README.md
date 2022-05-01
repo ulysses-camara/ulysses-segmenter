@@ -23,7 +23,8 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 4. [Usage examples](#usage-examples)
     1. [Standard models (Torch format, Huggingface Transformers compatible)](#standard-models)
     2. [Quantization in ONNX format](#quantization-in-onnx-format)
-    2. [Quantization in Torch JIT format](#quantization-in-torch-jit-format)
+    3. [Quantization in Torch JIT format](#quantization-in-torch-jit-format)
+    4. [Noise subsegment removal](#noise-subsegment-removal)
 5. [Experimental results](#experimental-results)
 6. [Train data](#train-data)
 7. [Package tests](#package-tests)
@@ -53,8 +54,12 @@ The *pooling* operations can be one of the following:
 #### Training
 The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [a notebook in this repository](./notebooks/2_generate_labels_from_regular_expressions.ipynb)).
 
+---
+
 ### Trained models
 TODO.
+
+---
 
 ### Installation
 To install this package:
@@ -66,6 +71,8 @@ If you plan to use optimized models in ONNX format, you need to install some opt
 ```bash
 python -m pip install "segmentador[optimize] @ git+https://github.com/FelSiq/ulysses-segmenter"
 ```
+
+---
 
 ### Usage examples
 #### Standard models
@@ -248,17 +255,34 @@ seg_result = segmenter_bert_torch_quantized(sample_text, return_logits=True)
 ...
 ```
 
+#### Noise subsegment removal
+Tokens are classified as one out of 4 available classes: No-op (0), Segment (1), Noise Start (2), and Noise End (3). Tokens between a pair of `Noise Start` (inclusive) and the closest `Noise End` or `Segment` (either exclusive) can be removed during the segmentation, by passing the argument `remove_noise_subsegments=True` to the segmenter model:
+
+```python
+seg_result = segmenter(sample_text, remove_noise_subsegments=True)
+```
+
+---
+
 ### Experimental results
 Experimental results are available in [a notebook in this repository](./notebooks/6_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
+
+---
 
 ### Train data
 TODO.
 
+---
+
 ### Package tests
 Tests for this package are run using Tox and Pytest.
 
+---
+
 ### License
 [MIT.](./LICENSE)
+
+---
 
 ### Citation
 ```bibtex
