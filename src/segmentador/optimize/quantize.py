@@ -103,6 +103,16 @@ def _build_onnx_default_uris(
 
     paths = QuantizationOutputONNX(**paths_dict)
 
+    all_path_set = {paths.onnx_base_uri, paths.onnx_optimized_uri, paths.onnx_quantized_uri}
+    num_distinct_paths = len(all_path_set)
+
+    if num_distinct_paths < 3:
+        raise ValueError(
+            f"{3 - num_distinct_paths} URI for ONNX models (including intermediary models) "
+            "are the same, which will cause undefined behaviour while quantizing the model. "
+            "Please provide distinct filenames for ONNX files."
+        )
+
     return paths
 
 
