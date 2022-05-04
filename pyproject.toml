@@ -13,7 +13,7 @@ authors = [
 requires-python = ">=3.9"
 
 dependencies = [
-	"numpy >= 1.22.3",
+	"numpy >= 1.21.6",
 	"torch >= 1.11.0",
 	"transformers == 4.16.2",
 ]
