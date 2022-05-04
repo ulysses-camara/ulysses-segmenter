@@ -68,12 +68,12 @@ def import_colorama() -> t.Optional[types.ModuleType]:
         return None
 
 
-MAP_FACTORY_REQUIRED: dict[str, t.Callable[[], types.ModuleType]] = {
+MAP_FACTORY_REQUIRED: t.Dict[str, t.Callable[[], types.ModuleType]] = {
     "optimum.onnxruntime": import_optimum_onnxruntime,
     "onnxruntime": import_onnxruntime,
 }
 
-MAP_FACTORY: dict[str, t.Callable[[], t.Optional[types.ModuleType]]] = {
+MAP_FACTORY: t.Dict[str, t.Callable[[], t.Optional[types.ModuleType]]] = {
     "colorama": import_colorama,
     **MAP_FACTORY_REQUIRED,
 }

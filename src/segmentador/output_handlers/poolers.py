@@ -46,9 +46,7 @@ class _BasePooler(abc.ABC):
 class AutoMovingWindowPooler(_BasePooler):
     """Generate a specific pooler based on the chosen strategy."""
 
-    def __new__(  # type: ignore
-        cls, pooling_operation: t.Literal["max", "sum", "gaussian", "assymetric-max"]
-    ):
+    def __new__(cls, pooling_operation: str):  # type: ignore
         options = {
             "assymetric-max": AssymetricMaxMovingWindowPooler,
             "sum": SumMovingWindowPooler,
@@ -59,7 +57,7 @@ class AutoMovingWindowPooler(_BasePooler):
         if pooling_operation not in options:
             raise ValueError(
                 "Invalid value for 'pooling_operation' parameter, which must assume a "
-                f"value from: {', '.join(options.keys())} (got {pooling_operation=})."
+                f"value from: {', '.join(options.keys())} (got '{pooling_operation}')."
             )
 
         chosen_cls = options[pooling_operation]

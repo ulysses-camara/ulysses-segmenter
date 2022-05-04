@@ -49,7 +49,7 @@ QuantizationOutput = t.Union[QuantizationOutputONNX, QuantizationOutputTorch]
 
 def _build_onnx_default_uris(
     model_name: str,
-    model_attributes: dict[str, t.Any],
+    model_attributes: t.Dict[str, t.Any],
     quantized_model_dirpath: str,
     quantized_model_filename: t.Optional[str] = None,
     intermediary_onnx_model_name: t.Optional[str] = None,
@@ -90,7 +90,7 @@ def _build_onnx_default_uris(
     )
     onnx_quantized_uri = os.path.join(quantized_model_dirpath, quantized_model_filename)
 
-    paths_dict: dict[str, str] = dict(
+    paths_dict: t.Dict[str, str] = dict(
         onnx_base_uri=onnx_base_uri,
         onnx_optimized_uri=onnx_optimized_uri,
         onnx_quantized_uri=onnx_quantized_uri,
@@ -118,7 +118,7 @@ def _build_onnx_default_uris(
 
 def _build_torch_default_uris(
     model_name: str,
-    model_attributes: dict[str, t.Any],
+    model_attributes: t.Dict[str, t.Any],
     quantized_model_dirpath: str,
     quantized_model_filename: t.Optional[str] = None,
 ) -> QuantizationOutputTorch:
@@ -137,7 +137,7 @@ def _build_torch_default_uris(
 
 def _gen_dummy_inputs_for_tracing(
     batch_size: int, vocab_size: int, seq_length: int
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> t.Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Generate dummy inputs for Torch JIT tracing."""
     dummy_input_ids = torch.randint(
         low=0, high=vocab_size, size=(batch_size, seq_length), dtype=torch.long
@@ -220,7 +220,7 @@ def quantize_bert_model_as_onnx(
 
     Returns
     -------
-    paths : tuple[str, ...]
+    paths : t.Tuple[str, ...]
         File URIs related from generated files during the quantization procedure. The
         final model URI can be accessed from the `output_uri` attribute.
 
@@ -247,7 +247,7 @@ def quantize_bert_model_as_onnx(
             "quantize_model(..., model_output_format='torch_jit')."
         )
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+    model_attributes: t.Dict[str, t.Any] = collections.OrderedDict(
         (
             ("num_layers", model_config.num_hidden_layers),
             ("vocab_size", model.tokenizer.vocab_size),
@@ -414,7 +414,7 @@ def quantize_lstm_model_as_onnx(
 
     Returns
     -------
-    paths : tuple[str, ...]
+    paths : t.Tuple[str, ...]
         File URIs related from generated files during the quantization procedure. The
         final model URI can be accessed from the `output_uri` attribute.
 
@@ -431,7 +431,7 @@ def quantize_lstm_model_as_onnx(
     import onnxruntime
     import onnxruntime.quantization
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+    model_attributes: t.Dict[str, t.Any] = collections.OrderedDict(
         (
             ("hidden_layer_dim", model.lstm_hidden_layer_size),
             ("vocab_size", model.tokenizer.vocab_size),
@@ -532,7 +532,7 @@ def quantize_bert_model_as_torch(
     quantized_model_filename: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
     modules_to_quantize: t.Union[
-        set[t.Type[torch.nn.Module]], tuple[t.Type[torch.nn.Module], ...]
+        t.Set[t.Type[torch.nn.Module]], t.Tuple[t.Type[torch.nn.Module], ...]
     ] = (
         torch.nn.Embedding,
         torch.nn.Linear,
@@ -562,7 +562,7 @@ def quantize_bert_model_as_torch(
         Path to output file directory, which the resulting quantized model will be stored,
         alongside any possible coproducts also generated during the quantization procedure.
 
-    modules_to_quantize : tuple[t.Type[torch.nn.Module], ...], \
+    modules_to_quantize : t.Tuple[t.Type[torch.nn.Module], ...], \
         default=(torch.nn.Embedding, torch.nn.Linear)
 
     check_cached : bool, default=True
@@ -574,13 +574,13 @@ def quantize_bert_model_as_torch(
 
     Returns
     -------
-    paths : tuple[str, ...]
+    paths : t.Tuple[str, ...]
         File URIs related from generated files during the quantization procedure. The
         final model URI can be accessed from the `output_uri` attribute.
     """
     model_config: transformers.BertConfig = model.model.config  # type: ignore
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+    model_attributes: t.Dict[str, t.Any] = collections.OrderedDict(
         (
             ("num_layers", model_config.num_hidden_layers),
             ("vocab_size", model.tokenizer.vocab_size),
@@ -659,7 +659,7 @@ def quantize_lstm_model_as_torch(
     quantized_model_filename: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
     modules_to_quantize: t.Union[
-        set[t.Type[torch.nn.Module]], tuple[t.Type[torch.nn.Module], ...]
+        t.Set[t.Type[torch.nn.Module]], t.Tuple[t.Type[torch.nn.Module], ...]
     ] = (
         torch.nn.Embedding,
         torch.nn.LSTM,
@@ -690,7 +690,7 @@ def quantize_lstm_model_as_torch(
         Path to output file directory, which the resulting quantized model will be stored,
         alongside any possible coproducts also generated during the quantization procedure.
 
-    modules_to_quantize : tuple[t.Type[torch.nn.Module], ...], \
+    modules_to_quantize : t.Tuple[t.Type[torch.nn.Module], ...], \
         default=(torch.nn.Embedding, torch.nn.LSTM, torch.nn.Linear)
 
     check_cached : bool, default=True
@@ -702,12 +702,12 @@ def quantize_lstm_model_as_torch(
 
     Returns
     -------
-    paths : tuple[str, ...]
+    paths : t.Tuple[str, ...]
         File URIs related from generated files during the quantization procedure. The
         final model URI can be accessed from the `output_uri` attribute.
     """
 
-    model_attributes: dict[str, t.Any] = collections.OrderedDict(
+    model_attributes: t.Dict[str, t.Any] = collections.OrderedDict(
         (
             ("num_layers", model.lstm_hidden_layer_size),
             ("vocab_size", model.tokenizer.vocab_size),
@@ -781,7 +781,7 @@ def quantize_model(
     quantized_model_filename: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
     optimization_level: int = 99,
-    model_output_format: t.Literal["onnx", "torch_jit"] = "onnx",
+    model_output_format: str = "onnx",
     onnx_opset_version: int = 15,
     check_cached: bool = True,
     verbose: bool = False,
@@ -862,10 +862,11 @@ def quantize_model(
 
     if model_output_format not in {"onnx", "torch_jit"}:
         raise ValueError(
-            f"Unsupported '{model_output_format=}'. Please choose either 'onnx' or 'torch_jit'."
+            f"Unsupported 'model_output_format={model_output_format}'. "
+            "Please choose either 'onnx' or 'torch_jit'."
         )
 
-    fn_kwargs: dict[str, t.Any] = dict(
+    fn_kwargs: t.Dict[str, t.Any] = dict(
         model=model,
         quantized_model_filename=quantized_model_filename,
         quantized_model_dirpath=quantized_model_dirpath,
@@ -873,8 +874,8 @@ def quantize_model(
         verbose=verbose,
     )
 
-    fn_quantization_factory: dict[
-        tuple[t.Type[_base.BaseSegmenter], str], t.Callable[..., QuantizationOutput]
+    fn_quantization_factory: t.Dict[
+        t.Tuple[t.Type[_base.BaseSegmenter], str], t.Callable[..., QuantizationOutput]
     ] = {
         (segmenter.BERTSegmenter, "torch_jit"): quantize_bert_model_as_torch,
         (segmenter.BERTSegmenter, "onnx"): quantize_bert_model_as_onnx,
@@ -887,7 +888,8 @@ def quantize_model(
 
     except KeyError as e_key:
         raise ValueError(
-            f"Unsupported '{model_output_format=}' for segmenter type={type(model)}."
+            f"Unsupported 'model_output_format={model_output_format}' for segmenter "
+            f"type={type(model)}."
         ) from e_key
 
     if model_output_format == "onnx":

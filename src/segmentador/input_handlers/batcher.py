@@ -1,4 +1,6 @@
 """Build minibatches for segmenter inference."""
+import typing as t
+
 import transformers
 import numpy as np
 import torch
@@ -12,9 +14,9 @@ def build_minibatches(
     moving_window_size: int,
     window_shift_size: int,
     pad_id: int = 0,
-) -> list[transformers.BatchEncoding]:
+) -> t.List[transformers.BatchEncoding]:
     """Break BatchEncoding items into proper smaller minibatches."""
-    minibatches: list[transformers.BatchEncoding] = []
+    minibatches: t.List[transformers.BatchEncoding] = []
     minibatch = transformers.BatchEncoding()
 
     total_minibatches = 1 + max(

@@ -25,9 +25,7 @@ class BaseSegmenter:
     def __init__(
         self,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
         cache_dir_tokenizer: str = "./cache/tokenizers",
@@ -52,11 +50,11 @@ class BaseSegmenter:
 
     def __call__(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
+    ) -> t.Union[t.List[str], t.Tuple[t.List[t.Any], ...]]:
         return self.segment_legal_text(*args, **kwargs)
 
     def __repr__(self) -> str:
-        strs: list[str] = []
+        strs: t.List[str] = []
 
         strs.append(f"{self.__class__.__name__} pipeline")
         strs.append(f" o Device: {self.device}")
@@ -111,7 +109,7 @@ class BaseSegmenter:
         text: str,
         return_justificativa: bool = False,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
-    ) -> t.Union[str, tuple[str, list[str]]]:
+    ) -> t.Union[str, t.Tuple[str, t.List[str]]]:
         """Apply minimal legal text preprocessing.
 
         The preprocessing steps are:
@@ -138,7 +136,7 @@ class BaseSegmenter:
         preprocessed_text : str
             Content from `text` after the preprocessing steps.
 
-        justificativa_block : list[str]
+        justificativa_block : t.List[str]
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
         """
@@ -159,7 +157,7 @@ class BaseSegmenter:
         tokens: transformers.BatchEncoding,
         num_tokens: int,
         label_ids: npt.NDArray[np.int32],
-    ) -> list[str]:
+    ) -> t.List[str]:
         """Convert predicted labels and subword tokens to text segments."""
         seg_cls_id: int
 
@@ -172,7 +170,7 @@ class BaseSegmenter:
         segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
         segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
 
-        segs: list[str] = []
+        segs: t.List[str] = []
         np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].ravel()
 
         for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
@@ -205,7 +203,7 @@ class BaseSegmenter:
 
     def segment_legal_text(
         self,
-        text: t.Union[str, dict[str, list[int]]],
+        text: t.Union[str, t.Dict[str, t.List[int]]],
         batch_size: int = 32,
         moving_window_size: int = 1024,
         window_shift_size: t.Union[float, int] = 0.5,
@@ -215,7 +213,7 @@ class BaseSegmenter:
         remove_noise_subsegments: bool = False,
         show_progress_bar: bool = False,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
-    ) -> t.Union[list[str], tuple[list[t.Any], ...]]:
+    ) -> t.Union[t.List[str], t.Tuple[t.List[t.Any], ...]]:
         """Segment legal `text`.
 
         The pretrained model support texts up to 1024 subwords. Texts larger than this
@@ -227,7 +225,7 @@ class BaseSegmenter:
 
         Parameters
         ----------
-        text : str or dict[str, list[int]]
+        text : str or t.Dict[str, t.List[int]]
             Legal text to be segmented.
 
         batch_size : int, default=32
@@ -281,10 +279,10 @@ class BaseSegmenter:
 
         Returns
         -------
-        segments : list[str]
+        segments : t.List[str]
             Segmented legal text.
 
-        justificativa : list[str]
+        justificativa : t.List[str]
             Detected legal text `justificativa` blocks.
             Only returned if `return_justificativa=True`.
 
@@ -301,11 +299,11 @@ class BaseSegmenter:
             Only returned if `return_logits=True`.
         """
         if batch_size < 1:
-            raise ValueError(f"'batch_size' parameter must be >= 1 (got {batch_size=}).")
+            raise ValueError(f"'batch_size' parameter must be >= 1 (got '{batch_size}').")
 
         if moving_window_size < 1:
             raise ValueError(
-                f"'moving_window_size' parameter must be >= 1 (got {moving_window_size=})."
+                f"'moving_window_size' parameter must be >= 1 (got '{moving_window_size}')."
             )
 
         try:
@@ -317,7 +315,8 @@ class BaseSegmenter:
                 warnings.warn(
                     message=(
                         "'moving_window_size' is larger than model's positional embeddings "
-                        f"({moving_window_size=}, {max_moving_window_size_allowed=}). "
+                        f"(moving_window_size={moving_window_size}, "
+                        f"max_moving_window_size_allowed={max_moving_window_size_allowed}). "
                         "Will set 'moving_window_size' to the maximum allowed value."
                     ),
                     category=UserWarning,
@@ -335,14 +334,14 @@ class BaseSegmenter:
 
         if window_shift_size < 1:
             raise ValueError(
-                f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size=}')."
+                f"'window_shift_size' parameter must be >= 1 (got '{window_shift_size}')."
             )
 
         if window_shift_size > moving_window_size:
             warnings.warn(
                 message=(
                     f"'window_shift_size' parameter must be <= {moving_window_size} "
-                    f"(got '{window_shift_size=}'). "
+                    f"(got '{window_shift_size}'). "
                     f"Will set it to {moving_window_size} automatically."
                 ),
                 category=UserWarning,
@@ -365,7 +364,7 @@ class BaseSegmenter:
         )
 
         self.eval()
-        all_logits: list[npt.NDArray[np.float64]] = []
+        all_logits: t.List[npt.NDArray[np.float64]] = []
 
         with torch.no_grad():
             for minibatch in tqdm.auto.tqdm(minibatches, disable=not show_progress_bar):
@@ -389,7 +388,7 @@ class BaseSegmenter:
             {key: val.cpu().detach().numpy() for key, val in tokens.items()}
         )
 
-        label2id: dict[str, int]
+        label2id: t.Dict[str, int]
 
         if remove_noise_subsegments:
             try:
@@ -475,7 +474,7 @@ class LSTMSegmenterTorchModule(torch.nn.Module):
         input_ids: torch.Tensor,
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> dict[str, torch.Tensor]:
+    ) -> t.Dict[str, torch.Tensor]:
         # pylint: disable='missing-function-docstring', 'unused-argument'
         out = input_ids
 

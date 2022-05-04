@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 
-InputHandlerOutputType = tuple[transformers.BatchEncoding, t.Optional[list[str]], int]
+InputHandlerOutputType = t.Tuple[transformers.BatchEncoding, t.Optional[t.List[str]], int]
 
 
 class _BaseInputHandler(abc.ABC):
@@ -66,7 +66,7 @@ class InputHandlerString(_BaseInputHandler):
         cls,
         text: str,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
-    ) -> tuple[str, list[str]]:
+    ) -> t.Tuple[str, t.List[str]]:
         """Apply minimal legal text preprocessing.
 
         The preprocessing steps are:
@@ -89,7 +89,7 @@ class InputHandlerString(_BaseInputHandler):
         preprocessed_text : str
             Content from `text` after the preprocessing steps.
 
-        justificativa_block : list[str]
+        justificativa_block : t.List[str]
             Detected legal text `justificativa` blocks.
         """
         text = cls.RE_BLANK_SPACES.sub(" ", text)
@@ -137,7 +137,7 @@ class InputHandlerString(_BaseInputHandler):
         tokens : transformers.BatchEncoding
             Input `text` split into tokens by `tokenizer`.
 
-        justificativa : list[str] or None
+        justificativa : t.List[str] or None
             Detected `justificativa` blocks by `regex_justificativa`.
 
         num_tokens : int
@@ -196,7 +196,7 @@ class InputHandlerMapping(_BaseInputHandler):
 
         Parameters
         ----------
-        text : dict[str, list[int]]
+        text : t.Dict[str, t.List[int]]
             Mapping of key to input ids.
 
         *args : tuple, optional

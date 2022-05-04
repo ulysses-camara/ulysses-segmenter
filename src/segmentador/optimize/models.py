@@ -76,9 +76,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         uri_model: str,
         uri_onnx_config: str,
         uri_tokenizer: str,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
@@ -175,9 +173,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: str,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "gaussian",
+        inference_pooling_operation: str = "gaussian",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
@@ -223,7 +219,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
 
         input_ids = np.atleast_2d(input_ids)
 
-        model_out: list[npt.NDArray[np.float64]] = self._model.run(
+        model_out: t.List[npt.NDArray[np.float64]] = self._model.run(
             output_names=["logits"],
             input_feed=dict(input_ids=input_ids),
             run_options=None,
@@ -282,9 +278,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
@@ -296,7 +290,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
             cache_dir_tokenizer=cache_dir_tokenizer,
         )
 
-        map_jit: dict[str, t.Any] = {"tokenizer": None}
+        map_jit: t.Dict[str, t.Any] = {"tokenizer": None}
         model = torch.jit.load(uri_model, _extra_files=map_jit)
 
         if uri_tokenizer is None:
@@ -367,9 +361,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "./cache/tokenizers",
     ):
@@ -427,9 +419,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "gaussian",
+        inference_pooling_operation: str = "gaussian",
         local_files_only: bool = True,
         cache_dir_tokenizer: str = "./cache/tokenizers",
     ):

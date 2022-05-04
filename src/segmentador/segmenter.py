@@ -89,9 +89,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str = "neuralmind/bert-base-portuguese-cased",
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "assymetric-max",
+        inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
@@ -201,9 +199,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: str,
-        inference_pooling_operation: t.Literal[
-            "max", "sum", "gaussian", "assymetric-max"
-        ] = "gaussian",
+        inference_pooling_operation: str = "gaussian",
         local_files_only: bool = True,
         device: str = "cpu",
         from_quantized_weights: bool = False,
@@ -257,7 +253,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
 
     @staticmethod
     def _infer_lstm_hidden_layer_size(
-        state_dict: dict[str, t.Any], from_quantized_weights: bool
+        state_dict: t.Dict[str, t.Any], from_quantized_weights: bool
     ) -> int:
         """Infer 'lstm_hidden_layer_size' when not provided by user."""
         try:
@@ -278,7 +274,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         return int(lstm_hidden_layer_size)
 
     @staticmethod
-    def _infer_lstm_num_layers(state_dict: dict[str, t.Any], from_quantized_weights: bool) -> int:
+    def _infer_lstm_num_layers(state_dict: t.Dict[str, t.Any], from_quantized_weights: bool) -> int:
         """Infer 'lstm_num_layers' when not provided by user."""
         re_find_layer_inds = (
             regex.compile(r"(?<=lstm\._all_weight_values\.)([0-9]+)")
