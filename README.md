@@ -1,4 +1,4 @@
-[![Tests](https://github.com/FelSiq/ulysses-segmenter/actions/workflows/tests.yml/badge.svg)](https://github.com/FelSiq/ulysses-segmenter/actions/workflows/tests.yml)
+[![Tests](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml/badge.svg)](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml)
 
 ## Brazilian Legal Text Segmenter
 This project presents a Legal Text Segmenter for Portuguese-Brazilian language.
@@ -64,12 +64,12 @@ TODO.
 ### Installation
 To install this package:
 ```bash
-python -m pip install "git+https://github.com/FelSiq/ulysses-segmenter"
+python -m pip install "git+https://github.com/ulysses-camara/ulysses-segmenter"
 ```
 
 If you plan to use optimized models in ONNX format, you need to install some optional dependencies:
 ```bash
-python -m pip install "segmentador[optimize] @ git+https://github.com/FelSiq/ulysses-segmenter"
+python -m pip install "segmentador[optimize] @ git+https://github.com/ulysses-camara/ulysses-segmenter"
 ```
 
 ---
