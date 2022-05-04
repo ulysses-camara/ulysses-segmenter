@@ -15,7 +15,7 @@ requires-python = ">=3.9"
 dependencies = [
 	"numpy >= 1.22.3",
 	"torch >= 1.11.0",
-	"transformers >= 4.16.2",
+	"transformers == 4.16.2",
 ]
 
 [project.optional-dependencies]
