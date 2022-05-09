@@ -121,7 +121,8 @@ isolated_build = true
 
 [gh-actions]
 python =
-    3.9: mypy, pylint
+    3.9: py39, mypy, pylint
+	3.7: py37
 
 [testenv]
 whitelist_externals = flit
@@ -143,6 +144,7 @@ commands =
 basepython = python3.9
 deps =
 	pylint
+	buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher
 	pytest
 	datasets
 	onnx
