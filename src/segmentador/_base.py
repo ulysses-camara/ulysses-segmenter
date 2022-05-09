@@ -1,6 +1,7 @@
 """Base classes for segmenter models."""
 import typing as t
 import warnings
+import os
 
 import regex
 import transformers
@@ -24,22 +25,53 @@ class BaseSegmenter:
 
     def __init__(
         self,
+        uri_model: t.Optional[str] = None,
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        show_download_progress_bar: bool = False,
+        uri_model_extension: str = "",
     ):
         self.local_files_only = bool(local_files_only)
+
+        tokenizer_is_within_model = uri_model == uri_tokenizer
+
+        if not self.local_files_only:
+            if uri_tokenizer and not tokenizer_is_within_model:
+                uri_tokenizer = input_handlers.download_model(
+                    model_name=uri_tokenizer,
+                    output_dir=cache_dir_tokenizer,
+                    show_progress_bar=show_download_progress_bar,
+                )
+
+            if uri_model:
+                uri_model = input_handlers.download_model(
+                    model_name=uri_model,
+                    output_dir=cache_dir_model,
+                    show_progress_bar=show_download_progress_bar,
+                )
+
+        if uri_model_extension and not uri_model_extension.startswith("."):
+            uri_model_extension = f".{uri_model_extension}"
+
+        if uri_model_extension and not uri_model.endswith(uri_model_extension):
+            uri_model += uri_model_extension
+
+        self.uri_model = uri_model
+        self.uri_tokenizer = self.uri_model if tokenizer_is_within_model else uri_tokenizer
 
         self._model: t.Union[torch.nn.Module, transformers.BertForTokenClassification]
         self._tokenizer: transformers.BertTokenizerFast
 
-        if uri_tokenizer:
+        if self.uri_tokenizer:
             self._tokenizer = transformers.AutoTokenizer.from_pretrained(
-                uri_tokenizer,
+                self.uri_tokenizer,
                 local_files_only=self.local_files_only,
                 cache_dir=cache_dir_tokenizer,
+                use_fast=True,
             )
 
         self._moving_window_pooler = output_handlers.AutoMovingWindowPooler(
