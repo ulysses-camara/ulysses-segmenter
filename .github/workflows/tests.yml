@@ -8,7 +8,6 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/'
-      - '**.yaml'
       - 'diagrams/'
       - 'notebooks/'
       - 'train_statistics/'
@@ -20,7 +19,6 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/'
-      - '**.yaml'
       - 'diagrams/'
       - 'notebooks/'
       - 'train_statistics/'
@@ -33,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10']
+        python-version: ['3.7', '3.9', '3.10']
         os: [ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
