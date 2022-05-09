@@ -90,6 +90,11 @@ class BERTSegmenter(_base.BaseSegmenter):
         Expected file extension of model local file. If `uri_model` does not ends with
         the provided extension, it will be appended to the end of URI before loading model.
 
+    show_download_progress_bar : bool, default=True
+        If True, show download progress bar for pretrained Ulysses models. Note that
+        progress bar related to Huggingface HUB can still be shown regardless of this
+        parameter.
+
     References
     ----------
     .. [1] About pretrained models in Ulysses Segmenter documentation, at GitHub (2022).
@@ -110,6 +115,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
         uri_model_extension: str = "",
+        show_download_progress_bar: bool = True,
     ):
         super().__init__(
             uri_model=uri_model,
@@ -120,6 +126,7 @@ class BERTSegmenter(_base.BaseSegmenter):
             cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
             uri_model_extension=uri_model_extension,
+            show_download_progress_bar=show_download_progress_bar,
         )
 
         if config is None:
@@ -217,6 +224,11 @@ class LSTMSegmenter(_base.BaseSegmenter):
         Expected file extension of model local file. If `uri_model` does not ends with
         the provided extension, it will be appended to the end of URI before loading model.
 
+    show_download_progress_bar : bool, default=True
+        If True, show download progress bar for pretrained Ulysses models. Note that
+        progress bar related to Huggingface HUB can still be shown regardless of this
+        parameter.
+
     See Also
     --------
     optimize.quantize_model : create a quantized model from an existing Segmenter model.
@@ -240,6 +252,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
         uri_model_extension: str = ".pt",
+        show_download_progress_bar: bool = True,
     ):
         super().__init__(
             uri_model=uri_model,
@@ -250,6 +263,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
             cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
             uri_model_extension=uri_model_extension,
+            show_download_progress_bar=show_download_progress_bar,
         )
 
         self.from_quantized_weights = bool(from_quantized_weights)

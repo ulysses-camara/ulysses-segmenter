@@ -31,8 +31,8 @@ class BaseSegmenter:
         device: str = "cpu",
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
-        show_download_progress_bar: bool = False,
         uri_model_extension: str = "",
+        show_download_progress_bar: bool = False,
     ):
         self.local_files_only = bool(local_files_only)
 
