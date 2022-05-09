@@ -69,6 +69,10 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
 
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default='.onnx'
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
     """
 
     def __init__(
@@ -78,14 +82,19 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         uri_tokenizer: str,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".onnx",
     ):
         super().__init__(
+            uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
         with open(uri_onnx_config, "rb") as f_in:
@@ -96,7 +105,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         import optimum.onnxruntime  # pylint: disable='import-error'
 
         self._model: optimum.onnxruntime.ORTModel = optimum.onnxruntime.ORTModel(
-            uri_model,
+            self.uri_model,
             onnx_config,
         )
 
@@ -165,8 +174,15 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         If True, will search only for local pretrained model and tokenizers.
         If False, may download models from Huggingface HUB, if necessary.
 
+    cache_dir_model : str, default='./cache/models'
+        Cache directory for transformer encoder model.
+
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default='.onnx'
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
     """
 
     def __init__(
@@ -175,14 +191,19 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         uri_tokenizer: str,
         inference_pooling_operation: str = "gaussian",
         local_files_only: bool = True,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".onnx",
     ):
         super().__init__(
+            uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
         _optional_import_utils.load_required_module("onnxruntime")
@@ -195,7 +216,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         )
 
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
-            path_or_bytes=uri_model,
+            path_or_bytes=self.uri_model,
             sess_options=sess_options,
         )
 
@@ -272,6 +293,10 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
 
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default='.pt'
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
     """
 
     def __init__(
@@ -280,20 +305,25 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".pt",
     ):
         super().__init__(
+            uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
         map_jit: t.Dict[str, t.Any] = {"tokenizer": None}
-        model = torch.jit.load(uri_model, _extra_files=map_jit)
+        model = torch.jit.load(self.uri_model, _extra_files=map_jit)
 
-        if uri_tokenizer is None:
+        if self.uri_tokenizer is None:
             self._tokenizer = pickle.loads(map_jit["tokenizer"])
 
         self._model: torch.jit.ScriptModule = model.to(self.device)
@@ -355,6 +385,10 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
 
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default='.pt'
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
     """
 
     def __init__(
@@ -363,14 +397,18 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".pt",
     ):
         super().__init__(
             uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
 
@@ -413,6 +451,10 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
 
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default='.pt'
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
     """
 
     def __init__(
@@ -421,14 +463,18 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "gaussian",
         local_files_only: bool = True,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".pt",
     ):
         super().__init__(
             uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
     def _preprocess_minibatch(
