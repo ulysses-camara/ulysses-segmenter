@@ -1,5 +1,6 @@
 """Declare fixtures for tests."""
 import os
+import shutil
 
 import pytest
 import onnx
@@ -23,10 +24,19 @@ def fn_fixture_model_bert_2_layers(
         uri_model=fixture_test_paths.model_bert,
         inference_pooling_operation="assymetric-max",
         device="cpu",
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
     )
 
-    return model
+    yield model
+
+    shutil.rmtree(os.path.join(fixture_test_paths.cache_dir_models, fixture_test_paths.model_bert))
+
+    try:
+        os.rmdir(fixture_test_paths.cache_dir_models)
+
+    except OSError:
+        pass
 
 
 @pytest.fixture(name="fixture_model_lstm_1_layer", scope="session")
@@ -36,10 +46,31 @@ def fn_fixture_model_lstm_1_layer(fixture_test_paths: paths.TestPaths) -> segmen
         uri_tokenizer=fixture_test_paths.tokenizer,
         inference_pooling_operation="gaussian",
         device="cpu",
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
+        cache_dir_tokenizer=fixture_test_paths.cache_dir_tokenizers,
     )
 
-    return model
+    yield model
+
+    os.remove(
+        os.path.join(fixture_test_paths.cache_dir_models, f"{fixture_test_paths.model_lstm}.pt")
+    )
+    shutil.rmtree(
+        os.path.join(fixture_test_paths.cache_dir_tokenizers, fixture_test_paths.tokenizer)
+    )
+
+    try:
+        os.rmdir(fixture_test_paths.cache_dir_models)
+
+    except OSError:
+        pass
+
+    try:
+        os.rmdir(fixture_test_paths.cache_dir_tokenizers)
+
+    except OSError:
+        pass
 
 
 @pytest.fixture(name="fixture_legal_text_long", scope="session")

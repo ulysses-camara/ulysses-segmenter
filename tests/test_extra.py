@@ -4,15 +4,17 @@ import regex
 
 import segmentador
 
+from . import paths
+
 
 def test_segmenter_model_to_string(fixture_model_bert_2_layers: segmentador.Segmenter):
     assert isinstance(str(fixture_model_bert_2_layers), str)
 
 
-def test_lstm_instantiation_infer_model_parameters():
+def test_lstm_instantiation_infer_model_parameters(fixture_test_paths: paths.TestPaths):
     segmentador.LSTMSegmenter(
-        uri_model="pretrained_segmenter_model/128_6000_2_lstm/checkpoints/epoch=3-step=3591.ckpt",
-        uri_tokenizer="tokenizers/6000_subwords",
+        uri_model=fixture_test_paths.model_lstm,
+        uri_tokenizer=fixture_test_paths.tokenizer,
         device="cpu",
         local_files_only=True,
     )
