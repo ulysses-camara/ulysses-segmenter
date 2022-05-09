@@ -59,14 +59,16 @@ def test_warning_moving_window_size(
 
 
 @pytest.mark.parametrize("inference_pooling_operation", (None, "", "avg"))
-def test_invalid_inference_pooling_operation(inference_pooling_operation: str):
+def test_invalid_inference_pooling_operation(
+    inference_pooling_operation: str, fixture_test_paths: paths.TestPaths
+):
     with pytest.raises(ValueError):
         segmentador.Segmenter(
-            uri_model="pretrained_segmenter_model/2_6000_layer_model",
-            uri_tokenizer="tokenizers/6000_subwords",
+            uri_model=fixture_test_paths.model_bert,
             inference_pooling_operation=inference_pooling_operation,
             device="cpu",
-            local_files_only=True,
+            local_files_only=False,
+            cache_dir_model=fixture_test_paths.cache_dir_models,
         )
 
 
@@ -92,7 +94,8 @@ def test_invalid_onnx_format_for_pruned_bert(fixture_test_paths: paths.TestPaths
     model_pruned = segmentador.BERTSegmenter(
         uri_model=fixture_test_paths.model_bert,
         device="cpu",
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
     )
     model_pruned.model.prune_heads({0: [1, 2, 5], 1: [4, 5]})
 

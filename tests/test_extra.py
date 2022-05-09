@@ -16,7 +16,9 @@ def test_lstm_instantiation_infer_model_parameters(fixture_test_paths: paths.Tes
         uri_model=fixture_test_paths.model_lstm,
         uri_tokenizer=fixture_test_paths.tokenizer,
         device="cpu",
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
+        cache_dir_tokenizer=fixture_test_paths.cache_dir_tokenizers,
     )
     assert True
 

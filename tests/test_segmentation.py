@@ -16,7 +16,8 @@ def test_inference_pooling_operation_argument_with_long_text_and_bert(
         uri_model=fixture_test_paths.model_bert,
         inference_pooling_operation=pooling_operation,
         device="cpu",
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
     )
     segs = model(fixture_legal_text_long)
     assert len(segs) >= 50
@@ -33,7 +34,9 @@ def test_inference_pooling_operation_argument_with_short_text_and_lstm(
         device="cpu",
         lstm_hidden_layer_size=512,
         lstm_num_layers=1,
-        local_files_only=True,
+        local_files_only=False,
+        cache_dir_model=fixture_test_paths.cache_dir_models,
+        cache_dir_tokenizer=fixture_test_paths.cache_dir_tokenizers,
     )
     segs = model(fixture_legal_text_short)
     assert len(segs) >= 6
