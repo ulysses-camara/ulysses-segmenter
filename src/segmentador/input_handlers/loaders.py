@@ -1,4 +1,4 @@
-"""TODO."""
+"""Fetch Ulysses pretrained segmenter models."""
 import os
 
 import buscador
@@ -11,7 +11,24 @@ __all__ = [
 
 
 def download_model(model_name: str, output_dir: str, show_progress_bar: bool = True) -> bool:
-    """TODO."""
+    """Fetch a pretrained model or tokenizer.
+
+    Parameters
+    ----------
+    model_name : str
+        Model to fetch.
+
+    output_dir : str
+        Directory to save downloaded model.
+
+    show_progress_bar : bool, default=True
+        If True, display download progress bar.
+
+    Returns
+    -------
+    has_succeed : bool
+        True if download succeed, or a cached local file was found.
+    """
     try:
         download_has_succeed = buscador.download_model(
             task_name="legal_text_segmentation",
@@ -32,7 +49,25 @@ def download_model(model_name: str, output_dir: str, show_progress_bar: bool = T
 def get_model_uri_if_local_file(
     model_name: str, download_dir: str, file_extension: str = ""
 ) -> str:
-    """TODO"""
+    """Build a full URI for a downloaded model if found locally.
+
+    Parameters
+    ----------
+    model_name : str
+        Model name to search for.
+
+    download_dir : str
+        Where to find model.
+
+    file_extension : str, default=''
+        File extension to append to URI. Unnecessary if `model_name` has the file extension,
+        or the model has no file extension at all.
+
+    Returns
+    -------
+    path : str
+        Model URI if found locally, `model_name` otherwise.
+    """
     uri_model = str(model_name)
     uri_model = os.path.join(download_dir, uri_model)
     uri_model = os.path.normpath(uri_model)
