@@ -53,7 +53,7 @@ class BaseSegmenter:
                     show_progress_bar=show_download_progress_bar,
                 )
 
-        if uri_tokenizer is not None:
+        if uri_tokenizer is not None and not tokenizer_is_within_model:
             uri_tokenizer = input_handlers.get_model_uri_if_local_file(
                 model_name=uri_tokenizer,
                 download_dir=cache_dir_tokenizer,
