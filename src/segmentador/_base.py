@@ -1,7 +1,6 @@
 """Base classes for segmenter models."""
 import typing as t
 import warnings
-import os
 
 import regex
 import transformers
@@ -25,7 +24,7 @@ class BaseSegmenter:
 
     def __init__(
         self,
-        uri_model: t.Optional[str] = None,
+        uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
@@ -41,24 +40,31 @@ class BaseSegmenter:
 
         if not self.local_files_only:
             if uri_tokenizer and not tokenizer_is_within_model:
-                uri_tokenizer = input_handlers.download_model(
+                input_handlers.download_model(
                     model_name=uri_tokenizer,
                     output_dir=cache_dir_tokenizer,
                     show_progress_bar=show_download_progress_bar,
                 )
 
             if uri_model:
-                uri_model = input_handlers.download_model(
+                input_handlers.download_model(
                     model_name=uri_model,
                     output_dir=cache_dir_model,
                     show_progress_bar=show_download_progress_bar,
                 )
 
-        if uri_model_extension and not uri_model_extension.startswith("."):
-            uri_model_extension = f".{uri_model_extension}"
+        if uri_tokenizer is not None:
+            uri_tokenizer = input_handlers.get_model_uri_if_local_file(
+                model_name=uri_tokenizer,
+                download_dir=cache_dir_tokenizer,
+                file_extension="",
+            )
 
-        if uri_model_extension and not uri_model.endswith(uri_model_extension):
-            uri_model += uri_model_extension
+        uri_model = input_handlers.get_model_uri_if_local_file(
+            model_name=uri_model,
+            download_dir=cache_dir_model,
+            file_extension=uri_model_extension,
+        )
 
         self.uri_model = uri_model
         self.uri_tokenizer = self.uri_model if tokenizer_is_within_model else uri_tokenizer
