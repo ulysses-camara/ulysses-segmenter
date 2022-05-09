@@ -26,6 +26,7 @@ def fn_fixture_model_bert_2_layers(
         device="cpu",
         local_files_only=False,
         cache_dir_model=fixture_test_paths.cache_dir_models,
+        show_download_progress_bar=False,
     )
 
     yield model
@@ -49,6 +50,7 @@ def fn_fixture_model_lstm_1_layer(fixture_test_paths: paths.TestPaths) -> segmen
         local_files_only=False,
         cache_dir_model=fixture_test_paths.cache_dir_models,
         cache_dir_tokenizer=fixture_test_paths.cache_dir_tokenizers,
+        show_download_progress_bar=False,
     )
 
     yield model
