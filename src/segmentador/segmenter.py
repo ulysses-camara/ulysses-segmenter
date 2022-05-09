@@ -26,15 +26,16 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     Parameters
     ----------
-    uri_model : str, default='neuralmind/bert-base-portuguese-cased'
-        URI to load pretrained model from. May be a Hugginface HUB URL (if
-        `local_files_only=False`) or a local file.
+    uri_model : str, default='2_layer_6000_vocab_size_bert'
+        URI to load pretrained model from. May be a valid pretrained Ulysses segmenter model,
+        a Hugginface HUB URL, or a local file (mandatory when `local_files_only=True`).
+        See [1]_ for more information about pretrained Ulysses segmenter models.
 
     uri_tokenizer : str or None, default=None
         URI to pretrained text Tokenizer. If None, will load the tokenizer from
         the `uri_model` path.
 
-    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
             default='assymetric-max'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
@@ -51,9 +52,10 @@ class BERTSegmenter(_base.BaseSegmenter):
             the `No-operation` class, which in turn receives the minimum among all corresponding
             logits instead.
 
-    local_files_only : bool, default=True
+    local_files_only : bool, default=False
         If True, will search only for local pretrained model and tokenizers.
-        If False, may download models from Huggingface HUB, if necessary.
+        If False, may download pretrained Ulysses models or models from Huggingface HUB, when
+        necessary.
 
     device : {'cpu', 'cuda'}, default='cpu'
         Device to segment document content.
@@ -83,14 +85,23 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default=''
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
+
+    References
+    ----------
+    .. [1] About pretrained models in Ulysses Segmenter documentation, at GitHub (2022).
+       URL: https://github.com/ulysses-camara/ulysses-segmenter#trained-models
     """
 
     def __init__(
         self,
-        uri_model: str = "neuralmind/bert-base-portuguese-cased",
+        uri_model: str = "2_layer_6000_vocab_size_bert",
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "assymetric-max",
-        local_files_only: bool = True,
+        local_files_only: bool = False,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
         config: t.Optional[t.Union[transformers.BertConfig, transformers.PretrainedConfig]] = None,
@@ -98,18 +109,22 @@ class BERTSegmenter(_base.BaseSegmenter):
         num_hidden_layers: int = 6,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = "",
     ):
         super().__init__(
+            uri_model=uri_model,
             uri_tokenizer=uri_tokenizer if uri_tokenizer is not None else uri_model,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
             device=device,
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
         if config is None:
             labels = ("NO-OP", "SEG_START", "NOISE_START", "NOISE_END")
-            config = transformers.BertConfig.from_pretrained(uri_model)
+            config = transformers.BertConfig.from_pretrained(self.uri_model)
             config.max_position_embeddings = 1024
             config.num_hidden_layers = num_hidden_layers
             config.num_labels = num_labels
@@ -118,7 +133,7 @@ class BERTSegmenter(_base.BaseSegmenter):
 
         if init_from_pretrained_weights:
             model = transformers.AutoModelForTokenClassification.from_pretrained(
-                uri_model,
+                self.uri_model,
                 local_files_only=self.local_files_only,
                 cache_dir=cache_dir_model,
                 label2id=config.label2id,
@@ -146,13 +161,15 @@ class LSTMSegmenter(_base.BaseSegmenter):
 
     Parameters
     ----------
-    uri_model : str
-        URI to load pretrained model from.
+    uri_model : str, default='512_hidden_dim_6000_vocab_size_1_layer_lstm'
+        URI to load pretrained model from. May be a valid pretrained Ulysses segmenter model, or a
+        local file (mandatory when `local_files_only=True`). See [1]_ for more information about
+        pretrained Ulysses segmenter models.
 
-    uri_tokenizer : str
+    uri_tokenizer : str, default='6000_subword_tokenizer'
         URI to pretrained text Tokenizer.
 
-    inference_pooling_operation : {"max", "sum", "gaussian", "assymetric-max"},\
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
             default='assymetric-max'
         Specify the strategy used to combine logits during model inference for documents
         larger than `moving_window_size` subword tokens (see `LSTMSegmenter.segment_legal_text`
@@ -170,16 +187,19 @@ class LSTMSegmenter(_base.BaseSegmenter):
             the `No-operation` class, which in turn receives the minimum among all corresponding
             logits instead.
 
-    local_files_only : bool, default=True
+    local_files_only : bool, default=False
         If True, will search only for local pretrained model and tokenizers.
-        If False, may download models from Huggingface HUB, if necessary.
+        If False, may download pretrained Ulysses models or models from Huggingface HUB, when
+        necessary.
 
     device : {'cpu', 'cuda'}, default='cpu'
         Device to segment document content.
 
     from_quantized_weights : bool, default=False
-        Set to True if the pretrained weights where previously quantized (from FP32 to UINT8).
-        Check ``optimize.quantize_model`` for more information.
+        Set to True if the pretrained weights where previously quantized (from FP32 to UINT8),
+        in Torch format. Not that this option is not meant to support quantization strategies
+        provided by `optimize.quantize_model`, but any other quantization strategies of external
+        nature.
 
     lstm_hidden_layer_size : int
         Dimension of LSTM model hidden layer.
@@ -187,39 +207,56 @@ class LSTMSegmenter(_base.BaseSegmenter):
     lstm_num_layers : int
         Number of layers in LSTM model.
 
+    cache_dir_model : str, default='./cache/models'
+        Cache directory for LSTM model.
+
     cache_dir_tokenizer : str, default='./cache/tokenizers'
         Cache directory for text tokenizer.
+
+    uri_model_extension : str, default=''
+        Expected file extension of model local file. If `uri_model` does not ends with
+        the provided extension, it will be appended to the end of URI before loading model.
 
     See Also
     --------
     optimize.quantize_model : create a quantized model from an existing Segmenter model.
+
+    References
+    ----------
+    .. [1] About pretrained models in Ulysses Segmenter documentation, at GitHub (2022).
+       URL: https://github.com/ulysses-camara/ulysses-segmenter#trained-models
     """
 
     def __init__(
         self,
-        uri_model: str,
-        uri_tokenizer: str,
+        uri_model: str = "512_hidden_dim_6000_vocab_size_1_layer_lstm",
+        uri_tokenizer: str = "6000_subword_tokenizer",
         inference_pooling_operation: str = "gaussian",
-        local_files_only: bool = True,
+        local_files_only: bool = False,
         device: str = "cpu",
         from_quantized_weights: bool = False,
         lstm_hidden_layer_size: t.Optional[int] = None,
         lstm_num_layers: t.Optional[int] = None,
+        cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
+        uri_model_extension: str = ".pt",
     ):
         super().__init__(
+            uri_model=uri_model,
             uri_tokenizer=uri_tokenizer,
             local_files_only=local_files_only,
             inference_pooling_operation=inference_pooling_operation,
             device=device,
+            cache_dir_model=cache_dir_model,
             cache_dir_tokenizer=cache_dir_tokenizer,
+            uri_model_extension=uri_model_extension,
         )
 
         self.from_quantized_weights = bool(from_quantized_weights)
         self.vocab_size = int(self._tokenizer.vocab_size)
         self.pad_id = int(self._tokenizer.pad_token_id or 0)
 
-        state_dict = torch.load(uri_model, map_location="cpu")
+        state_dict = torch.load(self.uri_model, map_location="cpu")
 
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
