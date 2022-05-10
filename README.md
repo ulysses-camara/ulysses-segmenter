@@ -57,7 +57,14 @@ The data labeling process is semi-automatic, employing several *ad-hoc* regular 
 ---
 
 ### Trained models
-TODO.
+Pretrained Ulysses segmenter models are downloaded by using the [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher) API.
+
+The default models loaded for each algorithm is:
+- *BERT*: `2_layer_6000_vocab_size_bert`.
+- *Bi-LSTM Model*: `512_hidden_dim_6000_vocab_size_1_layer_lstm`.
+- *Tokenizer*: `6000_subword_tokenizer`.
+
+Note that the `2_layer_6000_vocab_size_bert` already has its own built-in tokenizer, which happens to be identical to `6000_subword_tokenizer`. Hence, providing `6000_subword_tokenizer` for BERT segmenter is unnecessary, and will give the same results if done.
 
 ---
 
@@ -76,12 +83,13 @@ python -m pip install "segmentador[optimize] @ git+https://github.com/ulysses-ca
 
 ### Usage examples
 #### Standard models
+When loading a model, pretrained Ulysses segmenter models are downloaded automatically and cached locally by using [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher).
+
 ##### BERTSegmenter
 ```python
 import segmentador
 
 segmenter_bert = segmentador.BERTSegmenter(
-    uri_model="<pretrained_model_path>",
     device="cpu",  # or 'cuda' for GPU
     inference_pooling_operation="assymetric-max",
 )
@@ -122,8 +130,6 @@ print(seg_result.logits)
 import segmentador
 
 segmenter_lstm = segmentador.LSTMSegmenter(
-    uri_model="<pretrained_model_uri>",
-    uri_tokenizer="<pretrained_tokenize_uri>",
     device="cpu",  # or 'cuda' for GPU
     inference_pooling_operation="gaussian",
 )
@@ -158,18 +164,33 @@ print(seg_result.logits)
 #  [  6.64764452  -2.28969622  -3.06246185  -8.4958601 ]
 #  [ -0.75093395   5.79272366   2.84845114  -8.5399065 ]]
 ```
+
+##### Local files or Huggingface HUB models
+You can also provide local models (or compatible Huggingface HUB models) to initialize the segmenter model weights, by providing the `uri_model` and `uri_tokenizer` arguments, as depicted in the exemple below. Remember that BERT models often have their own tokenizer built-in, wheres LSTM models do not. Therefore, providing a tokenizer model for LSTM models is a requirement, whereas for BERT models is optional.
+```python
+segmenter_bert = segmentador.BERTSegmenter(
+    uri_model="<path_to_local_model_or_hf_hub_model_name>",
+    uri_tokenizer=None,
+)
+
+segmenter_lstm = segmentador.LSTMSegmenter(
+    uri_model="<path_to_local_model>",
+    uri_tokenizer="<path_to_model_tokenizer>",
+)
+```
+
+---
+
 #### Quantization in ONNX format
-We provide support for models in ONNX format (and also functions to convert from pytorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization.
+We provide support for models in ONNX format (and also functions to convert from pytorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. Effects of quantization in segmenter models are analyzed in [Optimization and Compression notebook](./notebooks/7_optimization_and_compression.ipynb).
 
 First, in order to use models in ONNX format you need to install some optional dependencies, as shown in [Installation](#installation) section. Then, you need to create the ONNX quantized model using the `segmentador.optimize` subpackage API:
+
 ```python
 import segmentador.optimize
 
 # Load BERT Torch model
-segmenter_bert = segmentador.BERTSegmenter(
-    uri_model="<pretrained_model_uri>",
-    device="cpu",
-)
+segmenter_bert = segmentador.BERTSegmenter()
 
 # Create ONNX BERT model
 quantized_model_paths = segmentador.optimize.quantize_model(
@@ -198,11 +219,7 @@ The procedure shown above is analogous for ONNX Bi-LSTM models:
 import segmentador.optimize
 
 # Load Bi-LSTM standard model
-segmenter_lstm = segmentador.LSTMSegmenter(
-    uri_model="<pretrained_model_uri>",
-    uri_tokenizer="<pretrained_tokenizer_uri>",
-    device="cpu",
-)
+segmenter_lstm = segmentador.LSTMSegmenter()
 
 # Create ONNX Bi-LSTM model
 quantized_lstm_paths = segmentador.optimize.quantize_model(
@@ -212,7 +229,7 @@ quantized_lstm_paths = segmentador.optimize.quantize_model(
 )
 
 # Load ONNX model
-segmenter_lstm_quantized = segmentador.optimizer.ONNXLSTMSegmenter(
+segmenter_lstm_quantized = segmentador.optimize.ONNXLSTMSegmenter(
     uri_model=quantized_lstm_paths.output_uri,
     uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
 )
