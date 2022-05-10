@@ -123,9 +123,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
         if not isinstance(minibatch, datasets.Dataset):
-            minibatch = datasets.Dataset.from_dict({  # type: ignore
-                key: val.long() for key, val in minibatch.items()
-            })
+            minibatch = datasets.Dataset.from_dict(minibatch)  # type: ignore
 
         model_out = self._model.evaluation_loop(minibatch)
         model_out = model_out.predictions
@@ -213,9 +211,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         import onnxruntime  # pylint: disable='import-error'
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.graph_optimization_level = (
-            onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
-        )
+        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
 
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
             path_or_bytes=self.uri_model,
@@ -240,7 +236,6 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         if isinstance(input_ids, torch.Tensor):
             input_ids = input_ids.detach().cpu().numpy()
 
-        input_ids = input_ids.astype(np.int64, copy=False)
         input_ids = np.atleast_2d(input_ids)
 
         model_out: t.List[npt.NDArray[np.float64]] = self._model.run(
