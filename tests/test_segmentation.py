@@ -19,7 +19,7 @@ def test_inference_pooling_operation_argument_with_long_text_and_bert(
         local_files_only=False,
         cache_dir_model=fixture_test_paths.cache_dir_models,
     )
-    segs = model(fixture_legal_text_long)
+    segs = model(fixture_legal_text_long, batch_size=4)
     assert len(segs) >= 50
 
 

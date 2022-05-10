@@ -54,11 +54,11 @@ def test_model_lstm_inference_time_standard_vs_quantized_torch(
     )
 
     times_quantized = timeit.repeat(
-        "fixture_quantized_model_lstm_torch(fixture_legal_text_long)",
+        "fixture_quantized_model_lstm_torch(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
     times_standard = timeit.repeat(
-        "fixture_model_lstm_1_layer(fixture_legal_text_long)",
+        "fixture_model_lstm_1_layer(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
 
@@ -84,11 +84,11 @@ def test_model_lstm_inference_time_standard_vs_quantized_onnx(
     )
 
     times_quantized = timeit.repeat(
-        "fixture_quantized_model_lstm_onnx(fixture_legal_text_long)",
+        "fixture_quantized_model_lstm_onnx(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
     times_standard = timeit.repeat(
-        "fixture_model_lstm_1_layer(fixture_legal_text_long)",
+        "fixture_model_lstm_1_layer(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
 
@@ -114,11 +114,11 @@ def test_model_bert_inference_time_standard_vs_quantized_onnx(
     )
 
     times_quantized = timeit.repeat(
-        "fixture_quantized_model_bert_onnx(fixture_legal_text_long)",
+        "fixture_quantized_model_bert_onnx(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
     times_standard = timeit.repeat(
-        "fixture_model_bert_2_layers(fixture_legal_text_long)",
+        "fixture_model_bert_2_layers(fixture_legal_text_long, batch_size=4)",
         **common_kwargs,
     )
 
