@@ -36,7 +36,7 @@ def download_model(model_name: str, output_dir: str, show_progress_bar: bool = T
             output_dir=output_dir,
             show_progress_bar=show_progress_bar,
             check_cached=True,
-            clean_zip_files=True,
+            clean_compressed_files=True,
             check_model_hash=True,
             timeout_limit_seconds=10,
         )
@@ -68,10 +68,12 @@ def get_model_uri_if_local_file(
     path : str
         Model URI if found locally, `model_name` otherwise.
     """
-    uri_model = str(model_name)
+    uri_model = str(model_name).strip()
     uri_model = os.path.join(download_dir, uri_model)
-    uri_model = os.path.normpath(uri_model)
-    uri_model = os.path.join(".", uri_model)
+    uri_model = os.path.expanduser(uri_model)
+    uri_model = os.path.realpath(uri_model)
+
+    file_extension = file_extension.strip()
 
     if file_extension and not file_extension.startswith("."):
         file_extension = f".{file_extension}"
