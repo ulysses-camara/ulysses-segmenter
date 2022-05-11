@@ -17,7 +17,7 @@ dependencies = [
 	"torch >= 1.11.0",
 	"transformers == 4.16.2",
 	"regex >= 2022.3.15",
-	"buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher == 0.1.1",
+	"buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@v0.1.1-beta",
 ]
 
 [project.optional-dependencies]
