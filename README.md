@@ -52,7 +52,7 @@ The *pooling* operations can be one of the following:
 | Assymetric-Max (default for BERT) | Keep maximal overlapping logits for all classes except "No-op" (which gets the minimal overlapping logit instead). |
 
 #### Training
-The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [a notebook in this repository](./notebooks/2_generate_labels_from_regular_expressions.ipynb)).
+The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [Generate Labels from Regular Expressions notebook](./notebooks/2_generate_labels_from_regular_expressions.ipynb)).
 
 ---
 
@@ -282,7 +282,7 @@ seg_result = segmenter(sample_text, remove_noise_subsegments=True)
 ---
 
 ### Experimental results
-Experimental results are available in [a notebook in this repository](./notebooks/6_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
+Experimental results are available in [Result Analsys notebook](./notebooks/6_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
 
 ---
 
