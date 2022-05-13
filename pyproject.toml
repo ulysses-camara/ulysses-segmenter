@@ -29,6 +29,7 @@ optimize = [
 
 codestyle = [
     "black >= 22.1.0",
+    "black[jupyter] >= 22.1.0",
 ]
 
 notebooks = [
