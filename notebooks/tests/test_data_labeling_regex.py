@@ -24,17 +24,10 @@ def run_tests(labels: list[list[int]]) -> None:
             continue
 
         total_segments = int(len(labels[idx]) > 0)
-        total_segments += sum(
-            lab == SPECIAL_SYMBOLS[MARKER_VALID] for lab in labels[idx]
-        )
-        total_noise = sum(
-            lab == SPECIAL_SYMBOLS[MARKER_NOISE_START] for lab in labels[idx]
-        )
+        total_segments += sum(lab == SPECIAL_SYMBOLS[MARKER_VALID] for lab in labels[idx])
+        total_noise = sum(lab == SPECIAL_SYMBOLS[MARKER_NOISE_START] for lab in labels[idx])
 
-        if (
-            total_segments == expected_segment_count
-            and total_noise == expected_noise_count
-        ):
+        if total_segments == expected_segment_count and total_noise == expected_noise_count:
             correct += 1
             continue
 

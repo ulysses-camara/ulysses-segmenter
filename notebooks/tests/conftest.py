@@ -26,9 +26,7 @@ def load_registered_cases(test_cases_uri: str = REGISTERED_TEST_CASES_URI) -> No
         print(f"No test cases found at '{test_cases_uri}'.")
         return
 
-    df = pd.read_csv(
-        test_cases_uri, usecols=REGISTERED_TEST_CASES_COLUMNS, index_col=None
-    )
+    df = pd.read_csv(test_cases_uri, usecols=REGISTERED_TEST_CASES_COLUMNS, index_col=None)
 
     for i, (idx, *expected_values) in df.iterrows():
         TEST_CASES[idx] = expected_values
@@ -113,9 +111,7 @@ def print_results(
 
     for tok, lab in zip(tokens, labels):
         if lab == SPECIAL_SYMBOLS[MARKER_VALID]:
-            if not keyword_filters or not keyword_filters.isdisjoint(
-                map(str.lower, sentence)
-            ):
+            if not keyword_filters or not keyword_filters.isdisjoint(map(str.lower, sentence)):
                 print(c_color, segment_count, c_end, " ".join(sentence), end="\n\n")
 
             sentence = []
