@@ -1,4 +1,5 @@
 [![Tests](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml/badge.svg)](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml)
+[![Documentation Status](https://readthedocs.org/projects/ulysses-segmenter/badge/?version=latest)](https://ulysses-segmenter.readthedocs.io/en/latest/?badge=latest)
 
 ## Brazilian Legal Text Segmenter
 This project presents a Legal Text Segmenter for Portuguese-Brazilian language.
