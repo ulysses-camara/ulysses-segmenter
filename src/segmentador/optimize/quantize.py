@@ -165,12 +165,12 @@ def quantize_bert_model_as_onnx(
 
     Models created from this format can be loaded for inference as:
 
-    optimize.ONNXBERTSegmenter(
-        uri_model="[quantized_model_uri]",
-        uri_tokenizer=...,
-        uri_onnx_config="[quantized_model_config_uri]",
-        ...,
-    )
+    >>> optimize.ONNXBERTSegmenter(  # doctest: +SKIP
+    ...     uri_model='<quantized_model_uri>',
+    ...     uri_tokenizer=...,
+    ...     uri_onnx_config='<quantized_model_config_uri>',
+    ...     ...,
+    ... )
 
     Parameters
     ----------
@@ -201,10 +201,12 @@ def quantize_bert_model_as_onnx(
 
     optimization_level : {0, 1, 2, 99}, default=99
         Optimization level for ONNX models. From the ONNX Runtime specification:
+
         - 0: disable all optimizations;
         - 1: enable only basic optimizations;
         - 2: enable basic and extended optimizations; or
         - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
+
         See [1]_ for more information.
 
     onnx_opset_version: int, default=15
@@ -364,11 +366,11 @@ def quantize_lstm_model_as_onnx(
 
     Models created from this format can be loaded for inference as:
 
-    optimize.ONNXLSTMSegmenter(
-        uri_model="[quantized_model_uri]",
-        uri_tokenizer=...,
-        ...,
-    )
+    >>> optimize.ONNXLSTMSegmenter(  # doctest: +SKIP
+    ...     uri_model='<quantized_model_uri>',
+    ...     uri_tokenizer=...,
+    ...     ...,
+    ... )
 
     Parameters
     ----------
@@ -395,10 +397,12 @@ def quantize_lstm_model_as_onnx(
 
     optimization_level : {0, 1, 2, 99}, default=99
         Optimization level for ONNX models. From the ONNX Runtime specification:
+
         - 0: disable all optimizations;
         - 1: enable only basic optimizations;
         - 2: enable basic and extended optimizations; or
         - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
+
         See [1]_ for more information.
 
     onnx_opset_version: int, default=15
@@ -544,10 +548,10 @@ def quantize_bert_model_as_torch(
 
     Models created from this format can be loaded for inference as:
 
-    optimize.TorchJITBERTSegmenter(
-        uri_model="[quantized_model_uri]",
-        ...,
-    )
+    >>> optimize.TorchJITBERTSegmenter(  # doctest: +SKIP
+    ...     uri_model='<quantized_model_uri>',
+    ...     ...,
+    ... )
 
     Parameters
     ----------
@@ -672,10 +676,10 @@ def quantize_lstm_model_as_torch(
 
     Models created from this format can be loaded for inference as:
 
-    optimize.TorchJITLSTMSegmenter(
-        uri_model="[quantized_model_uri]",
-        ...,
-    )
+    >>> optimize.TorchJITLSTMSegmenter(  # doctest: +SKIP
+    ...     uri_model='<quantized_model_uri>',
+    ...     ...,
+    ... )
 
     Parameters
     ----------
@@ -808,10 +812,12 @@ def quantize_model(
 
     optimization_level : {0, 1, 2, 99}, default=99
         Optimization level for ONNX models. From the ONNX Runtime specification:
+
         - 0: disable all optimizations;
         - 1: enable only basic optimizations;
         - 2: enable basic and extended optimizations; or
         - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
+
         See [1]_ for more information.
 
     model_output_format : {'onnx', 'torch_jit'}, default='onnx'
@@ -835,7 +841,7 @@ def quantize_model(
 
     Returns
     -------
-    paths : tuple of str
+    paths : t.Tuple[str, ...]
         Named tuple with all paths of files generated during the full quantization
         procedure.
 

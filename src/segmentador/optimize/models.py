@@ -51,14 +51,15 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         therefore, predictions) associated with it. This argument defines how exactly the
         logits should be combined in order to derive the final verdict for that said token.
         The possible choices for this argument are:
+
         - `max`: take the maximum logit of each token;
         - `sum`: sum the logits associated with the same token;
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
+          to the window center they are, diminishing its weights closer to the window
+          limits; and
         - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
+          the `No-operation` class, which in turn receives the minimum among all corresponding
+          logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
@@ -161,14 +162,15 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         therefore, predictions) associated with it. This argument defines how exactly the
         logits should be combined in order to derive the final verdict for that said token.
         The possible choices for this argument are:
+
         - `max`: take the maximum logit of each token;
         - `sum`: sum the logits associated with the same token;
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
+          to the window center they are, diminishing its weights closer to the window
+          limits; and
         - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
+          the `No-operation` class, which in turn receives the minimum among all corresponding
+          logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
@@ -273,14 +275,15 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         therefore, predictions) associated with it. This argument defines how exactly the
         logits should be combined in order to derive the final verdict for that said token.
         The possible choices for this argument are:
+
         - `max`: take the maximum logit of each token;
         - `sum`: sum the logits associated with the same token;
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
+          to the window center they are, diminishing its weights closer to the window
+          limits; and
         - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
+          the `No-operation` class, which in turn receives the minimum among all corresponding
+          logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
@@ -365,14 +368,15 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         therefore, predictions) associated with it. This argument defines how exactly the
         logits should be combined in order to derive the final verdict for that said token.
         The possible choices for this argument are:
+
         - `max`: take the maximum logit of each token;
         - `sum`: sum the logits associated with the same token;
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
+          to the window center they are, diminishing its weights closer to the window
+          limits; and
         - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
+          the `No-operation` class, which in turn receives the minimum among all corresponding
+          logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
@@ -431,14 +435,15 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         therefore, predictions) associated with it. This argument defines how exactly the
         logits should be combined in order to derive the final verdict for that said token.
         The possible choices for this argument are:
+
         - `max`: take the maximum logit of each token;
         - `sum`: sum the logits associated with the same token;
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
-            to the window center they are, diminishing its weights closer to the window
-            limits; and
+          to the window center they are, diminishing its weights closer to the window
+          limits; and
         - `assymetric-max`: take the maximum logit of each token for all classes other than
-            the `No-operation` class, which in turn receives the minimum among all corresponding
-            logits instead.
+          the `No-operation` class, which in turn receives the minimum among all corresponding
+          logits instead.
 
     local_files_only : bool, default=True
         If True, will search only for local pretrained model and tokenizers.
