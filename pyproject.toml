@@ -67,8 +67,14 @@ test = [
     "onnx >= 1.11.0",
 ]
 
-doc = [
+docs = [
     "grip >= 4.6.0",
+	"sphinx == 4.5.0",
+	"myst-parser == 0.17.2",
+	"sphinxcontrib-mermaid == 0.7.1",
+	"numpydoc == 1.2.1",
+	"sphinx-autoapi == 1.8.4",
+	"sphinx-rtd-theme == 1.0.0",
 ]
 
 [tool.mypy]
