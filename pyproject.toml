@@ -151,7 +151,7 @@ commands =
 basepython = python3.9
 deps =
     pylint
-    buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher
+    buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@v0.1.1-beta
     pytest
     datasets
     onnx
