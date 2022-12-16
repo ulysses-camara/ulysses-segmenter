@@ -13,6 +13,17 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 |2     |Start of noise sequence |
 |3     |End of noise sequence   |
 
+
+In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class I (Segment) than other segmentation tools, such as NLTK, SpaCy and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts.
+
+| Segmentation Method 	| Precision | Recall 	|
+|:---	    |:---	    |:---	    |
+| NLTK  	| 12.8557% 	| 19.6128% 	|
+| SpaCy 	| 11.2524% 	| 22.2331% 	|
+| LexNLP 	| 24.4427% 	| 28.1971% 	|
+| Ulysses Segmenter 	| **96.3277%** 	| **94.3781%** 	|
+
+
 ---
 
 ### Table of Contents
