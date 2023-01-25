@@ -167,7 +167,7 @@ noises.txt
 Makefile
 test_cases/
 tokenizers/
-segmenter_checkpoint/
+segmenter_checkpoint*/
 train_logs/
 **/figures/
 **/lightning_logs/
@@ -177,3 +177,8 @@ curated_results/
 **/head_pruning/
 **.onnx
 **/todo.txt
+**/*.zip
+**/*.txt
+**/*.pt
+**/*.pdf
+tests/temp_quantization_models
