@@ -353,3 +353,13 @@ class LSTMSegmenter(_base.BaseSegmenter):
             assert lstm_num_layers > 0, "Something went wrong while deducing 'lstm_num_layers'."
 
         return int(lstm_num_layers)
+
+    def _preprocess_minibatch(
+        self, minibatch: transformers.BatchEncoding
+    ) -> transformers.BatchEncoding:
+        """Perform necessary minibatch transformations before inference."""
+        minibatch = super()._preprocess_minibatch(minibatch)
+        for k in list(minibatch.keys()):
+            if k != "input_ids":
+                minibatch.pop(k)
+        return minibatch

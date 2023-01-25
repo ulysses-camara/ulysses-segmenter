@@ -226,7 +226,6 @@ class BaseSegmenter:
 
         Can be used by subclasses. In this base class, this method is No-op/identity operator.
         """
-        # pylint: disable='no-self-use'
         return minibatch
 
     def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
@@ -507,13 +506,7 @@ class LSTMSegmenterTorchModule(torch.nn.Module):
             num_classes,
         )
 
-    def forward(
-        self,
-        input_ids: torch.Tensor,
-        *args: t.Any,
-        **kwargs: t.Any,
-    ) -> t.Dict[str, torch.Tensor]:
-        # pylint: disable='missing-function-docstring', 'unused-argument'
+    def forward(self, input_ids: torch.Tensor) -> t.Dict[str, torch.Tensor]:
         out = input_ids
 
         out = self.embeddings(out)

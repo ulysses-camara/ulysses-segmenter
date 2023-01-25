@@ -79,7 +79,6 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
     def __init__(
         self,
         uri_model: str,
-        uri_onnx_config: str,
         uri_tokenizer: str,
         inference_pooling_operation: str = "assymetric-max",
         local_files_only: bool = True,
@@ -98,17 +97,11 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
             uri_model_extension=uri_model_extension,
         )
 
-        with open(uri_onnx_config, "rb") as f_in:
-            onnx_config = pickle.load(f_in)
-
         _optional_import_utils.load_required_module("optimum.onnxruntime")
 
         import optimum.onnxruntime  # pylint: disable='import-error'
 
-        self._model: optimum.onnxruntime.ORTModel = optimum.onnxruntime.ORTModel(
-            self.uri_model,
-            onnx_config,
-        )
+        self._model = optimum.onnxruntime.ORTModelForTokenClassification.from_pretrained(uri_model)
 
     def eval(self) -> "ONNXBERTSegmenter":
         """No-op method, created only to keep API consistent."""
@@ -123,11 +116,11 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         minibatch: t.Union[datasets.Dataset, transformers.BatchEncoding],
     ) -> npt.NDArray[np.float64]:
         """Predict a tokenized minibatch."""
-        if not isinstance(minibatch, datasets.Dataset):
-            minibatch = datasets.Dataset.from_dict(minibatch)  # type: ignore
+        if isinstance(minibatch, datasets.Dataset):
+            minibatch = minibatch.to_dict()
 
-        model_out = self._model.evaluation_loop(minibatch)
-        model_out = model_out.predictions
+        model_out = self._model.forward(**minibatch)
+        model_out = model_out.logits
 
         logits = np.asfarray(model_out)
 
@@ -236,7 +229,11 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         input_ids = minibatch["input_ids"]
 
         if isinstance(input_ids, torch.Tensor):
-            input_ids = input_ids.detach().cpu().numpy()
+            input_ids = (
+                input_ids.detach()
+                if input_ids.requires_grad
+                else input_ids
+            ).cpu().numpy()
 
         input_ids = np.atleast_2d(input_ids)
 
@@ -485,13 +482,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
     ) -> transformers.BatchEncoding:
         """Perform necessary minibatch transformations before inference."""
         minibatch = super()._preprocess_minibatch(minibatch)
-
-        if "attention_mask" in minibatch:
-            minibatch.pop("attention_mask")
-
-        if "token_type_ids" in minibatch:
-            minibatch.pop("token_type_ids")
-
-        minibatch["indices"] = minibatch.pop("input_ids")
-
+        for k in list(minibatch.keys()):
+            if k != "input_ids":
+                minibatch.pop(k)
         return minibatch
