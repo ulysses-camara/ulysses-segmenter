@@ -36,6 +36,7 @@ class QuantizationOutputONNX(t.NamedTuple):
     onnx_base_uri: str
     onnx_quantized_uri: str
     output_uri: str
+    onnx_optimized_uri: t.Optional[str] = None
 
 
 class QuantizationOutputTorch(t.NamedTuple):
@@ -132,7 +133,6 @@ def quantize_bert_model_as_onnx(
     quantized_model_filename: t.Optional[str] = None,
     intermediary_onnx_model_name: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
-    onnx_opset_version: int = 17,
     check_cached: bool = True,
     verbose: bool = False,
 ) -> QuantizationOutputONNX:
@@ -163,10 +163,6 @@ def quantize_bert_model_as_onnx(
         Name to save intermediary model in ONNX format in `quantized_model_dirpath`. This
         transformation is necessary to perform all necessary optimization and quantization.
         If None, a name will be derived from `quantized_model_filename`.
-
-    onnx_opset_version: int, default=17
-        ONNX operator set version. Used only if `model_output_format='onnx'`. Check [2]_ for
-        more information.
 
     check_cached : bool, default=True
         If True, check whether a model with the same model exists before quantization.
@@ -220,14 +216,17 @@ def quantize_bert_model_as_onnx(
     quantized_model_uri = paths.output_uri.replace(".onnx", "_onnx")
 
     paths = QuantizationOutputONNX(
-        onnx_base_uri=None,
+        onnx_base_uri=quantized_model_uri,
         onnx_quantized_uri=quantized_model_uri,
         output_uri=quantized_model_uri,
     )
 
     if check_cached and os.path.exists(paths.onnx_quantized_uri):
         if verbose:  # pragma: no cover
-            print(f"Found cached model in '{paths.quantized_uri}'. Skipping model quantization.")
+            print(
+                f"Found cached model in '{paths.onnx_quantized_uri}'.",
+                "Skipping model quantization.",
+            )
 
         return paths
 
@@ -262,8 +261,7 @@ def quantize_bert_model_as_onnx(
         module_name = ".".join(__name__.split(".")[:-1])
 
         print(
-            f"Saved quantized BERT (ONNX format) in {c_blu}'{paths.onnx_quantized_uri}'{c_rst}, "
-            f"and its configuration file in {c_blu}'{paths.onnx_config_uri}'{c_rst}. "
+            f"Saved quantized BERT (ONNX format) in {c_blu}'{paths.onnx_quantized_uri}'{c_rst}. "
             "To use it, load a BERT segmenter model as:\n\n"
             f"{module_name}.{models.ONNXBERTSegmenter.__name__}(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.onnx_quantized_uri}'{c_rst},\n"
@@ -782,7 +780,7 @@ def quantize_model(
             f"type={type(model)}."
         ) from e_key
 
-    if model_output_format == "onnx":
+    if model_output_format == "onnx" and isinstance(model, segmenter.LSTMSegmenter):
         v_major, v_minor, _ = platform.python_version_tuple()
         fn_kwargs["onnx_opset_version"] = onnx_opset_version
 

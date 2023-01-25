@@ -507,6 +507,7 @@ class LSTMSegmenterTorchModule(torch.nn.Module):
         )
 
     def forward(self, input_ids: torch.Tensor) -> t.Dict[str, torch.Tensor]:
+        # pylint: disable='missing-function-docstring'
         out = input_ids
 
         out = self.embeddings(out)
