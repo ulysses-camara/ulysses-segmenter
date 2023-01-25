@@ -247,7 +247,7 @@ def quantize_bert_model_as_onnx(
         per_channel=True,
         operators_to_quantize=["MatMul", "Add", "Gather"],
     )
-    
+
     quantizer.quantize(
         save_dir=paths.onnx_quantized_uri,
         file_suffix="quantized",
@@ -785,7 +785,7 @@ def quantize_model(
     if model_output_format == "onnx":
         v_major, v_minor, _ = platform.python_version_tuple()
         fn_kwargs["onnx_opset_version"] = onnx_opset_version
-        
+
         if 100 * int(v_major) + int(v_minor) < 310 and onnx_opset_version > 15:
             warnings.warn(
                 f"Unsupported onnx_opset_version={onnx_opset_version} for Python version < 3.10 "

@@ -118,7 +118,7 @@ def test_repeated_file_uris_in_onnx_quantization_lstm(
 
 
 def test_repeated_file_uris_in_onnx_quantization_bert(
-    fixture_model_bert_2_layers: segmentador.Segmenter
+    fixture_model_bert_2_layers: segmentador.Segmenter,
 ):
     with pytest.raises(ValueError):
         segmentador.optimize.quantize_model(

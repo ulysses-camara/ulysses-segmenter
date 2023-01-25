@@ -229,11 +229,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         input_ids = minibatch["input_ids"]
 
         if isinstance(input_ids, torch.Tensor):
-            input_ids = (
-                input_ids.detach()
-                if input_ids.requires_grad
-                else input_ids
-            ).cpu().numpy()
+            input_ids = (input_ids.detach() if input_ids.requires_grad else input_ids).cpu().numpy()
 
         input_ids = np.atleast_2d(input_ids)
 
