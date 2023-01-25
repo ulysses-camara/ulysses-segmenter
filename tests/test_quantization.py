@@ -1,6 +1,7 @@
 """Tests related to quantization and quantized segmenter models."""
 import timeit
 import os
+import shutil
 
 import segmentador
 import segmentador.optimize
@@ -135,18 +136,14 @@ def test_create_bert_model_with_default_name_onnx(
     output_paths = segmentador.optimize.quantize_model(
         model=fixture_model_bert_2_layers,
         quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
-        optimization_level=99,
-        onnx_opset_version=15,
+        onnx_opset_version=17,
         model_output_format="onnx",
         check_cached=False,
         verbose=False,
     )
 
-    assert os.path.isfile(output_paths.output_uri)
-    assert os.path.isfile(output_paths.onnx_config_uri)
-
-    os.remove(output_paths.output_uri)
-    os.remove(output_paths.onnx_config_uri)
+    assert os.path.exists(output_paths.output_uri)
+    shutil.rmtree(output_paths.output_uri)
 
 
 def test_create_lstm_model_with_default_name_torch(

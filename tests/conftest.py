@@ -107,8 +107,7 @@ def fn_fixture_quantized_model_lstm_onnx(
         model=fixture_model_lstm_1_layer,
         quantized_model_filename=fixture_test_paths.quantized_test_model_lstm_onnx,
         quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
-        optimization_level=99,
-        onnx_opset_version=15,
+        onnx_opset_version=17,
         model_output_format="onnx",
         check_cached=False,
         verbose=False,
@@ -172,27 +171,21 @@ def fn_fixture_quantized_model_bert_onnx(
         model=fixture_model_bert_2_layers,
         quantized_model_filename=fixture_test_paths.quantized_test_model_bert_onnx,
         quantized_model_dirpath=fixture_test_paths.quantized_test_model_dirname,
-        optimization_level=99,
-        onnx_opset_version=15,
+        onnx_opset_version=17,
         model_output_format="onnx",
         check_cached=False,
         verbose=False,
     )
 
-    # Note: will fail for onnx_opset_version <= 15, since there's no support for LayerNormalization
-    # onnx.checker.check_model(output_paths.output_uri)
+    # Note: failing for onnx_opset_version < 17, since they had no support for LayerNormalization
+    onnx.checker.check_model(os.path.join(output_paths.output_uri, "model_quantized.onnx"))
 
     onnx_bert_model = segmentador.optimize.ONNXBERTSegmenter(
         uri_model=output_paths.output_uri,
         uri_tokenizer=fixture_model_bert_2_layers.tokenizer.name_or_path,
-        uri_onnx_config=output_paths.onnx_config_uri,
     )
 
     yield onnx_bert_model
-
-    for path in set(output_paths):
-        if path:
-            os.remove(path)
 
     try:
         os.rmdir(fixture_test_paths.quantized_test_model_dirname)

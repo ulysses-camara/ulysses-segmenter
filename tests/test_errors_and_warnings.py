@@ -1,5 +1,4 @@
 """Tests that are expected to fail, raise expections or warnings."""
-import typing as t
 import pytest
 
 import segmentador
@@ -106,51 +105,25 @@ def test_invalid_onnx_format_for_pruned_bert(fixture_test_paths: paths.TestPaths
         )
 
 
-@pytest.mark.parametrize(
-    "quantized_model_filename,intermediary_onnx_model_name,intermediary_onnx_optimized_model_name",
-    [
-        ("redundant_name", "redundant_name", None),
-        (None, "redundant_name", "redundant_name"),
-        ("redundant_name", None, "redundant_name"),
-        ("redundant_name", "redundant_name", "redundant_name"),
-    ],
-)
 def test_repeated_file_uris_in_onnx_quantization_lstm(
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
-    quantized_model_filename: t.Optional[str],
-    intermediary_onnx_model_name: t.Optional[str],
-    intermediary_onnx_optimized_model_name: t.Optional[str],
 ):
     with pytest.raises(ValueError):
         segmentador.optimize.quantize_model(
             model=fixture_model_lstm_1_layer,
             model_output_format="onnx",
-            quantized_model_filename=quantized_model_filename,
-            intermediary_onnx_model_name=intermediary_onnx_model_name,
-            intermediary_onnx_optimized_model_name=intermediary_onnx_optimized_model_name,
+            quantized_model_filename="repeated_name",
+            intermediary_onnx_model_name="repeated_name",
         )
 
 
-@pytest.mark.parametrize(
-    "quantized_model_filename,intermediary_onnx_model_name,intermediary_onnx_optimized_model_name",
-    [
-        ("redundant_name", "redundant_name", None),
-        (None, "redundant_name", "redundant_name"),
-        ("redundant_name", None, "redundant_name"),
-        ("redundant_name", "redundant_name", "redundant_name"),
-    ],
-)
 def test_repeated_file_uris_in_onnx_quantization_bert(
-    fixture_model_bert_2_layers: segmentador.Segmenter,
-    quantized_model_filename: t.Optional[str],
-    intermediary_onnx_model_name: t.Optional[str],
-    intermediary_onnx_optimized_model_name: t.Optional[str],
+    fixture_model_bert_2_layers: segmentador.Segmenter
 ):
     with pytest.raises(ValueError):
         segmentador.optimize.quantize_model(
             model=fixture_model_bert_2_layers,
             model_output_format="onnx",
-            quantized_model_filename=quantized_model_filename,
-            intermediary_onnx_model_name=intermediary_onnx_model_name,
-            intermediary_onnx_optimized_model_name=intermediary_onnx_optimized_model_name,
+            quantized_model_filename="repeated_name",
+            intermediary_onnx_model_name="repeated_name",
         )
