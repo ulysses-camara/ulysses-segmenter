@@ -178,7 +178,7 @@ def fn_fixture_quantized_model_bert_onnx(
     )
 
     # Note: failing for onnx_opset_version < 17, since they had no support for LayerNormalization
-    onnx.checker.check_model(os.path.join(output_paths.output_uri, "model_quantized.onnx"))
+    # onnx.checker.check_model(os.path.join(output_paths.output_uri, "model_quantized.onnx"))
 
     onnx_bert_model = segmentador.optimize.ONNXBERTSegmenter(
         uri_model=output_paths.output_uri,
@@ -188,7 +188,7 @@ def fn_fixture_quantized_model_bert_onnx(
     yield onnx_bert_model
 
     try:
-        os.rmdir(fixture_test_paths.quantized_test_model_dirname)
+        shutil.rmtree(output_paths.output_uri)
 
     except OSError:
         pass
