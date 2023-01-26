@@ -243,7 +243,7 @@ def quantize_bert_model_as_onnx(
         disable_bias_skip_layer_norm_fusion=False,
         disable_bias_gelu_fusion=False,
         enable_gelu_approximation=True,
-        optimize_for_gpu=torch.device(model.model.device).type == "gpu",
+        optimize_for_gpu=torch.device(model.model.device).type == "cuda",  # type: ignore
     )
 
     quantization_config = optimum_onnxruntime.configuration.QuantizationConfig(
