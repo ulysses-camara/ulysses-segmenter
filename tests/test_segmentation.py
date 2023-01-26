@@ -62,7 +62,7 @@ def test_justificativa_regex_standard(
     expected_justificativa_length: int,
 ):
     _, justificativa = fixture_model_bert_2_layers(fake_legal_text, return_justificativa=True)
-    return len(justificativa) == expected_justificativa_length
+    assert len(justificativa) == expected_justificativa_length
 
 
 @pytest.mark.parametrize(
@@ -84,7 +84,7 @@ def test_justificativa_regex_custom(
         fake_legal_text, return_justificativa=True, regex_justificativa=regex_justificativa
     )
 
-    return len(justificativa) == expected_justificativa_length
+    assert len(justificativa) == expected_justificativa_length
 
 
 @pytest.mark.parametrize("batch_size", (1, 2, 3, 16, 10000))

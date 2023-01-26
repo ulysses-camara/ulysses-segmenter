@@ -4,6 +4,11 @@ import pickle
 import os
 import pathlib
 import collections
+import platform
+import warnings
+import random
+import datetime
+import shutil
 
 import transformers
 import torch
@@ -32,10 +37,9 @@ class QuantizationOutputONNX(t.NamedTuple):
     """Output paths for quantization as ONNX format."""
 
     onnx_base_uri: str
-    onnx_optimized_uri: str
     onnx_quantized_uri: str
     output_uri: str
-    onnx_config_uri: t.Optional[str] = None
+    onnx_optimized_uri: t.Optional[str] = None
 
 
 class QuantizationOutputTorch(t.NamedTuple):
@@ -53,31 +57,17 @@ def _build_onnx_default_uris(
     quantized_model_dirpath: str,
     quantized_model_filename: t.Optional[str] = None,
     intermediary_onnx_model_name: t.Optional[str] = None,
-    intermediary_onnx_optimized_model_name: t.Optional[str] = None,
-    onnx_config_name: t.Optional[str] = None,
-    optimization_level: t.Union[str, int] = 99,
-    include_config_uri: bool = True,
 ) -> QuantizationOutputONNX:
     """Build default URIs for quantized output in ONNX format."""
     if not intermediary_onnx_model_name:
         attrs_to_name = "_".join("_".join(map(str, item)) for item in model_attributes.items())
         intermediary_onnx_model_name = f"segmenter_{attrs_to_name}_{model_name}_model"
 
-    if not intermediary_onnx_optimized_model_name:
-        intermediary_onnx_optimized_model_name = (
-            f"{intermediary_onnx_model_name}_{optimization_level}_opt_level"
-        )
-
     if not quantized_model_filename:
-        quantized_model_filename = f"q_{intermediary_onnx_optimized_model_name}"
-
-    onnx_config_name = onnx_config_name or f"{quantized_model_filename}.config"
+        quantized_model_filename = f"q_{intermediary_onnx_model_name}"
 
     if not intermediary_onnx_model_name.endswith(".onnx"):
         intermediary_onnx_model_name += ".onnx"
-
-    if not intermediary_onnx_optimized_model_name.endswith(".onnx"):
-        intermediary_onnx_optimized_model_name += ".onnx"
 
     if not quantized_model_filename.endswith(".onnx"):
         quantized_model_filename += ".onnx"
@@ -85,30 +75,22 @@ def _build_onnx_default_uris(
     pathlib.Path(quantized_model_dirpath).mkdir(exist_ok=True, parents=True)
 
     onnx_base_uri = os.path.join(quantized_model_dirpath, intermediary_onnx_model_name)
-    onnx_optimized_uri = os.path.join(
-        quantized_model_dirpath, intermediary_onnx_optimized_model_name
-    )
     onnx_quantized_uri = os.path.join(quantized_model_dirpath, quantized_model_filename)
 
     paths_dict: t.Dict[str, str] = dict(
         onnx_base_uri=onnx_base_uri,
-        onnx_optimized_uri=onnx_optimized_uri,
         onnx_quantized_uri=onnx_quantized_uri,
         output_uri=onnx_quantized_uri,
     )
 
-    if include_config_uri:
-        onnx_config_uri = os.path.join(quantized_model_dirpath, onnx_config_name)
-        paths_dict["onnx_config_uri"] = onnx_config_uri
-
     paths = QuantizationOutputONNX(**paths_dict)
 
-    all_path_set = {paths.onnx_base_uri, paths.onnx_optimized_uri, paths.onnx_quantized_uri}
+    all_path_set = {paths.onnx_base_uri, paths.onnx_quantized_uri}
     num_distinct_paths = len(all_path_set)
 
-    if num_distinct_paths < 3:
+    if num_distinct_paths < 2:
         raise ValueError(
-            f"{3 - num_distinct_paths} URI for ONNX models (including intermediary models) "
+            f"{2 - num_distinct_paths} URI for ONNX models (including intermediary models) "
             "are the same, which will cause undefined behaviour while quantizing the model. "
             "Please provide distinct filenames for ONNX files."
         )
@@ -153,11 +135,7 @@ def quantize_bert_model_as_onnx(
     model: segmenter.BERTSegmenter,
     quantized_model_filename: t.Optional[str] = None,
     intermediary_onnx_model_name: t.Optional[str] = None,
-    intermediary_onnx_optimized_model_name: t.Optional[str] = None,
-    onnx_config_name: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
-    optimization_level: int = 99,
-    onnx_opset_version: int = 15,
     check_cached: bool = True,
     verbose: bool = False,
 ) -> QuantizationOutputONNX:
@@ -168,7 +146,6 @@ def quantize_bert_model_as_onnx(
     >>> optimize.ONNXBERTSegmenter(  # doctest: +SKIP
     ...     uri_model='<quantized_model_uri>',
     ...     uri_tokenizer=...,
-    ...     uri_onnx_config='<quantized_model_config_uri>',
     ...     ...,
     ... )
 
@@ -189,29 +166,6 @@ def quantize_bert_model_as_onnx(
         Name to save intermediary model in ONNX format in `quantized_model_dirpath`. This
         transformation is necessary to perform all necessary optimization and quantization.
         If None, a name will be derived from `quantized_model_filename`.
-
-    intermediary_onnx_optimized_model_name : str or None, default=None
-        Name to save intermediary optimized model in ONNX format in `quantized_model_dirpath`.
-        This transformation is necessary to perform quantization. If None, a name will be
-        derived from `quantized_model_filename`.
-
-    onnx_config_name : str or None, default=None
-        Name of pickled BERT configuration file, necessary to provide enough information
-        during model loading. If None, a name will be derived from `quantized_model_filename`.
-
-    optimization_level : {0, 1, 2, 99}, default=99
-        Optimization level for ONNX models. From the ONNX Runtime specification:
-
-        - 0: disable all optimizations;
-        - 1: enable only basic optimizations;
-        - 2: enable basic and extended optimizations; or
-        - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
-
-        See [1]_ for more information.
-
-    onnx_opset_version: int, default=15
-        ONNX operator set version. Used only if `model_output_format='onnx'`. Check [2]_ for
-        more information.
 
     check_cached : bool, default=True
         If True, check whether a model with the same model exists before quantization.
@@ -235,9 +189,6 @@ def quantize_bert_model_as_onnx(
        https://github.com/onnx/onnx/blob/main/docs/Operators.md
     """
     optimum_onnxruntime = _optional_import_utils.load_required_module("optimum.onnxruntime")
-    _optional_import_utils.load_required_module("onnxruntime")
-
-    import onnxruntime.quantization
 
     model_config: transformers.BertConfig = model.model.config  # type: ignore
     is_pruned = bool(model_config.pruned_heads)
@@ -263,71 +214,87 @@ def quantize_bert_model_as_onnx(
         quantized_model_dirpath=quantized_model_dirpath,
         quantized_model_filename=quantized_model_filename,
         intermediary_onnx_model_name=intermediary_onnx_model_name,
-        intermediary_onnx_optimized_model_name=intermediary_onnx_optimized_model_name,
-        onnx_config_name=onnx_config_name,
-        optimization_level=optimization_level,
     )
 
-    if check_cached and os.path.isfile(paths.onnx_quantized_uri):
+    quantized_model_uri = paths.output_uri.replace(".onnx", "_onnx")
+
+    paths = QuantizationOutputONNX(
+        onnx_base_uri=quantized_model_uri,
+        onnx_quantized_uri=quantized_model_uri,
+        output_uri=quantized_model_uri,
+    )
+
+    if check_cached and os.path.exists(paths.onnx_quantized_uri):
         if verbose:  # pragma: no cover
             print(
-                f"Found cached model in '{paths.onnx_quantized_uri}'. "
-                "Skipping model quantization."
+                f"Found cached model in '{paths.onnx_quantized_uri}'.",
+                "Skipping model quantization.",
             )
 
         return paths
 
-    onnx_config = transformers.models.bert.BertOnnxConfig(model_config)
-
-    if not check_cached or not os.path.isfile(paths.onnx_base_uri):
-        transformers.onnx.export(
-            model=model.model,  # type: ignore
-            tokenizer=model.tokenizer,  # type: ignore
-            config=onnx_config,
-            opset=onnx_opset_version,
-            output=pathlib.Path(paths.onnx_base_uri),
-        )
-
-    elif verbose:  # pragma: no cover
-        print(f"Found cached ONNX model in '{paths.onnx_base_uri}'.")
-
-    if not check_cached or not os.path.isfile(paths.onnx_optimized_uri):
-        optimizer = optimum_onnxruntime.ORTOptimizer(
-            model=model.model,
-            tokenizer=model.tokenizer,
-            feature="token-classification",
-        )
-
-        optimization_config = optimum_onnxruntime.configuration.OptimizationConfig(
-            optimization_level=optimization_level,
-            optimize_for_gpu=torch.device(model.device).type == "cuda",
-            enable_gelu_approximation=True,
-        )
-
-        optimizer.export(
-            onnx_model_path=paths.onnx_base_uri,
-            onnx_optimized_model_output_path=paths.onnx_optimized_uri,
-            optimization_config=optimization_config,
-        )
-
-    elif verbose:  # pragma: no cover
-        print(f"Found cached ONNX model in '{paths.onnx_optimized_uri}'.")
-
-    onnxruntime.quantization.quantize_dynamic(
-        model_input=paths.onnx_optimized_uri,
-        model_output=paths.onnx_quantized_uri,
-        weight_type=onnxruntime.quantization.QuantType.QUInt8,
-        optimize_model=False,
-        per_channel=False,
-        extra_options=dict(
-            EnableSubgraph=True,
-            MatMulConstBOnly=False,
-            ForceQuantizeNoInputCheck=True,
-        ),
+    optimization_config = optimum_onnxruntime.OptimizationConfig(
+        optimization_level=99,
+        enable_transformers_specific_optimizations=True,
+        disable_gelu_fusion=False,
+        disable_embed_layer_norm_fusion=False,
+        disable_attention_fusion=False,
+        disable_skip_layer_norm_fusion=False,
+        disable_bias_skip_layer_norm_fusion=False,
+        disable_bias_gelu_fusion=False,
+        enable_gelu_approximation=True,
+        optimize_for_gpu=torch.device(model.model.device).type == "cuda",  # type: ignore
     )
 
-    with open(paths.onnx_config_uri or (paths.output_uri + ".config"), "wb") as f_out:
-        pickle.dump(onnx_config, f_out, protocol=pickle.HIGHEST_PROTOCOL)
+    quantization_config = optimum_onnxruntime.configuration.QuantizationConfig(
+        is_static=False,
+        format=optimum_onnxruntime.quantization.QuantFormat.QOperator,
+        mode=optimum_onnxruntime.quantization.QuantizationMode.IntegerOps,
+        activations_dtype=optimum_onnxruntime.quantization.QuantType.QUInt8,
+        weights_dtype=optimum_onnxruntime.quantization.QuantType.QInt8,
+        per_channel=True,
+        operators_to_quantize=["MatMul", "Add", "Gather", "EmbedLayerNormalization", "Attention"],
+    )
+
+    ort_model = optimum_onnxruntime.ORTModelForTokenClassification.from_pretrained(
+        model.model.name_or_path,
+        from_transformers=True,
+        local_files_only=True,
+    )
+
+    optimizer = optimum_onnxruntime.ORTOptimizer.from_pretrained(ort_model)
+
+    temp_optimized_model_uri = "_".join(
+        [
+            "temp_optimized_ulysses_segmenter_model",
+            datetime.datetime.utcnow().strftime("%Y_%m_%d__%H_%M_%S"),
+            hex(random.getrandbits(128))[2:],
+        ]
+    )
+    temp_optimized_model_uri = os.path.join(quantized_model_dirpath, temp_optimized_model_uri)
+
+    optimizer.optimize(
+        save_dir=temp_optimized_model_uri,
+        file_suffix="",
+        optimization_config=optimization_config,
+    )
+
+    try:
+        ort_model = optimum_onnxruntime.ORTModelForTokenClassification.from_pretrained(
+            temp_optimized_model_uri,
+            local_files_only=True,
+        )
+
+        quantizer = optimum_onnxruntime.ORTQuantizer.from_pretrained(ort_model)
+
+        quantizer.quantize(
+            save_dir=paths.onnx_quantized_uri,
+            file_suffix="quantized",
+            quantization_config=quantization_config,
+        )
+
+    finally:
+        shutil.rmtree(temp_optimized_model_uri)
 
     if verbose:  # pragma: no cover
         c_ylw = colorama.Fore.YELLOW if colorama else ""
@@ -337,13 +304,11 @@ def quantize_bert_model_as_onnx(
         module_name = ".".join(__name__.split(".")[:-1])
 
         print(
-            f"Saved quantized BERT (ONNX format) in {c_blu}'{paths.onnx_quantized_uri}'{c_rst}, "
-            f"and its configuration file in {c_blu}'{paths.onnx_config_uri}'{c_rst}. "
+            f"Saved quantized BERT (ONNX format) in {c_blu}'{paths.onnx_quantized_uri}'{c_rst}. "
             "To use it, load a BERT segmenter model as:\n\n"
             f"{module_name}.{models.ONNXBERTSegmenter.__name__}(\n"
             f"   {c_ylw}uri_model={c_blu}'{paths.onnx_quantized_uri}'{c_rst},\n"
             f"   uri_tokenizer='{model.tokenizer.name_or_path}',\n"
-            f"   {c_ylw}uri_onnx_config={c_blu}'{paths.onnx_config_uri}'{c_rst},\n"
             "   ...,\n"
             ")"
         )
@@ -355,10 +320,8 @@ def quantize_lstm_model_as_onnx(
     model: segmenter.LSTMSegmenter,
     quantized_model_filename: t.Optional[str] = None,
     intermediary_onnx_model_name: t.Optional[str] = None,
-    intermediary_onnx_optimized_model_name: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
-    optimization_level: int = 99,
-    onnx_opset_version: int = 15,
+    onnx_opset_version: int = 17,
     check_cached: bool = True,
     verbose: bool = False,
 ) -> QuantizationOutputONNX:
@@ -390,22 +353,7 @@ def quantize_lstm_model_as_onnx(
         transformation is necessary to perform all necessary optimization and quantization.
         If None, a name will be derived from `quantized_model_filename`.
 
-    intermediary_onnx_optimized_model_name : str or None, default=None
-        Name to save intermediary optimized model in ONNX format in `quantized_model_dirpath`.
-        This transformation is necessary to perform quantization. If None, a name will be
-        derived from `quantized_model_filename`.
-
-    optimization_level : {0, 1, 2, 99}, default=99
-        Optimization level for ONNX models. From the ONNX Runtime specification:
-
-        - 0: disable all optimizations;
-        - 1: enable only basic optimizations;
-        - 2: enable basic and extended optimizations; or
-        - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
-
-        See [1]_ for more information.
-
-    onnx_opset_version: int, default=15
+    onnx_opset_version: int, default=17
         ONNX operator set version. Used only if `model_output_format='onnx'`. Check [2]_ for
         more information.
 
@@ -449,9 +397,6 @@ def quantize_lstm_model_as_onnx(
         quantized_model_dirpath=quantized_model_dirpath,
         quantized_model_filename=quantized_model_filename,
         intermediary_onnx_model_name=intermediary_onnx_model_name,
-        intermediary_onnx_optimized_model_name=intermediary_onnx_optimized_model_name,
-        optimization_level=optimization_level,
-        include_config_uri=False,
     )
 
     if check_cached and os.path.isfile(paths.onnx_quantized_uri):
@@ -477,6 +422,7 @@ def quantize_lstm_model_as_onnx(
             output_names=["logits"],
             opset_version=onnx_opset_version,
             export_params=True,
+            do_constant_folding=True,
             dynamic_axes=dict(
                 input_ids={0: "batch_axis", 1: "sentence_length"},
                 logits={0: "batch_axis", 1: "sentence_length"},
@@ -486,29 +432,12 @@ def quantize_lstm_model_as_onnx(
     elif verbose:  # pragma: no cover
         print(f"Found cached ONNX model in '{paths.onnx_base_uri}'.")
 
-    if not check_cached or not os.path.isfile(paths.onnx_optimized_uri):
-        opt_sess_options = onnxruntime.SessionOptions()
-        opt_sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel(
-            optimization_level
-        )
-        opt_sess_options.optimized_model_filepath = paths.onnx_optimized_uri
-
-        onnxruntime.InferenceSession(paths.onnx_base_uri, opt_sess_options)
-
-    elif verbose:  # pragma: no cover
-        print(f"Found cached ONNX model in '{paths.onnx_optimized_uri}'.")
-
     onnxruntime.quantization.quantize_dynamic(
-        model_input=paths.onnx_optimized_uri,
+        model_input=paths.onnx_base_uri,
         model_output=paths.onnx_quantized_uri,
         weight_type=onnxruntime.quantization.QuantType.QUInt8,
-        optimize_model=False,
-        per_channel=False,
-        extra_options=dict(
-            EnableSubgraph=True,
-            MatMulConstBOnly=False,
-            ForceQuantizeNoInputCheck=True,
-        ),
+        optimize_model=True,
+        per_channel=True,
     )
 
     if verbose:  # pragma: no cover
@@ -624,7 +553,7 @@ def quantize_bert_model_as_torch(
     )
 
     dummy_inputs = _gen_dummy_inputs_for_tracing(
-        batch_size=2,
+        batch_size=1,
         vocab_size=model_config.vocab_size,
         seq_length=model_config.max_position_embeddings,
     )
@@ -746,12 +675,19 @@ def quantize_lstm_model_as_torch(
     )
 
     dummy_input_ids, _, _ = _gen_dummy_inputs_for_tracing(
-        batch_size=2,
+        batch_size=3,
         vocab_size=model.tokenizer.vocab_size,
         seq_length=512,
     )
 
-    jit_traced_model = torch.jit.trace(quantized_pytorch_module, (dummy_input_ids,), strict=False)
+    dummy_input_ids = dummy_input_ids.unsqueeze(1)
+
+    jit_traced_model = torch.jit.trace(
+        func=torch.jit.script(quantized_pytorch_module),
+        example_inputs=(dummy_input_ids[0],),
+        check_inputs=[(dummy_input_ids[1],), (dummy_input_ids[2],)],
+        strict=True,
+    )
     pickled_tokenizer = pickle.dumps(model.tokenizer, protocol=pickle.HIGHEST_PROTOCOL)
 
     torch.jit.save(
@@ -784,9 +720,8 @@ def quantize_model(
     model: t.Union[segmenter.BERTSegmenter, segmenter.LSTMSegmenter],
     quantized_model_filename: t.Optional[str] = None,
     quantized_model_dirpath: str = "./quantized_models",
-    optimization_level: int = 99,
     model_output_format: str = "onnx",
-    onnx_opset_version: int = 15,
+    onnx_opset_version: int = 17,
     check_cached: bool = True,
     verbose: bool = False,
     **kwargs: t.Any,
@@ -810,22 +745,12 @@ def quantize_model(
         Path to output file directory, which the resulting quantized model will be stored,
         alongside any possible coproducts also generated during the quantization procedure.
 
-    optimization_level : {0, 1, 2, 99}, default=99
-        Optimization level for ONNX models. From the ONNX Runtime specification:
-
-        - 0: disable all optimizations;
-        - 1: enable only basic optimizations;
-        - 2: enable basic and extended optimizations; or
-        - 99: enable all optimizations (incluing layer and hardware-specific optimizations).
-
-        See [1]_ for more information.
-
     model_output_format : {'onnx', 'torch_jit'}, default='onnx'
         Output format of quantized model. This option also determines how exactly inference with
         the quantized model will be done. See ``See Also`` section for information about specific
         configuratins of model types and output formats.
 
-    onnx_opset_version: int, default=15
+    onnx_opset_version: int, default=17
         ONNX operator set version. Used only if `model_output_format='onnx'`. Check [2]_ for
         more information.
 
@@ -898,8 +823,16 @@ def quantize_model(
             f"type={type(model)}."
         ) from e_key
 
-    if model_output_format == "onnx":
-        fn_kwargs["optimization_level"] = optimization_level
+    if model_output_format == "onnx" and isinstance(model, segmenter.LSTMSegmenter):
+        v_major, v_minor, _ = platform.python_version_tuple()
         fn_kwargs["onnx_opset_version"] = onnx_opset_version
+
+        if 100 * int(v_major) + int(v_minor) < 310 and onnx_opset_version > 15:
+            warnings.warn(
+                f"Unsupported onnx_opset_version={onnx_opset_version} for Python version < 3.10 "
+                f"(detected '{v_major}.{v_minor}'). Setting it to '15'.",
+                UserWarning,
+            )
+            fn_kwargs["onnx_opset_version"] = 15
 
     return fn_quantization(**fn_kwargs, **kwargs)

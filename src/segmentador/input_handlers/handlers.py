@@ -38,7 +38,7 @@ class InputHandlerString(_BaseInputHandler):
             (
                 r"\s*".join("JUSTIFICATIVA"),
                 r"\s*".join([*"JUSTIFICA", "[CÇ]", "[AÁÀÃÃ]", "O"]),
-                r"\s*".join("ANEXOS"),
+                r"\s*".join("ANEXOS") + "?",
             )
         )
     )
@@ -50,14 +50,14 @@ class InputHandlerString(_BaseInputHandler):
     ) -> regex.Pattern:
         """Compile or set default 'JUSTIFICATIVA' block regex.
 
-        If the provided regex is already compiled, this function simply returns its own
+        If the provided regex is already compiled, then this function will return its own
         argument.
         """
         if regex_justificativa is None:
             regex_justificativa = cls.RE_JUSTIFICATIVA
 
         if isinstance(regex_justificativa, str):
-            regex_justificativa = regex.compile(regex_justificativa)
+            regex_justificativa = regex.compile(f"(?:{regex_justificativa})")
 
         return regex_justificativa
 
