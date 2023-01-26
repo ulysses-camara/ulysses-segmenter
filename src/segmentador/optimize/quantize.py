@@ -6,6 +6,9 @@ import pathlib
 import collections
 import platform
 import warnings
+import random
+import datetime
+import shutil
 
 import transformers
 import torch
@@ -230,28 +233,68 @@ def quantize_bert_model_as_onnx(
 
         return paths
 
-    ort_model = optimum_onnxruntime.ORTModelForTokenClassification.from_pretrained(
-        model.model.name_or_path,
-        from_transformers=True,
-        local_files_only=True,
+    optimization_config = optimum_onnxruntime.OptimizationConfig(
+        optimization_level=99,
+        enable_transformers_specific_optimizations=True,
+        disable_gelu_fusion=False,
+        disable_embed_layer_norm_fusion=False,
+        disable_attention_fusion=False,
+        disable_skip_layer_norm_fusion=False,
+        disable_bias_skip_layer_norm_fusion=False,
+        disable_bias_gelu_fusion=False,
+        enable_gelu_approximation=True,
+        optimize_for_gpu=torch.device(model.model.device).type == "gpu",
     )
-    quantizer = optimum_onnxruntime.ORTQuantizer.from_pretrained(ort_model)
 
-    qconfig = optimum_onnxruntime.configuration.QuantizationConfig(
+    quantization_config = optimum_onnxruntime.configuration.QuantizationConfig(
         is_static=False,
         format=optimum_onnxruntime.quantization.QuantFormat.QOperator,
         mode=optimum_onnxruntime.quantization.QuantizationMode.IntegerOps,
         activations_dtype=optimum_onnxruntime.quantization.QuantType.QUInt8,
         weights_dtype=optimum_onnxruntime.quantization.QuantType.QInt8,
         per_channel=True,
-        operators_to_quantize=["MatMul", "Add", "Gather"],
+        operators_to_quantize=["MatMul", "Add", "Gather", "EmbedLayerNormalization", "Attention"],
     )
 
-    quantizer.quantize(
-        save_dir=paths.onnx_quantized_uri,
-        file_suffix="quantized",
-        quantization_config=qconfig,
+    ort_model = optimum_onnxruntime.ORTModelForTokenClassification.from_pretrained(
+        model.model.name_or_path,
+        from_transformers=True,
+        local_files_only=True,
     )
+
+    optimizer = optimum_onnxruntime.ORTOptimizer.from_pretrained(ort_model)
+
+    temp_optimized_model_uri = "_".join(
+        [
+            "temp_optimized_ulysses_segmenter_model",
+            datetime.datetime.utcnow().strftime("%Y_%m_%d__%H_%M_%S"),
+            hex(random.getrandbits(128))[2:],
+        ]
+    )
+    temp_optimized_model_uri = os.path.join(quantized_model_dirpath, temp_optimized_model_uri)
+
+    optimizer.optimize(
+        save_dir=temp_optimized_model_uri,
+        file_suffix="",
+        optimization_config=optimization_config,
+    )
+
+    try:
+        ort_model = optimum_onnxruntime.ORTModelForTokenClassification.from_pretrained(
+            temp_optimized_model_uri,
+            local_files_only=True,
+        )
+
+        quantizer = optimum_onnxruntime.ORTQuantizer.from_pretrained(ort_model)
+
+        quantizer.quantize(
+            save_dir=paths.onnx_quantized_uri,
+            file_suffix="quantized",
+            quantization_config=quantization_config,
+        )
+
+    finally:
+        shutil.rmtree(temp_optimized_model_uri)
 
     if verbose:  # pragma: no cover
         c_ylw = colorama.Fore.YELLOW if colorama else ""
