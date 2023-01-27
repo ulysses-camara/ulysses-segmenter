@@ -217,9 +217,8 @@ Lastly, load the optimized models with appropriate classes from `segmentador.opt
 ```python
 # Load ONNX model
 segmenter_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
-    uri_model=quantized_bert_paths.output_uri,
+    uri_model=quantized_model_paths.output_uri,
     uri_tokenizer=segmenter_bert.tokenizer.name_or_path,
-    uri_onnx_config=quantized_bert_paths.onnx_config_uri,
 )
 
 seg_result = segmenter_bert_quantized(sample_text, return_logits=True)
