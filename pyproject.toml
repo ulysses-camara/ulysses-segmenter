@@ -4,7 +4,7 @@ requires = ["flit_core >=3.2,<4"]
 
 [project]
 name = "segmentador"
-version = "0.2.2"
+version = "0.2.3"
 description = "Segmentador de textos legislativos da Câmara dos Deputados do Brasil."
 authors = [
     {name="felsiq", email= "felipe.siqueira@usp.br"}
@@ -140,7 +140,7 @@ commands =
 
 [testenv:mypy]
 basepython = python3.9
-deps = mypy
+deps = mypy == 0.991
 commands =
     python -m mypy --install-types --non-interactive src/
     python -m mypy src/
@@ -148,7 +148,7 @@ commands =
 [testenv:pylint]
 basepython = python3.9
 deps =
-    pylint
+    pylint == 2.16.0
     buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@v0.1.1-beta
     pytest
     datasets
