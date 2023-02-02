@@ -221,7 +221,7 @@ class InputHandlerMapping(_BaseInputHandler):
             {key: cls._val_to_tensor(val) for key, val in text.items()}
         )
         justificativa = None
-        num_tokens = len(tokens["input_ids"])
+        num_tokens = int(tokens["input_ids"].numel())
 
         return tokens, justificativa, num_tokens
 
