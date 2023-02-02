@@ -1,4 +1,6 @@
 """General tests for arguments, model instantiation and segmentation."""
+import typing as t
+
 import pytest
 import pandas as pd
 import datasets
@@ -6,6 +8,11 @@ import datasets
 import segmentador
 
 from . import paths
+
+
+def no_segmentation_at_middle_subwords(segs: t.List[str]) -> bool:
+    """Check if no word has been segmented."""
+    return not any(s.startswith("##") for s in segs)
 
 
 @pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
@@ -20,7 +27,7 @@ def test_inference_pooling_operation_argument_with_long_text_and_bert(
         cache_dir_model=fixture_test_paths.cache_dir_models,
     )
     segs = model(fixture_legal_text_long, batch_size=4)
-    assert len(segs) >= 50
+    assert len(segs) >= 50 and no_segmentation_at_middle_subwords(segs)
 
 
 @pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
@@ -39,7 +46,7 @@ def test_inference_pooling_operation_argument_with_short_text_and_lstm(
         cache_dir_tokenizer=fixture_test_paths.cache_dir_tokenizers,
     )
     segs = model(fixture_legal_text_short)
-    assert len(segs) >= 6
+    assert len(segs) >= 6 and no_segmentation_at_middle_subwords(segs)
 
 
 @pytest.mark.parametrize(
@@ -93,8 +100,8 @@ def test_batch_size_with_short_text(
     fixture_legal_text_short: str,
     batch_size: int,
 ):
-    segments = fixture_model_bert_2_layers(fixture_legal_text_short, batch_size=batch_size)
-    assert len(segments) == 9
+    segs = fixture_model_bert_2_layers(fixture_legal_text_short, batch_size=batch_size)
+    assert len(segs) == 9 and no_segmentation_at_middle_subwords(segs)
 
 
 @pytest.mark.parametrize("batch_size", (1, 2, 3, 16, 10000))
@@ -103,8 +110,8 @@ def test_batch_size_with_long_text(
     fixture_legal_text_long: str,
     batch_size: int,
 ):
-    segments = fixture_model_bert_2_layers(fixture_legal_text_long, batch_size=batch_size)
-    assert len(segments) == 63
+    segs = fixture_model_bert_2_layers(fixture_legal_text_long, batch_size=batch_size)
+    assert len(segs) == 63 and no_segmentation_at_middle_subwords(segs)
 
 
 @pytest.mark.parametrize("window_shift_size", (1024, 512, 256, 1.0, 0.5, 0.25))
@@ -113,10 +120,8 @@ def test_window_shift_size(
     fixture_legal_text_long: str,
     window_shift_size: int,
 ):
-    segments = fixture_model_bert_2_layers(
-        fixture_legal_text_long, window_shift_size=window_shift_size
-    )
-    assert len(segments) >= 59
+    segs = fixture_model_bert_2_layers(fixture_legal_text_long, window_shift_size=window_shift_size)
+    assert len(segs) >= 59 and no_segmentation_at_middle_subwords(segs)
 
 
 @pytest.mark.parametrize("input_type_fn", [tuple, list, pd.Series])
@@ -126,7 +131,7 @@ def test_input_type(fixture_model_bert_2_layers: segmentador.Segmenter, input_ty
             input_type_fn(["Projeto de Lei (do XYZ).", "Artigo 10: abc xyz", "a) 0 abc b) xyz"])
         )
 
-    assert len(segs) > 0
+    assert len(segs) > 0 and no_segmentation_at_middle_subwords(segs)
 
 
 def test_input_type_pandas_df(fixture_model_bert_2_layers: segmentador.Segmenter):
@@ -146,7 +151,7 @@ def test_input_type_pre_tokenized(
         preproc_text, return_tensors=return_tensors
     )
     segs = fixture_model_bert_2_layers(tokenized_input)
-    assert len(segs) == 9
+    assert len(segs) == 9 and no_segmentation_at_middle_subwords(segs)
 
 
 def test_input_type_huggingface_dataset(
@@ -156,4 +161,4 @@ def test_input_type_huggingface_dataset(
     tokenized_input = fixture_model_bert_2_layers.tokenizer(preproc_text)
     dataset = datasets.Dataset.from_dict(tokenized_input)
     segs = fixture_model_bert_2_layers(dataset)
-    assert len(segs) == 9
+    assert len(segs) == 9 and no_segmentation_at_middle_subwords(segs)
