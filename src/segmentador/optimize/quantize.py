@@ -77,11 +77,11 @@ def _build_onnx_default_uris(
     onnx_base_uri = os.path.join(quantized_model_dirpath, intermediary_onnx_model_name)
     onnx_quantized_uri = os.path.join(quantized_model_dirpath, quantized_model_filename)
 
-    paths_dict: t.Dict[str, str] = dict(
-        onnx_base_uri=onnx_base_uri,
-        onnx_quantized_uri=onnx_quantized_uri,
-        output_uri=onnx_quantized_uri,
-    )
+    paths_dict: t.Dict[str, str] = {
+        "onnx_base_uri": onnx_base_uri,
+        "onnx_quantized_uri": onnx_quantized_uri,
+        "output_uri": onnx_quantized_uri,
+    }
 
     paths = QuantizationOutputONNX(**paths_dict)
 
@@ -423,10 +423,10 @@ def quantize_lstm_model_as_onnx(
             opset_version=onnx_opset_version,
             export_params=True,
             do_constant_folding=True,
-            dynamic_axes=dict(
-                input_ids={0: "batch_axis", 1: "sentence_length"},
-                logits={0: "batch_axis", 1: "sentence_length"},
-            ),
+            dynamic_axes={
+                "input_ids": {0: "batch_axis", 1: "sentence_length"},
+                "logits": {0: "batch_axis", 1: "sentence_length"},
+            },
         )
 
     elif verbose:  # pragma: no cover
@@ -564,7 +564,7 @@ def quantize_bert_model_as_torch(
     torch.jit.save(
         m=jit_traced_model,
         f=paths.output_uri,
-        _extra_files=dict(tokenizer=pickled_tokenizer),
+        _extra_files={"tokenizer": pickled_tokenizer},
     )
 
     if verbose:  # pragma: no cover
@@ -693,7 +693,7 @@ def quantize_lstm_model_as_torch(
     torch.jit.save(
         m=jit_traced_model,
         f=paths.output_uri,
-        _extra_files=dict(tokenizer=pickled_tokenizer),
+        _extra_files={"tokenizer": pickled_tokenizer},
     )
 
     if verbose:  # pragma: no cover
@@ -797,13 +797,13 @@ def quantize_model(
             "Please choose either 'onnx' or 'torch_jit'."
         )
 
-    fn_kwargs: t.Dict[str, t.Any] = dict(
-        model=model,
-        quantized_model_filename=quantized_model_filename,
-        quantized_model_dirpath=quantized_model_dirpath,
-        check_cached=check_cached,
-        verbose=verbose,
-    )
+    fn_kwargs: t.Dict[str, t.Any] = {
+        "model": model,
+        "quantized_model_filename": quantized_model_filename,
+        "quantized_model_dirpath": quantized_model_dirpath,
+        "check_cached": check_cached,
+        "verbose": verbose,
+    }
 
     fn_quantization_factory: t.Dict[
         t.Tuple[t.Type[_base.BaseSegmenter], str], t.Callable[..., QuantizationOutput]

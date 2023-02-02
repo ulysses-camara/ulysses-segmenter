@@ -190,6 +190,38 @@ class BaseSegmenter:
 
         return preprocessed_text
 
+    def _set_middle_subword_label_to_noop_(
+        self, input_ids: npt.NDArray[np.int32], logits: npt.NDArray[np.float64], num_tokens: int
+    ) -> npt.NDArray[np.float64]:
+        """Set label to NOOP class for all subwords in the middle of a whole word."""
+        noop_cls_id: int
+
+        try:
+            noop_cls_id = self._model.config.label2id.get("NO_OP", 0)  # type: ignore
+
+        except AttributeError:
+            noop_cls_id = 0
+
+        middle_subword_new_logits = np.zeros(self.NUM_CLASSES, dtype=logits.dtype)
+        middle_subword_new_logits[noop_cls_id] = 1.0
+
+        input_ids = input_ids.ravel()
+
+        logits_shape = logits.shape
+        logits = logits.reshape(-1, self.NUM_CLASSES)
+
+        assert input_ids.size == num_tokens, (input_ids.size, num_tokens)
+        assert logits.shape[0] >= num_tokens, (logits.shape[0], num_tokens)
+
+        subwords = self._tokenizer.convert_ids_to_tokens(input_ids, skip_special_tokens=False)
+        middle_subword_inds = [i for i, sw in enumerate(subwords) if sw.startswith("##")]
+
+        logits[middle_subword_inds, :] = middle_subword_new_logits
+
+        logits = logits.reshape(*logits_shape)
+        assert logits.shape == logits_shape
+        return logits
+
     def _generate_segments_from_labels(
         self,
         tokens: transformers.BatchEncoding,
@@ -418,25 +450,27 @@ class BaseSegmenter:
             window_shift_size=window_shift_size,
         )
 
+        tokens = transformers.BatchEncoding(
+            {key: val.detach().cpu().numpy() for key, val in tokens.items()}
+        )
+
+        logits = self._set_middle_subword_label_to_noop_(
+            input_ids=tokens["input_ids"],
+            logits=logits,
+            num_tokens=num_tokens,
+        )
+
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
-        tokens = transformers.BatchEncoding(
-            {key: val.cpu().detach().numpy() for key, val in tokens.items()}
-        )
-
-        label2id: t.Dict[str, int]
+        label2id: t.Optional[t.Dict[str, int]]
 
         if remove_noise_subsegments:
             try:
                 label2id = self._model.config.label2id  # type: ignore
 
             except AttributeError:
-                label2id = dict(
-                    seg_cls_id=1,
-                    noise_start_cls_id=2,
-                    noise_end_cls_id=3,
-                )
+                label2id = None
 
             label_ids, (logits, *tokens_vals) = output_handlers.remove_noise_subsegments(
                 label_ids,
