@@ -191,8 +191,8 @@ class BaseSegmenter:
         return preprocessed_text
 
     def _set_middle_subword_label_to_noop_(
-        self, input_ids: npt.NDArray[np.int32], logits: npt.NDArray[np.float32], num_tokens: int
-    ) -> npt.NDArray[np.float32]:
+        self, input_ids: npt.NDArray[np.int32], logits: npt.NDArray[np.float64], num_tokens: int
+    ) -> npt.NDArray[np.float64]:
         """Set label to NOOP class for all subwords in the middle of a whole word."""
         noop_cls_id: int
 
@@ -463,18 +463,14 @@ class BaseSegmenter:
         label_ids = logits.argmax(axis=-1)
         label_ids = label_ids.squeeze()
 
-        label2id: t.Dict[str, int]
+        label2id: t.Optional[t.Dict[str, int]]
 
         if remove_noise_subsegments:
             try:
                 label2id = self._model.config.label2id  # type: ignore
 
             except AttributeError:
-                label2id = dict(
-                    seg_cls_id=1,
-                    noise_start_cls_id=2,
-                    noise_end_cls_id=3,
-                )
+                label2id = None
 
             label_ids, (logits, *tokens_vals) = output_handlers.remove_noise_subsegments(
                 label_ids,

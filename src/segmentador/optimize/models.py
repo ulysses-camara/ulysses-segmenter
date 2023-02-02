@@ -119,7 +119,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         if isinstance(minibatch, datasets.Dataset):
             minibatch = minibatch.to_dict()
 
-        model_out = self._model.forward(**minibatch)
+        model_out = self._model.forward(**minibatch)  # type: ignore
         model_out = model_out.logits
 
         logits = np.asfarray(model_out)
@@ -235,7 +235,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
 
         model_out: t.List[npt.NDArray[np.float64]] = self._model.run(
             output_names=["logits"],
-            input_feed=dict(input_ids=input_ids),
+            input_feed={"input_ids": input_ids},
             run_options=None,
         )
 

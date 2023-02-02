@@ -44,15 +44,15 @@ def test_model_lstm_inference_time_standard_vs_quantized_torch(
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
     fixture_legal_text_long: str,
 ):
-    common_kwargs = dict(
-        number=20,
-        repeat=3,
-        globals=dict(
-            fixture_quantized_model_lstm_torch=fixture_quantized_model_lstm_torch,
-            fixture_legal_text_long=fixture_legal_text_long,
-            fixture_model_lstm_1_layer=fixture_model_lstm_1_layer,
-        ),
-    )
+    common_kwargs = {
+        "number": 20,
+        "repeat": 3,
+        "globals": {
+            "fixture_quantized_model_lstm_torch": fixture_quantized_model_lstm_torch,
+            "fixture_legal_text_long": fixture_legal_text_long,
+            "fixture_model_lstm_1_layer": fixture_model_lstm_1_layer,
+        },
+    }
 
     times_quantized = timeit.repeat(
         "fixture_quantized_model_lstm_torch(fixture_legal_text_long, batch_size=4)",
@@ -74,15 +74,15 @@ def test_model_lstm_inference_time_standard_vs_quantized_onnx(
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
     fixture_legal_text_long: str,
 ):
-    common_kwargs = dict(
-        number=20,
-        repeat=3,
-        globals=dict(
-            fixture_quantized_model_lstm_onnx=fixture_quantized_model_lstm_onnx,
-            fixture_legal_text_long=fixture_legal_text_long,
-            fixture_model_lstm_1_layer=fixture_model_lstm_1_layer,
-        ),
-    )
+    common_kwargs = {
+        "number": 20,
+        "repeat": 3,
+        "globals": {
+            "fixture_quantized_model_lstm_onnx": fixture_quantized_model_lstm_onnx,
+            "fixture_legal_text_long": fixture_legal_text_long,
+            "fixture_model_lstm_1_layer": fixture_model_lstm_1_layer,
+        },
+    }
 
     times_quantized = timeit.repeat(
         "fixture_quantized_model_lstm_onnx(fixture_legal_text_long, batch_size=4)",
@@ -104,15 +104,15 @@ def test_model_bert_inference_time_standard_vs_quantized_torch(
     fixture_model_bert_2_layers: segmentador.BERTSegmenter,
     fixture_legal_text_long: str,
 ):
-    common_kwargs = dict(
-        number=10,
-        repeat=3,
-        globals=dict(
-            fixture_quantized_model_bert_torch=fixture_quantized_model_bert_torch,
-            fixture_legal_text_long=fixture_legal_text_long,
-            fixture_model_bert_2_layers=fixture_model_bert_2_layers,
-        ),
-    )
+    common_kwargs = {
+        "number": 10,
+        "repeat": 3,
+        "globals": {
+            "fixture_quantized_model_bert_torch": fixture_quantized_model_bert_torch,
+            "fixture_legal_text_long": fixture_legal_text_long,
+            "fixture_model_bert_2_layers": fixture_model_bert_2_layers,
+        },
+    }
 
     times_quantized = timeit.repeat(
         "fixture_quantized_model_bert_torch(fixture_legal_text_long, batch_size=4)",
