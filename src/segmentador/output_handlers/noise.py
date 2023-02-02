@@ -17,7 +17,7 @@ def remove_noise_subsegments(
 ) -> t.Tuple[npt.NDArray[np.int32], t.Tuple[npt.NDArray[t.Any], ...]]:
     """TODO"""
     label2id = label2id or {}
-    seg_cls_id = label2id.get("NOISE_START", 1)
+    seg_cls_id = label2id.get("SEG_START", 1)
     noise_start_cls_id = label2id.get("NOISE_START", 2)
     noise_end_cls_id = label2id.get("NOISE_END", 3)
 
