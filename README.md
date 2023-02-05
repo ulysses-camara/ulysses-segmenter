@@ -14,7 +14,7 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 |3     |End of noise sequence   |
 
 
-In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other available popular segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts.
+In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other available popular segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated Precision and Recall by using over 2000 unseen curated examples:
 
 | Segmentation Method           | Precision    | Recall       |
 |:---                           |:---          |:---          |
