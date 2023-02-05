@@ -14,14 +14,17 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 |3     |End of noise sequence   |
 
 
-In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy) and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts.
+In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other available popular segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts.
 
-| Segmentation Method 	| Precision | Recall 	|
-|:---	    |:---	    |:---	    |
-| NLTK  	| 12.8557% 	| 19.6128% 	|
-| SpaCy 	| 11.2524% 	| 22.2331% 	|
-| LexNLP 	| 24.4427% 	| 28.1971% 	|
-| Ulysses Segmenter 	| **96.3277%** 	| **94.3781%** 	|
+| Segmentation Method           | Precision    | Recall       |
+|:---                           |:---          |:---          |
+| NLTK (v3.7)                   | 12.8557%     | 19.6128%     |
+| SpaCy (v3.5.0)                | 11.2524%     | 22.2331%     |
+| LexNLP (v2.2.1.0)             | 24.4427%     | 28.1971%     |
+| Ulysses Segmenter v1 (BERT-2) | 96.3277%     | 94.3781%     |
+| Ulysses Segmenter v2 (BERT-4)\* | **97.5417%** | **96.9480%** |
+
+\**Coming soon.*
 
 
 ---
