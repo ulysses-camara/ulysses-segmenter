@@ -24,6 +24,20 @@ In a curated dataset, comprised of ground-truth legal text segments, Ulysses Seg
 | Ulysses Segmenter v1 (BERT-2) | 96.3277%     | 94.3781%     |
 | Ulysses Segmenter v2 (BERT-4)\* | **97.5417%** | **96.9480%** |
 
+
+<br>
+
+Metrics related to the 2299 curated instances dataset:
+
+| Segmentation Method           | Precision    | Recall       |
+|:---                           |:---          |:---          |
+| NLTK (v3.7)                   | 13.1197%     | 19.6861%     |
+| SpaCy (v3.5.0)                | 13.3962%     | 25.4032%     |
+| LexNLP (v2.2.1.0)             | 24.6631%     | 27.9249%     |
+| Ulysses Segmenter v1 (BERT-2) | 96.5545%     | 93.0829%     |
+| Ulysses Segmenter v2 (BERT-4)\* | |  |
+
+
 \**Coming soon.*
 
 
