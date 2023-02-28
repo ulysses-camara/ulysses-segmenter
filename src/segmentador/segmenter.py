@@ -35,8 +35,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         URI to pretrained text Tokenizer. If None, will load the tokenizer from
         the `uri_model` path.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -107,7 +106,7 @@ class BERTSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str = "2_layer_6000_vocab_size_bert",
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: str = "assymetric-max",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = False,
         device: str = "cpu",
         init_from_pretrained_weights: bool = True,
@@ -178,8 +177,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
     uri_tokenizer : str, default='6000_subword_tokenizer'
         URI to pretrained text Tokenizer.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than `moving_window_size` subword tokens (see `LSTMSegmenter.segment_legal_text`
         documentation). Larger documents are sharded into possibly overlapping windows of
@@ -246,7 +244,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str = "512_hidden_dim_6000_vocab_size_1_layer_lstm",
         uri_tokenizer: str = "6000_subword_tokenizer",
-        inference_pooling_operation: str = "gaussian",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = False,
         device: str = "cpu",
         from_quantized_weights: bool = False,

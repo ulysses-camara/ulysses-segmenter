@@ -280,8 +280,8 @@ class BaseSegmenter:
         self,
         text: t.Union[str, t.Dict[str, t.List[int]]],
         batch_size: int = 32,
-        moving_window_size: int = 1024,
-        window_shift_size: t.Union[float, int] = 0.5,
+        moving_window_size: int = 512,
+        window_shift_size: t.Union[float, int] = 0.25,
         return_justificativa: bool = False,
         return_labels: bool = False,
         return_logits: bool = False,
@@ -307,19 +307,18 @@ class BaseSegmenter:
             Maximum batch size feed document blocks in parallel to model. Higher values
             leads to faster inference with higher memory cost.
 
-        moving_window_size : int, default=1024
-            Moving window size, which corresponds to the maximum number of subwords feed in
-            parallel to the segmenter model. Higher values leads to larger contexts for every
-            tokens, at the expense of higher memory usage.
+        moving_window_size : int, default=512
+            Moving window size, the maximum number of subwords feed in simultaneously to the
+            segmenter model. Higher values leads to larger contexts for each token, at the expense
+            of higher memory usage.
 
-        window_shift_size : int or float, default=0.5
-            Moving window shift size, to feed documents larger than 1024 subwords tokens into
-            the segmenter model.
+        window_shift_size : int or float, default=0.25
+            Moving window shift size.
 
-            - If integer, specify exactly the shift size per step, and it must be in [1, 1024]
+            - If integer, specify the shift size per step exactly, and it must be in [1, 1024]
               range.
-            - If float, the shift size is calculated from the corresponding fraction of the window
-              size (1024 subword tokens), and it must be in the (0.0, 1.0] range.
+            - If float, the shift size is calculated as `window_shift_size * moving_window_size`
+              (rounded up), and it must be in the (0.0, 1.0] range.
 
             Overlapping logits are combined using the strategy specified by the argument
             `inference_pooling_operation` in Segmenter model initialization.
