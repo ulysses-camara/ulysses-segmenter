@@ -125,6 +125,12 @@ class BaseSegmenter:
         self.model.train()
         return self
 
+    def to(self, device: t.Union[str, torch.device]) -> "BaseSegmenter":
+        """Move underlying model to `device`."""
+        # pylint: disable='invalid-name'
+        self.model.to(device)
+        return self
+
     @property
     def model(self) -> t.Union[torch.nn.Module, transformers.BertForTokenClassification]:
         # pylint: disable='missing-function-docstring'
