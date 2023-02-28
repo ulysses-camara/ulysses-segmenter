@@ -45,6 +45,7 @@ autoapi_dirs = ["../../src/segmentador"]
 autoapi_options = [
     "show-module-summary",
     "show-inheritance",
+    "inherited-members",
     "special-members",
 ]
 

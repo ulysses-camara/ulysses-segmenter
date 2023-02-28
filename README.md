@@ -30,7 +30,7 @@ In a curated dataset, comprised of ground-truth legal text segments, Ulysses Seg
 ---
 
 ### Table of Contents
-1. [About the Model](#about-the-model)
+1. [Model details](#model-details)
     1. [Inference](#inference)
     2. [Training](#training)
 2. [Trained models](#trained-models)

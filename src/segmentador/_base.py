@@ -317,12 +317,14 @@ class BaseSegmenter:
             the segmenter model.
 
             - If integer, specify exactly the shift size per step, and it must be in [1, 1024]
-            range.
+              range.
             - If float, the shift size is calculated from the corresponding fraction of the window
-            size (1024 subword tokens), and it must be in the (0.0, 1.0] range.
+              size (1024 subword tokens), and it must be in the (0.0, 1.0] range.
+
             Overlapping logits are combined using the strategy specified by the argument
-            `inference_pooling_operation` in Segmenter model initialization, and the final
-            prediction for each token is derived from the combined logits.
+            `inference_pooling_operation` in Segmenter model initialization.
+
+            The final prediction for each token is derived from the combined logits.
 
         return_justificativa : bool, default=False
             If True, return contents from the 'justificativa' block from document.
