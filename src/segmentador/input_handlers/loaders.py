@@ -30,15 +30,15 @@ def download_model(model_name: str, output_dir: str, show_progress_bar: bool = T
         True if download succeed, or a cached local file was found.
     """
     try:
-        download_has_succeed = buscador.download_model(
+        download_has_succeed = buscador.download_resource(
             task_name="legal_text_segmentation",
-            model_name=model_name,
+            resource_name=model_name,
             output_dir=output_dir,
             show_progress_bar=show_progress_bar,
             check_cached=True,
             clean_compressed_files=True,
-            check_model_hash=True,
-            timeout_limit_seconds=10,
+            check_resource_hash=True,
+            timeout_limit_seconds=60,
         )
         return bool(download_has_succeed)
 
