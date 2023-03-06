@@ -43,8 +43,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
     uri_onnx_config : str
         URI to pickled ONNX configuration.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -80,7 +79,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: str,
-        inference_pooling_operation: str = "assymetric-max",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = True,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
@@ -147,8 +146,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
     uri_tokenizer : str
         URI to pretrained text Tokenizer.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -184,7 +182,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: str,
-        inference_pooling_operation: str = "gaussian",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = True,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
@@ -205,12 +203,8 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
 
         import onnxruntime  # pylint: disable='import-error'
 
-        sess_options = onnxruntime.SessionOptions()
-        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
-
         self._model: onnxruntime.InferenceSession = onnxruntime.InferenceSession(
             path_or_bytes=self.uri_model,
-            sess_options=sess_options,
         )
 
     def eval(self) -> "ONNXLSTMSegmenter":
@@ -260,8 +254,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -297,7 +290,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: str = "assymetric-max",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = True,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
@@ -353,8 +346,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -390,7 +382,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: str = "assymetric-max",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = True,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
@@ -420,8 +412,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'},\
-            default='assymetric-max'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -457,7 +448,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: str = "gaussian",
+        inference_pooling_operation: str = "sum",
         local_files_only: bool = True,
         cache_dir_model: str = "./cache/models",
         cache_dir_tokenizer: str = "./cache/tokenizers",
