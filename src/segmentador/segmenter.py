@@ -26,7 +26,7 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     Parameters
     ----------
-    uri_model : str, default='2_layer_6000_vocab_size_bert_v2'
+    uri_model : str, default='4_layer_6000_vocab_size_bert_v2'
         URI to load pretrained model from. May be a valid pretrained Ulysses segmenter model,
         a Hugginface HUB URL, or a local file (mandatory when `local_files_only=True`).
         See [1]_ for more information about pretrained Ulysses segmenter models.
@@ -104,7 +104,7 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     def __init__(
         self,
-        uri_model: str = "2_layer_6000_vocab_size_bert_v2",
+        uri_model: str = "4_layer_6000_vocab_size_bert_v2",
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "sum",
         local_files_only: bool = False,
