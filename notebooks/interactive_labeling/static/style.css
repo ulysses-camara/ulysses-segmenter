@@ -182,3 +182,14 @@ button:disabled {
   text-align: center;
   margin-bottom: 8px;
 }
+
+.highlighted {
+  background-color: #4169e1 !important;
+  border-width: 3px !important;
+  border: solid !important;
+  border-radius: 0px !important;
+}
+
+.highlighted:hover {
+  background-color: #5179f1 !important;
+}

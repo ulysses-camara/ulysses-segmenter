@@ -11,6 +11,8 @@ const htmlModTokens = d3.select("#value-total-modified-tokens");
 let selectedClass = 1;
 let totalModifiedTokens = 0;
 let marginHeatmapEnabled = true;
+let spaceBarPreviousTimestamp = 0;
+const spaceBarDoublePressThreshold = 500;
 
 function fn_eventHandlerKeyup(event) {
   const keyName = event.key.toLowerCase();
@@ -31,7 +33,16 @@ function fn_eventHandlerKeyup(event) {
 
   if (keyName == " ") {
     const scrollingElement = (document.scrollingElement || document.body);
-    scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    const spaceBarCurrentTimestamp = new Date();
+
+    if (spaceBarCurrentTimestamp - spaceBarPreviousTimestamp <= spaceBarDoublePressThreshold) {
+      scrollingElement.scrollTop = 0;
+      spaceBarCurrentTimestamp = 0;
+    } else {
+      scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    }
+
+    spaceBarPreviousTimestamp = spaceBarCurrentTimestamp;
   }
 
   if (newSelectedClass !== selectedClass) {
@@ -258,6 +269,7 @@ fetch(fetch_url_data)
     .text(function(d) { return d["token"].replace("##", "᠊"); })
     .classed("token", true)
     .classed("hoverable", true)
+    .classed("highlighted", function(d) { return d["highlight"]; })
     .attr("original-label", function(d) { return d["label"]; })
     .attr("margin", function(d) { return d["margin"]; })
     .attr("label", function() { return d3.select(this).attr("original-label"); })

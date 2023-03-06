@@ -45,6 +45,7 @@ def open_example(
     tokens: list[str],
     labels: list[t.Union[int, str]],
     logits: t.Optional[npt.NDArray[np.float64]] = None,
+    highlight_cells: t.Optional[t.Sequence[int]] = None,
     apply_softmax_to_logits: bool = True,
 ) -> None:
     """Send example from Jupyter Notebook to interactive front-end.
@@ -62,6 +63,9 @@ def open_example(
         in turn are translated as a token-wise heatmap in front-end, highlighting
         tokens that the pivot model is unsure about its classification.
 
+    highlight_cells : t.Sequence[int] or None, default=None
+        Cells indices to highlight.
+
     apply_softmax_to_logits : bool, default=True
         If False, assume that `logits` are class activations (softmaxed logits) instead
         of proper logits.
@@ -77,6 +81,10 @@ def open_example(
         margins = _compute_margin(logits, apply_softmax_to_logits=apply_softmax_to_logits)
         for item, margin in zip(data, margins):
             item["margin"] = margin
+
+    if highlight_cells is not None:
+        for i in highlight_cells:
+            data[i]["highlight"] = True
 
     rep = requests.post(
         os.path.join(f"http://localhost:{FLASK_PORT}/", "refinery-data-transfer"),

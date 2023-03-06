@@ -6,7 +6,7 @@
     <link href="style.css" rel="stylesheet" type="text/css"></link>
   </head>
 
-  <body>
+  <body oncontextmenu="return false;">
     <header>
       <div id="refresh-countdown-panel">
         Auto-refresh check in <span id="refresh-countdown-panel-value"></span> ...
@@ -53,7 +53,8 @@
       <li> Right-click on token: toggle no-op label 🡘 token original label; </div>
       <li> You can select classes using keyboard numerals (0, 1, 2, 3); </div>
       <li> You can switch classes using keyboard keys &#8592; / A and &#8594; / D; </div>
-      <li> Space bar: scroll down to the page end. </div>
+      <li> Space bar (single press): scroll down to the page end; </div>
+      <li> Space bar (double press): scroll up to the page start. </div>
     </ol>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
