@@ -17,16 +17,16 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other available popular segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated Precision and Recall by using over 2000 unseen curated examples:
 
 
-| Segmentation Method           | Precision    | Recall       |
-|:---                           |:---          |:---          |
-| NLTK (v3.7)                   | 13.1197%     | 19.6861%     |
-| SpaCy (v3.5.0)                | 13.3962%     | 25.4032%     |
-| LexNLP (v2.2.1.0)             | 24.6631%     | 27.9249%     |
-| Ulysses Segmenter v1 (BERT-2) | 96.5545%     | 93.0829%     |
-| Ulysses Segmenter v2 (BERT-4)\* | **97.5417%** | **96.9480%** |
-
-\**Coming soon.*
-
+| Segmentation Method             | Precision    | Recall       | Size (MiB) |
+|:---                             |:---          |:---          | :--------- |
+| NLTK (v3.7)                     | 13.1197%     | 19.6861%     | --         |
+| SpaCy (v3.5.0)                  | 13.3962%     | 25.4032%     | --         |
+| LexNLP (v2.2.1.0)               | 24.6631%     | 27.9249%     | --         |
+| Ulysses Segmenter v1 (LSTM-512) | 96.2952%     | 92.8916%     | 37         |
+| Ulysses Segmenter v1 (BERT-2)   | 96.5545%     | 93.0829%     | 74         |
+| Ulysses Segmenter v2 (LSTM-256) | 96.6677%     | 94.9698%     | **25**     |
+| Ulysses Segmenter v2 (BERT-2)   | 97.7987%     | 96.3871%     | 74         |
+| Ulysses Segmenter v2 (BERT-4)   | **98.2213%** | **96.7523%** | 128        |
 
 ---
 
@@ -105,10 +105,7 @@ When loading a model, pretrained Ulysses segmenter models are downloaded automat
 ```python
 import segmentador
 
-segmenter_bert = segmentador.BERTSegmenter(
-    device="cpu",  # or 'cuda' for GPU
-    inference_pooling_operation="assymetric-max",
-)
+segmenter_bert = segmentador.BERTSegmenter(device="cpu")
 
 sample_text = """
 PROJETO DE LEI N. 0123 (Da Sra. Alguém)
@@ -145,10 +142,7 @@ print(seg_result.logits)
 ```python
 import segmentador
 
-segmenter_lstm = segmentador.LSTMSegmenter(
-    device="cpu",  # or 'cuda' for GPU
-    inference_pooling_operation="gaussian",
-)
+segmenter_lstm = segmentador.LSTMSegmenter(device="cpu")
 
 sample_text = """
 PROJETO DE LEI N. 0123 (Da Sra. Alguém)
