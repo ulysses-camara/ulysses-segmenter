@@ -6,8 +6,8 @@ import os
 class TestPaths(t.NamedTuple):
     """Resource paths for tests."""
 
-    model_bert: str = "2_layer_6000_vocab_size_bert"
-    model_lstm: str = "512_hidden_dim_6000_vocab_size_1_layer_lstm"
+    model_bert: str = "2_layer_6000_vocab_size_bert_v2"
+    model_lstm: str = "256_hidden_dim_6000_vocab_size_1_layer_lstm_v2"
     tokenizer: str = "6000_subword_tokenizer"
     legal_text_long: str = "tests/resources/test_legal_text_long.txt"
     legal_text_short: str = "tests/resources/test_legal_text_short.txt"
