@@ -1,10 +1,10 @@
 [![Tests](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml/badge.svg)](https://github.com/ulysses-camara/ulysses-segmenter/actions/workflows/tests.yml)
 [![Documentation Status](https://readthedocs.org/projects/ulysses-segmenter/badge/?version=latest)](https://ulysses-segmenter.readthedocs.io/en/latest/?badge=latest)
 
-## Brazilian Legal Text Segmenter
-This project presents a Legal Text Segmenter for Portuguese-Brazilian language.
+## Brazilian Legislative Text Segmenter
+Pretrained legislative text segmentation models for Portuguese-Brazilian (PT-br) language.
 
-The segmentation problem is formalized here by a 4-multiclass token-wise classification problem. Each token can be classified as follows:
+The segmentation problem is formalized here by a 4-multiclass token-wise classification problem. Each token is classified as follows:
 
 |Class |Description             |
 | :--- | :---                   |
@@ -13,74 +13,36 @@ The segmentation problem is formalized here by a 4-multiclass token-wise classif
 |2     |Start of noise sequence |
 |3     |End of noise sequence   |
 
+We use a two-stage training procedure: (1) weak supervision (data labeling with regular expressions), and (2) active learning.
 
-In a curated dataset, comprised of ground-truth legal text segments, Ulysses Segmenter achieves higher Precision and Recall for the Class 1 (Segment) than other available popular segmentation tools, such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated Precision and Recall by using over 2000 unseen curated examples:
 
+In a curated dataset, comprised of 1447 ground-truth legal text segments, Ulysses Segmenter achieves higher precision and recall for class 1 ("Start of sentence") when compared to other available popular segmentation tools: [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated precision and recall. Note that *v1* models are trained only using weakly supervised data, whereas *v2* models are trained using active learning and using the corresponding *v1* model as base model.
 
 | Segmentation Method             | Precision    | Recall       | Size (MiB) |
 |:---                             |:---          |:---          | :--------- |
-| NLTK (v3.7)                     | 13.1197%     | 19.6861%     | --         |
-| SpaCy (v3.5.0)                  | 13.3962%     | 25.4032%     | --         |
-| LexNLP (v2.2.1.0)               | 24.6631%     | 27.9249%     | --         |
-| Ulysses Segmenter v1 (LSTM-512) | 96.2952%     | 92.8916%     | 37         |
-| Ulysses Segmenter v1 (BERT-2)   | 96.5545%     | 93.0829%     | 74         |
-| Ulysses Segmenter v2 (LSTM-256) | 96.6677%     | 94.9698%     | **25**     |
-| Ulysses Segmenter v2 (BERT-2)   | 97.7987%     | 96.3871%     | 74         |
-| Ulysses Segmenter v2 (BERT-4)   | **98.2213%** | **96.7523%** | 128        |
+| NLTK (v3.7)                     | 13.278%      | 19.738%      | --         |
+| SpaCy (v3.5.0)                  | 13.422%      | 25.300%      | --         |
+| LexNLP (v2.2.1.0)               | 13.462%      | 19.806%      | --         |
+| Ulysses Segmenter v1 (LSTM-512) | 96.345%      | 93.004%      | 37         |
+| Ulysses Segmenter v1 (BERT-2)   | 97.440%      | 93.530%      | 74         |
+| Ulysses Segmenter v2 (LSTM-256) | 97.014%      | 94.909%      | **25**     |
+| Ulysses Segmenter v2 (BERT-2)   | 97.981%      | 96.403%      | 74         |
+| Ulysses Segmenter v2 (BERT-4)   | **98.555%**  | **96.854%**  | 128        |
 
 ---
 
 ### Table of Contents
-1. [Model details](#model-details)
-    1. [Inference](#inference)
-    2. [Training](#training)
-2. [Trained models](#trained-models)
-3. [Installation](#installation)
+1. [Installation](#installation)
+2. [Inference details](#inference-details)
+3. [Available models](#available-models)
 4. [Usage examples](#usage-examples)
     1. [Standard models (Torch format, Huggingface Transformers compatible)](#standard-models)
-    2. [Quantization in ONNX format](#quantization-in-onnx-format)
-    3. [Quantization in Torch JIT format](#quantization-in-torch-jit-format)
-    4. [Noise subsegment removal](#noise-subsegment-removal)
-5. [Experimental results](#experimental-results)
-6. [Train data](#train-data)
-7. [Package tests](#package-tests)
-8. [License](#license)
-9. [Citation](#citation)
-
----
-
-### Model details
-
-#### Inference
-The trained models are Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens for BERT models. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword windows automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
-
-<p align="center">
-    <img src="./diagrams/segmenter_inference_pipeline.png" alt="Full segmenter inference pipeline."></img>
-</p>
-
-The *pooling* operations can be one of the following:
-
-|Pooling                            | Description                                                                                                        |
-| :---                              | :---                                                                                                               |
-| Max                               | Keep maximal overlapping logits.                                                                                   |
-| Sum                               | Sum overlapping logits.                                                                                            |
-| Gaussian (default for Bi-LSTM)    | Weight overlapping logits by a Gaussian distribution, centered at the middle of each moving window.                |
-| Assymetric-Max (default for BERT) | Keep maximal overlapping logits for all classes except "No-op" (which gets the minimal overlapping logit instead). |
-
-#### Training
-The data labeling process is semi-automatic, employing several *ad-hoc* regular expressions (available in [Generate Labels from Regular Expressions notebook](./notebooks/2_generate_labels_from_regular_expressions.ipynb)).
-
----
-
-### Trained models
-Pretrained Ulysses segmenter models are downloaded by using the [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher) API.
-
-The default models loaded for each algorithm is:
-- *BERT*: `2_layer_6000_vocab_size_bert`.
-- *Bi-LSTM Model*: `512_hidden_dim_6000_vocab_size_1_layer_lstm`.
-- *Tokenizer*: `6000_subword_tokenizer`.
-
-Note that the `2_layer_6000_vocab_size_bert` already has its own built-in tokenizer, which happens to be identical to `6000_subword_tokenizer`. Hence, providing `6000_subword_tokenizer` for BERT segmenter is unnecessary, and will give the same results if done.
+    2. [Noise subsegment removal](#noise-subsegment-removal)
+    3. [Quantization in ONNX format](#quantization-in-onnx-format)
+5. [Train and evaluation data](#train-and-evaluation-data)
+6. [Package tests](#package-tests)
+7. [License](#license)
+8. [Citation](#citation)
 
 ---
 
@@ -94,6 +56,37 @@ If you plan to use optimized models in ONNX format, you need to install some opt
 ```bash
 python -m pip install "segmentador[optimize] @ git+https://github.com/ulysses-camara/ulysses-segmenter"
 ```
+
+---
+
+### Inference details
+The trained models are Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens for BERT models. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword windows automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
+
+<p align="center">
+  <img src="./diagrams/segmenter_inference_pipeline.drawio.png" alt="Full segmenter inference pipeline."></img>
+</p>
+
+The *pooling* operations can be one of the following:
+
+|Pooling         | Description                                                                                          |
+| :---           | :---                                                                                                 |
+| Sum (default)  | Sum overlapping logits.                                                                              |
+| Max            | Keep maximal overlapping logits.                                                                     |
+| Gaussian       | Weight logits by a Gaussian distribution centered in the middle of each moving window.   |
+| Asymmetric-Max | Maximal logits for all classes except "No-op", which gets the minimal overlapping logit. |
+
+---
+
+### Available models
+Pretrained Ulysses segmenter models are downloaded with [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher) API.
+
+The default models loaded for each algorithm are:
+
+- *BERT*: `4_layer_6000_vocab_size_bert_v2`;
+- *Bi-LSTM Model*: `256_hidden_dim_6000_vocab_size_1_layer_lstm_v2`;
+- *Tokenizer*: `6000_subword_tokenizer`.
+
+Note that `4_layer_6000_vocab_size_bert_v2` has its own built-in tokenizer, which happens to be identical to `6000_subword_tokenizer`.
 
 ---
 
@@ -191,6 +184,15 @@ segmenter_lstm = segmentador.LSTMSegmenter(
 
 ---
 
+#### Noise subsegment removal
+Tokens are classified as one out of 4 available classes: No-op (0), Segment (1), Noise Start (2), and Noise End (3). Tokens in-between any pair of `Noise Start` (inclusive) and the closest `Noise End` or `Segment` (either exclusive) can be removed during the segmentation by using the argument `remove_noise_subsegments=True` to the segmenter model, as shown below:
+
+```python
+seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
+```
+
+---
+
 #### Quantization in ONNX format
 We provide support for models in ONNX format (and also functions to convert from pytorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. Effects of quantization in segmenter models are analyzed in [Optimization and Compression notebook](./notebooks/7_optimization_and_compression.ipynb).
 
@@ -246,62 +248,26 @@ segmenter_lstm_quantized = segmentador.optimize.ONNXLSTMSegmenter(
 seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
 ```
 
-#### Quantization in Torch JIT format
-
-Models can also be quantized as Torch JIT format, by setting `segmentador.optimize.quantize_model(model, model_output_format="torch_jit", ...)`:
-```Python
-# LSTM models quantized as Torch JIT format
-quantized_lstm_torch_paths = segmentador.optimize.quantize_model(
-    segmenter_lstm,
-    model_output_format="torch_jit",
-    verbose=True,
-)
-
-segmenter_lstm_torch_quantized = segmentador.optimize.TorchJITLSTMSegmenter(
-   uri_model=quantized_lstm_torch_paths.output_uri,
-)
-
-seg_result = segmenter_lstm_torch_quantized(sample_text, return_logits=True)
-...
-```
-
-```Python
-# BERT models quantized as Torch JIT format
-quantized_bert_torch_paths = segmentador.optimize.quantize_model(
-    segmenter_bert,
-    model_output_format="torch_jit",
-    verbose=True,
-)
-
-segmenter_bert_torch_quantized = segmentador.optimize.TorchJITBERTSegmenter(
-   uri_model=quantized_bert_torch_paths.output_uri,
-)
-
-seg_result = segmenter_bert_torch_quantized(sample_text, return_logits=True)
-...
-```
-
-#### Noise subsegment removal
-Tokens are classified as one out of 4 available classes: No-op (0), Segment (1), Noise Start (2), and Noise End (3). Tokens between a pair of `Noise Start` (inclusive) and the closest `Noise End` or `Segment` (either exclusive) can be removed during the segmentation, by passing the argument `remove_noise_subsegments=True` to the segmenter model:
-
-```python
-seg_result = segmenter(sample_text, remove_noise_subsegments=True)
-```
-
 ---
 
-### Experimental results
-Experimental results are available in [Result Analsys notebook](./notebooks/6_result_analysis.ipynb), with models tipically achieving per-class precision and recall higher than 95%, despite the problem being severely imbalanced. This same notebook also showcase some tests varying moving window size, moving window shift size, and Bidirectional LSTM models for comparison.
+### Train and evaluation Data
+*Available soon.*
+| Dataset                            | Size (MB) | Link 1     | Link 2      | Link 3 | Link 4 |
+| :---                               | :---      | :---       | :---        | :---   | :---   |
+| Weakly supervised (v1)             | 99.7      | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
+| Active learning (v2)               | 108.7     | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
+| Active learning (v2, curated only) | 5.4       | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
 
----
-
-### Train data
-TODO.
 
 ---
 
 ### Package tests
-Tests for this package are run using Tox and Pytest.
+Tests for this package are run using tox, pytest, pylint (codestyle), and mypy (static type checking).
+```bash
+https://github.com/ulysses-camara/ulysses-segmenter
+python -m pip install ".[test]"
+python -m tox
+```
 
 ---
 
