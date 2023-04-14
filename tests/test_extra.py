@@ -64,3 +64,31 @@ def test_model_preprocessing_with_justificativa(
         and preproc_text.find("\n") == -1
         and len(justificativa) == expected_just_length
     )
+
+
+@pytest.mark.parametrize("apply_postprocessing", [True, False])
+def test_postprocessing(
+    fixture_model_bert_2_layers: segmentador.Segmenter,
+    fixture_legal_text_short: str,
+    apply_postprocessing: bool,
+):
+    segs = fixture_model_bert_2_layers(
+        fixture_legal_text_short,
+        apply_postprocessing=apply_postprocessing,
+    )
+
+    reg_spurious_whitespaces = regex.compile(
+        r"""
+        \s+[\.:;)\]}]|[\[({]\s+|
+        (?<=[0-9])\s+\.\s*(?=[0-9])|
+        (?<=[0-9])\s*\.\s+(?=[0-9])|
+        (?<=[a-zçáéíóúãẽõâêôü])\s+-\s*(?=[a-zçáéíóúãẽõâêôü])|
+        (?<=[a-zçáéíóúãẽõâêôü])\s*-\s+(?=[a-zçáéíóúãẽõâêôü])
+    """,
+        regex.VERBOSE,  # pylint: disable='no-member'
+    )
+
+    if apply_postprocessing:
+        assert all(reg_spurious_whitespaces.search(seg) is None for seg in segs)
+    else:
+        assert any(reg_spurious_whitespaces.search(seg) for seg in segs)
