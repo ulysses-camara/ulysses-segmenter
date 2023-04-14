@@ -286,6 +286,7 @@ class BaseSegmenter:
         return_labels: bool = False,
         return_logits: bool = False,
         remove_noise_subsegments: bool = False,
+        apply_postprocessing: bool = True,
         show_progress_bar: bool = False,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
     ) -> t.Union[t.List[str], t.Tuple[t.List[t.Any], ...]]:
@@ -344,6 +345,9 @@ class BaseSegmenter:
             - Tokens between the sentence end and `noise_end` are kept.
             - Only the closest `noise_start` for every `noise_end` (or the sentence end) are
               considered. In other words, redundant `noise_start` tokens are ignored.
+
+        apply_postprocessing : bool, default=True
+            If True, remove spurious whitespaces next to punctuation marks in the output.
 
         show_progress_bar : bool, default=False
             If True, show segmentation progress bar.
@@ -494,6 +498,9 @@ class BaseSegmenter:
             num_tokens=num_tokens,
             label_ids=label_ids,
         )
+
+        if apply_postprocessing:
+            output_handlers.postprocessors.remove_spurious_whitespaces_(segs)
 
         label_ids = label_ids[:num_tokens]
         logits = logits.reshape(-1, self.NUM_CLASSES)
