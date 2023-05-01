@@ -112,7 +112,8 @@ disable = """
     too-many-arguments,
     too-many-statements,
     too-many-branches,
-    import-outside-toplevel
+    import-outside-toplevel,
+    useless-option-value
 """
 min-similarity-lines=10
 
