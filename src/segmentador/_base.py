@@ -228,13 +228,34 @@ class BaseSegmenter:
         assert logits.shape == logits_shape
         return logits
 
-    def _generate_segments_from_labels(
+    def generate_segments_from_ids(
         self,
-        tokens: transformers.BatchEncoding,
-        num_tokens: int,
-        label_ids: npt.NDArray[np.int32],
+        input_ids: t.Union[t.Sequence[int], npt.NDArray[np.int64]],
+        label_ids: t.Union[t.Sequence[int], npt.NDArray[np.int64]],
+        apply_postprocessing: bool = True,
     ) -> t.List[str]:
-        """Convert predicted labels and subword tokens to text segments."""
+        """Generate segments from ids and labels.
+
+        Parameters
+        ----------
+        input_ids : t.Sequence[int] or npt.NDArray[np.int64]
+            Tokenized text from model's tokenizer.
+
+        label_ids : t.Sequence[int] or npt.NDArray[np.int64]
+            Label ids for each token, where 'label_id=1' denotes the start of a new segment.
+
+        apply_postprocessing : bool, default=True
+            If True, remove spurious whitespaces next to punctuation marks in the output.
+
+        Returns
+        -------
+        segments : t.List[str]
+            List containing all segments in textual form.
+        """
+        input_ids = np.asarray(input_ids, dtype=int).ravel()
+        label_ids = np.asarray(label_ids, dtype=int).ravel()
+        label_ids = label_ids[:input_ids.size]
+
         seg_cls_id: int
 
         try:
@@ -244,16 +265,18 @@ class BaseSegmenter:
             seg_cls_id = 1
 
         segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
-        segment_start_inds = np.hstack((0, segment_start_inds, num_tokens))
+        segment_start_inds = np.hstack((0, segment_start_inds, len(input_ids)))
 
         segs: t.List[str] = []
-        np_token_ids: npt.NDArray[np.int32] = tokens["input_ids"].ravel()
 
         for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
-            split_ = np_token_ids[i:i_next]
+            split_ = input_ids[i:i_next]
             seg = self._tokenizer.decode(split_, skip_special_tokens=True)
             if seg:
                 segs.append(seg)
+
+        if apply_postprocessing:
+            output_handlers.postprocessors.remove_spurious_whitespaces_(segs)
 
         return segs
 
@@ -264,6 +287,7 @@ class BaseSegmenter:
 
         Can be used by subclasses. In this base class, this method is No-op/identity operator.
         """
+        # pylint: disable='no-self-use'
         return minibatch
 
     def _predict_minibatch(self, minibatch: transformers.BatchEncoding) -> npt.NDArray[np.float64]:
@@ -493,14 +517,11 @@ class BaseSegmenter:
             for key, val in zip(tokens.keys(), tokens_vals):
                 tokens[key] = val
 
-        segs = self._generate_segments_from_labels(
-            tokens=tokens,
-            num_tokens=num_tokens,
+        segs = self.generate_segments_from_ids(
+            input_ids=tokens["input_ids"],
             label_ids=label_ids,
+            apply_postprocessing=apply_postprocessing,
         )
-
-        if apply_postprocessing:
-            output_handlers.postprocessors.remove_spurious_whitespaces_(segs)
 
         label_ids = label_ids[:num_tokens]
         logits = logits.reshape(-1, self.NUM_CLASSES)
