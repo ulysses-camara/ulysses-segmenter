@@ -254,7 +254,7 @@ class BaseSegmenter:
         """
         input_ids = np.asarray(input_ids, dtype=int).ravel()
         label_ids = np.asarray(label_ids, dtype=int).ravel()
-        label_ids = label_ids[:input_ids.size]
+        label_ids = label_ids[: input_ids.size]
 
         seg_cls_id: int
 
@@ -310,6 +310,7 @@ class BaseSegmenter:
         return_labels: bool = False,
         return_logits: bool = False,
         remove_noise_subsegments: bool = False,
+        maximum_noise_subsegment_length: int = 25,
         apply_postprocessing: bool = True,
         show_progress_bar: bool = False,
         regex_justificativa: t.Optional[t.Union[str, regex.Pattern]] = None,
@@ -369,6 +370,11 @@ class BaseSegmenter:
             - Tokens between the sentence end and `noise_end` are kept.
             - Only the closest `noise_start` for every `noise_end` (or the sentence end) are
               considered. In other words, redundant `noise_start` tokens are ignored.
+
+        maximum_noise_subsegment_length : int, default=25
+            Maximum length (in tokens) allowed for each noise subsegments in order to be removed.
+            Larger noise subsegments are kept intact. This argument is useful to prevent removing
+            larger chunks of text that might actually contain useful information.
 
         apply_postprocessing : bool, default=True
             If True, remove spurious whitespaces next to punctuation marks in the output.
@@ -512,6 +518,7 @@ class BaseSegmenter:
                 logits,
                 *tokens.values(),
                 label2id=label2id,
+                maximum_noise_subsegment_length=maximum_noise_subsegment_length,
             )
 
             for key, val in zip(tokens.keys(), tokens_vals):
