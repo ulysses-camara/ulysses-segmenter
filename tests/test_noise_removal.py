@@ -40,6 +40,41 @@ def test_noise_removal_in_toy_examples(label_ids: t.Sequence[int], expected_leng
 
 
 @pytest.mark.parametrize(
+    "label_ids, expected_length_removed",
+    [
+        ((0, 0, 0, 1, 0, 0, 2, 3, 1, 0, 0), 1),
+        ((0, 0, 3, 1, 0, 0, 2, 3, 1, 0, 0), 1),
+        ((2, 0, 3, 1, 0, 0, 2, 3, 1, 0, 0), 3),
+        ((2, 0, 3, 1, 0, 0, 2, 0, 1, 0, 0), 4),
+        ((2, 0, 3, 1, 0, 0, 2, 1, 0, 0, 0), 3),
+        ((2, 0, 3, 1, 0, 0, 2, 0, 0, 0, 0), 2),
+        ([2, 0, 3, 1, 0, 0, 2, 2, 3, 0, 0], 3),
+        ([2, 0, 3, 1, 0, 0, 2, 0, 2, 0, 3], 4),
+        ([2, 0, 3, 1, 0, 0, 2, 0, 2, 0, 0], 5),
+        ([2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0),
+        ([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0),
+        ([0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0], 0),
+        ([0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0], 3),
+        ([0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1], 2),
+        ([0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1], 1),
+        ([2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1], 0),
+        ([2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 0),
+    ],
+)
+def test_noise_removal_with_maximum_noise_length(
+    label_ids: t.Sequence[int], expected_length_removed: int
+):
+    label_ids = np.asarray(label_ids, dtype=int)
+    label_ids_denoised, extra_args = segmentador.output_handlers.remove_noise_subsegments(
+        label_ids, maximum_noise_subsegment_length=3
+    )
+    expected_length = len(label_ids) - expected_length_removed
+
+    assert not extra_args
+    assert expected_length == len(label_ids_denoised)
+
+
+@pytest.mark.parametrize(
     "label_ids, extra_arg_count, expected_length_removed",
     [
         ((0, 0, 0, 1, 0, 0, 2, 3, 1, 0, 0), 1, 1),
