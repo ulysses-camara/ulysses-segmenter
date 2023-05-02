@@ -2,32 +2,7 @@
 [![Documentation Status](https://readthedocs.org/projects/ulysses-segmenter/badge/?version=latest)](https://ulysses-segmenter.readthedocs.io/en/latest/?badge=latest)
 
 ## Brazilian Legislative Text Segmenter
-Pretrained legislative text segmentation models for Portuguese-Brazilian (PT-br) language.
-
-The segmentation problem is formalized here by a 4-multiclass token-wise classification problem. Each token is classified as follows:
-
-|Class |Description             |
-| :--- | :---                   |
-|0     |No-op                   |
-|1     |Start of sentence       |
-|2     |Start of noise sequence |
-|3     |End of noise sequence   |
-
-We use a two-stage training procedure: (1) weak supervision (data labeling with regular expressions), and (2) active learning.
-
-
-In a curated dataset, comprised of 1447 ground-truth legal text segments, Ulysses Segmenter achieves higher precision and recall for class 1 ("Start of sentence") when compared to other available popular segmentation tools: [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated precision and recall. Note that *v1* models are trained only using weakly supervised data, whereas *v2* models are trained using active learning and using the corresponding *v1* model as base model.
-
-| Segmentation Method             | Precision    | Recall       | Size (MiB) |
-|:---                             |:---          |:---          | :--------- |
-| NLTK (v3.7)                     | 13.278%      | 19.738%      | --         |
-| SpaCy (v3.5.0)                  | 13.422%      | 25.300%      | --         |
-| LexNLP (v2.2.1.0)               | 13.462%      | 19.806%      | --         |
-| Ulysses Segmenter v1 (LSTM-512) | 96.345%      | 93.004%      | 37         |
-| Ulysses Segmenter v1 (BERT-2)   | 97.440%      | 93.530%      | 74         |
-| Ulysses Segmenter v2 (LSTM-256) | 97.014%      | 94.909%      | **25**     |
-| Ulysses Segmenter v2 (BERT-2)   | 97.981%      | 96.403%      | 74         |
-| Ulysses Segmenter v2 (BERT-4)   | **98.555%**  | **96.854%**  | 128        |
+Brazilian legislative bill segmenter models.
 
 ---
 
@@ -60,7 +35,7 @@ python -m pip install "segmentador[optimize] @ git+https://github.com/ulysses-ca
 ---
 
 ### Inference details
-The trained models are Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with varyinng number of hidden layers (transformer blocks), and with support to up to 1024 subword tokens for BERT models. Since legal texts may exceed this limit, the present framework pre-segment the text into possibly overlapping 1024 subword windows automatically in a moving window fashion, feeding them to the Transformer Encoder independently. The encoder output is then combined ("pooled"), and the final prediction for each token is finally derived.
+The models used in this framework are Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with varying numbers of hidden layers (transformer blocks) and support for up to 1024 subword tokens in BERT models. However, since legal texts may exceed this limit, the framework automatically pre-segments the text into possibly overlapping 1024 subword windows in a moving window fashion, and feeds them to the segmenter model independently. The output from the model is then combined ("pooled"), and the final prediction for each token is derived.
 
 <p align="center">
   <img src="./diagrams/segmenter_inference_pipeline.drawio.png" alt="Full segmenter inference pipeline."></img>
@@ -80,19 +55,41 @@ The *pooling* operations can be one of the following:
 ### Available models
 Pretrained Ulysses segmenter models are downloaded with [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher) API.
 
+We use a two-stage training procedure: (1) weak supervision (data labeling with regular expressions), and (2) active learning.
+
+In a curated dataset, comprised of 1447 ground-truth fragments of federal bills, Ulysses Segmenter achieves higher precision and recall for class 1 ("Start of sentence") when compared to other available popular segmentation tools: [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), with the latter being suitable for segmenting legal texts. In the table below we compare these algorithms against Ulysses Segmenter, showing results for both estimated precision and recall.
+
+- *v1* models were trained using weakly supervised data;
+- *v2* models were trained using active learning from the corresponding *v1* model as base model;
+- *v3* models were built on top of *v2* models and support better state bills and other legislative documents.
+
+| Segmentation Method             | Est. Precision | Est. Recall | Size (MiB) |
+|:---                             |:---            |:---         | :--------- |
+| NLTK (v3.7)                     | 13.278%        | 19.738%     | --         |
+| SpaCy (v3.5.0)                  | 13.422%        | 25.300%     | --         |
+| LexNLP (v2.2.1.0)               | 13.462%        | 19.806%     | --         |
+| Ulysses Segmenter v1 (LSTM-512) | 96.345%        | 93.004%     | 37         |
+| Ulysses Segmenter v1 (BERT-2)   | 97.440%        | 93.530%     | 74         |
+| Ulysses Segmenter v2 (LSTM-256) | 97.014%        | 94.909%     | **25**     |
+| Ulysses Segmenter v2 (BERT-2)   | 97.981%        | 96.403%     | 74         |
+| Ulysses Segmenter v2 (BERT-4)   | **98.555%**    | 96.854%     | 128        |
+| Ulysses Segmenter v3 (LSTM-256) | 96.539%        | 95.953%     | **25**     |
+| Ulysses Segmenter v3 (BERT-2)   | 97.850%        | 96.601%     | 74         |
+| Ulysses Segmenter v3 (BERT-4)   | 98.334%        | **97.099%** | 128        |
+
 The default models loaded for each algorithm are:
 
-- *BERT*: `4_layer_6000_vocab_size_bert_v2`;
-- *Bi-LSTM Model*: `256_hidden_dim_6000_vocab_size_1_layer_lstm_v2`;
+- *BERT*: `4_layer_6000_vocab_size_bert_v3`;
+- *Bi-LSTM Model*: `256_hidden_dim_6000_vocab_size_1_layer_lstm_v3`;
 - *Tokenizer*: `6000_subword_tokenizer`.
 
-Note that `4_layer_6000_vocab_size_bert_v2` has its own built-in tokenizer, which happens to be identical to `6000_subword_tokenizer`.
+Note that `4_layer_6000_vocab_size_bert_v3` has its own built-in tokenizer, which happens to be identical to `6000_subword_tokenizer`.
 
 ---
 
 ### Usage examples
 #### Standard models
-When loading a model, pretrained Ulysses segmenter models are downloaded automatically and cached locally by using [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher).
+Loading a model triggers download of the selected pretrained Ulysses segmenter models using [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher). Downloaded models are cached locally for future uses.
 
 ##### BERTSegmenter
 ```python
@@ -257,6 +254,27 @@ seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
 | Weakly supervised (v1)             | 99.7      | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
 | Active learning (v2)               | 108.7     | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
 | Active learning (v2, curated only) | 5.4       | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
+
+Note: you can easily convert the HF datasets into segments using the Ulysses segmenter `.generate_segments_from_ids(input_ids=..., label_ids=...)` method as follows:
+
+```python
+import datasets
+import segmentador
+
+segmenter = segmentador.Segmenter(device="cpu")
+dt = datasets.load_from_disk("./dataset_ulysses_segmenter_train_v3")
+
+all_segs: list[str] = []
+
+for item in dt:
+    segs: list[str] = segmenter.generate_segments_from_ids(
+        input_ids=item["input_ids"],
+        label_ids=item["labels"],
+    )
+    all_segs.extend(segs)
+
+print(len(all_segs))
+```
 
 
 ---
