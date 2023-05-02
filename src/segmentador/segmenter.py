@@ -17,18 +17,13 @@ __all__ = [
 
 
 class BERTSegmenter(_base.BaseSegmenter):
-    """BERT segmenter for PT-br legal text data.
-
-    Uses a pretrained Transformer Encoder to segment Brazilian Portuguese legal texts.
-    The pretrained models support texts up to 1024 subwords. Texts larger than this
-    value are pre-segmented into 1024 subword blocks, and each block is feed to the
-    segmenter individually.
+    """BERT segmenter model for Brazilian legislative bills.
 
     Parameters
     ----------
-    uri_model : str, default='4_layer_6000_vocab_size_bert_v2'
+    uri_model : str, default='4_layer_6000_vocab_size_bert_v3'
         URI to load pretrained model from. May be a valid pretrained Ulysses segmenter model,
-        a Hugginface HUB URL, or a local file (mandatory when `local_files_only=True`).
+        a Huggingface HUB URL, or a local file (mandatory when `local_files_only=True`).
         See [1]_ for more information about pretrained Ulysses segmenter models.
 
     uri_tokenizer : str or None, default=None
@@ -104,7 +99,7 @@ class BERTSegmenter(_base.BaseSegmenter):
 
     def __init__(
         self,
-        uri_model: str = "4_layer_6000_vocab_size_bert_v2",
+        uri_model: str = "4_layer_6000_vocab_size_bert_v3",
         uri_tokenizer: t.Optional[str] = None,
         inference_pooling_operation: str = "sum",
         local_files_only: bool = False,
@@ -163,13 +158,11 @@ Segmenter = BERTSegmenter
 
 
 class LSTMSegmenter(_base.BaseSegmenter):
-    """Bidirectional LSTM segmenter for PT-br legal text data.
-
-    Uses a pretrained Bidirectional LSTM to segment Brazilian Portuguese legal texts.
+    """Bi-LSTM segmenter model for Brazilian legislative bills.
 
     Parameters
     ----------
-    uri_model : str, default='256_hidden_dim_6000_vocab_size_1_layer_lstm_v2'
+    uri_model : str, default='256_hidden_dim_6000_vocab_size_1_layer_lstm_v3'
         URI to load pretrained model from. May be a valid pretrained Ulysses segmenter model, or a
         local file (mandatory when `local_files_only=True`). See [1]_ for more information about
         pretrained Ulysses segmenter models.
@@ -242,7 +235,7 @@ class LSTMSegmenter(_base.BaseSegmenter):
 
     def __init__(
         self,
-        uri_model: str = "256_hidden_dim_6000_vocab_size_1_layer_lstm_v2",
+        uri_model: str = "256_hidden_dim_6000_vocab_size_1_layer_lstm_v3",
         uri_tokenizer: str = "6000_subword_tokenizer",
         inference_pooling_operation: str = "sum",
         local_files_only: bool = False,
