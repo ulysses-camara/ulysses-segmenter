@@ -61,7 +61,7 @@ In a curated dataset, comprised of 1447 ground-truth fragments of federal bills,
 
 - *v1* models were trained using weakly supervised data;
 - *v2* models were trained using active learning from the corresponding *v1* model as base model;
-- *v3* models were built on top of *v2* models and support better state bills and other legislative documents.
+- *v3* models were built on top of *v2* models to support state bills and additional legislative documents.
 
 | Segmentation Method             | Est. Precision | Est. Recall | Size (MiB) |
 |:---                             |:---            |:---         | :--------- |
@@ -248,12 +248,14 @@ seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
 ---
 
 ### Train and evaluation Data
-*Available soon.*
-| Dataset                            | Size (MB) | Link 1     | Link 2      | Link 3 | Link 4 |
-| :---                               | :---      | :---       | :---        | :---   | :---   |
-| Weakly supervised (v1)             | 99.7      | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
-| Active learning (v2)               | 108.7     | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
-| Active learning (v2, curated only) | 5.4       | _datasets_ | _datasets_  | _TSV_  | _TSV_  |
+
+| Ver. | Dataset                                       | Size (MB) | [HF datasets](https://github.com/huggingface/datasets) format | .tsv format      |
+| :--- | :---                                          | :---      | :---              | :---             |
+| v1   | Weakly supervised                             | 99.7      | [Link 1](https://cloud.andrelab.icmc.usp.br/s/NoKR3AFGysXFySH) / [Link 2](https://drive.google.com/file/d/1eD832P7r31ey8lhHqDc_uLnyg6TdKlpd/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/KfbggCyfHWknREM) / [Link 2](https://drive.google.com/file/d/1K9Ckn0Q25vLIr_8LoTcTRA2PTho36Vnn/view?usp=share_link) |
+| v2   | Active learning                               | 108.7     | [Link 1](https://cloud.andrelab.icmc.usp.br/s/WiejawW5ksJaZMS) / [Link 2](https://drive.google.com/file/d/1Wxfd4qyFCtjpsPPVY9Nx-DQYpxjQvRrJ/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/wLBHrsLfrJpm5Zk) / [Link 2](https://drive.google.com/file/d/1pjNJyd53komxvw68UanW8ESkY9ZwteDd/view?usp=share_link) |
+| v2   | Active learning (curated only)                | 5.4       | [Link 1](https://cloud.andrelab.icmc.usp.br/s/eHzSR5Ai8bAEQi7) / [Link 2](https://drive.google.com/file/d/1pq6fKUJhzVQ5hcbqwrlgPeXBoFUsqFKQ/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/7Aniq5Ka9nn7Y43) / [Link 2](https://drive.google.com/file/d/1zHVFJc-QphKzrXkyuEeOeiEW2hh46Jtd/view?usp=share_link) |
+| v2   | Extra: Emendas legislativas                   | 0.4       | [Link 1](https://cloud.andrelab.icmc.usp.br/s/KXwcmERqMwaPskd) / [Link 2](https://drive.google.com/file/d/1ywzIVarPy6JUOWDQ0-ShKDk2PaIAEs_0/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/HzpiyToAmswFSby) / [Link 2](https://drive.google.com/file/d/11jzh8kAW7hyVeiZkWkw_CJyX9xkOc5jy/view?usp=share_link) |
+| v3   | State bills, Gov. Auctions, Codes, Acts, CF88 | 4.7      | [Link 1](https://cloud.andrelab.icmc.usp.br/s/5zq5pHDfar5MC3p) / [Link 2](https://drive.google.com/file/d/1d7iEsojyq62S2gUm36DwEioOzN9_NBrh/view?usp=share_link)  | [Link 1](https://cloud.andrelab.icmc.usp.br/s/JryBfFfcGz9YiTZ) / [Link 2](https://drive.google.com/file/d/1_RXd9jOZESftvdNKwmj2IxuLFBm-iAzy/view?usp=share_link) |
 
 Note: you can easily convert the HF datasets into segments using the Ulysses segmenter `.generate_segments_from_ids(input_ids=..., label_ids=...)` method as follows:
 
