@@ -4,7 +4,7 @@ requires = ["flit_core >=3.2,<4"]
 
 [project]
 name = "segmentador"
-version = "0.3.2"
+version = "0.3.3"
 description = "Segmentador de textos legislativos da Câmara dos Deputados do Brasil."
 authors = [
     {name="felsiq", email= "felipe.siqueira@usp.br"}
@@ -17,7 +17,7 @@ dependencies = [
     "torch >= 1.11.0",
     "transformers >= 4.16.2",
     "regex >= 2022.3.15",
-    "buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@v1.2.6",
+    "buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@master",
 ]
 
 [project.optional-dependencies]
@@ -150,7 +150,7 @@ commands =
 basepython = python3.9
 deps =
     pylint == 2.16.0
-    buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@v1.2.6
+    buscador @ git+https://github.com/ulysses-camara/ulysses-fetcher@master
     pytest
     datasets
     onnx
