@@ -270,10 +270,10 @@ The models utilized in this package consist of Transformer Encoders (BERT) and B
 
 You can control the number of tokens per window, overlapping factor between windows, and the pooling operation by using the following arguments:
 
-```
+```python
 import segmentador
 
-bert_segmenter = segmentador.BERTSegmenter(inference_pooling_operation="sum")  # See below the available values.
+bert_segmenter = segmentador.BERTSegmenter(inference_pooling_operation="sum")
 text = "PROPOSTA Nro. 1234/2040 ..."
 segs = bert_segmenter(text, moving_window_size=512, window_shift_size=0.25)
 ```
