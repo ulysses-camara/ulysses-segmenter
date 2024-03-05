@@ -70,12 +70,17 @@ test = [
 
 docs = [
     "grip >= 4.6.0",
-	"sphinx == 4.5.0",
-	"myst-parser == 0.17.2",
-	"sphinxcontrib-mermaid == 0.7.1",
-	"numpydoc == 1.2.1",
-	"sphinx-autoapi == 1.8.4",
-	"sphinx-rtd-theme == 1.0.0",
+    "numpydoc == 1.6.0",
+    "sphinx-autoapi == 3.0.0",
+    "sphinx-rtd-theme == 2.0.0",
+    "sphinxcontrib-applehelp == 1.0.8",
+    "sphinxcontrib-devhelp == 1.0.6",
+    "sphinxcontrib-htmlhelp == 2.0.5",
+    "sphinxcontrib-jquery == 4.1",
+    "sphinxcontrib-jsmath == 1.0.1",
+    "sphinxcontrib-mermaid == 0.9.2",
+    "sphinxcontrib-qthelp == 1.0.7",
+    "sphinxcontrib-serializinghtml == 1.1.10",
 ]
 
 [tool.mypy]
