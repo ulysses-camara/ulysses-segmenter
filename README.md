@@ -204,9 +204,11 @@ seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
 
 #### Quantization in ONNX format
 
-We provide support for models in ONNX format (and also functions to convert from pytorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. Effects of quantization in segmenter models are analyzed in [Optimization and Compression notebook](./notebooks/7_optimization_and_compression.ipynb).
+#### Quantization in ONNX format
 
-First, in order to use models in ONNX format you need to install some optional dependencies, as shown in [Installation](#installation) section. Then, you need to create the ONNX quantized model using the `segmentador.optimize` subpackage API:
+We offer support for models in ONNX format (and also functions to convert from PyTorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. To utilize models in ONNX format, you need to install optional dependencies, as outlined in the [Installation](#installation) section.
+
+Firstly, you should create the ONNX quantized model using the API provided in the `segmentador.optimize` submodule:
 
 ```python
 import segmentador.optimize
@@ -222,7 +224,7 @@ quantized_model_paths = segmentador.optimize.quantize_model(
 )
 ```
 
-Lastly, load the optimized models with appropriate classes from `segmentador.optimize` module. While the ONNX segmenter model configuration may differ from their standard (Torch format) version, its inference usage remains the same:
+Afterward, load the optimized models with the appropriate classes from the `segmentador.optimize` module. While the configuration of the ONNX segmenter model may differ from its standard (Torch format) version, the usage for inference remains the same:
 
 ```python
 # Load ONNX model
@@ -234,7 +236,7 @@ segmenter_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
 seg_result = segmenter_bert_quantized(sample_text, return_logits=True)
 ```
 
-The procedure shown above is analogous for ONNX Bi-LSTM models:
+The procedure shown above is similar for ONNX Bi-LSTM models:
 
 ```python
 import segmentador.optimize
