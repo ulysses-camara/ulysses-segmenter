@@ -204,8 +204,6 @@ seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
 
 #### Quantization in ONNX format
 
-#### Quantization in ONNX format
-
 We offer support for models in ONNX format (and also functions to convert from PyTorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. To utilize models in ONNX format, you need to install optional dependencies, as outlined in the [Installation](#installation) section.
 
 Firstly, you should create the ONNX quantized model using the API provided in the `segmentador.optimize` submodule:
