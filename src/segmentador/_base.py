@@ -233,19 +233,35 @@ class BaseSegmenter:
         input_ids: t.Union[t.Sequence[int], npt.NDArray[np.int64]],
         label_ids: t.Union[t.Sequence[int], npt.NDArray[np.int64]],
         apply_postprocessing: bool = True,
+        skip_special_tokens: bool = True,
+        remove_noise_subsegments: bool = True,
+        maximum_noise_subsegment_length: int = 25,
     ) -> t.List[str]:
-        """Generate segments from ids and labels.
+        """Generate segments from input IDs and labels.
 
         Parameters
         ----------
         input_ids : t.Sequence[int] or npt.NDArray[np.int64]
-            Tokenized text from model's tokenizer.
+            IDs from tokenized text from model's tokenizer.
 
         label_ids : t.Sequence[int] or npt.NDArray[np.int64]
-            Label ids for each token, where 'label_id=1' denotes the start of a new segment.
+            Label ids for each token, where 'label_id=1' denotes the start of a new segment,
+            `label_id=2` denotes start of noise sequence (inclusive), and `noise_id=3` denotes
+            end of a noise sequence (exclusive).
 
         apply_postprocessing : bool, default=True
             If True, remove spurious whitespaces next to punctuation marks in the output.
+
+        remove_noise_subsegments : bool, default=True
+            If True, do not include noise subsegments in the output.
+
+        maximum_noise_subsegment_length : int, default=25
+            Maximum length (in tokens) allowed for each noise subsegments in order to be removed.
+            Larger noise subsegments are kept intact. This argument is useful to prevent removing
+            larger chunks of text that might actually contain useful information.
+
+        skip_special_tokens : bool, default=True
+            If True, do not include tokenizer's special tokens in output ([CLS] and [SEP]).
 
         Returns
         -------
@@ -256,22 +272,36 @@ class BaseSegmenter:
         label_ids = np.asarray(label_ids, dtype=int).ravel()
         label_ids = label_ids[: input_ids.size]
 
-        seg_cls_id: int
+        sep_token_id = self._tokenizer.sep_token_id
 
+        label2id: t.Dict[str, int] = {"SEG_START": 1, "NOISE_START": 2, "NOISE_END": 3}
         try:
-            seg_cls_id = self._model.config.label2id.get("SEG_START", 1)  # type: ignore
-
+            label2id.update(self._model.config.label2id)
         except AttributeError:
-            seg_cls_id = 1
+            pass
 
-        segment_start_inds = np.flatnonzero(label_ids == seg_cls_id)
+        segment_start_inds = np.flatnonzero(label_ids == label2id["SEG_START"])
         segment_start_inds = np.hstack((0, segment_start_inds, len(input_ids)))
 
         segs: t.List[str] = []
 
         for i, i_next in zip(segment_start_inds[:-1], segment_start_inds[1:]):
             split_ = input_ids[i:i_next]
-            seg = self._tokenizer.decode(split_, skip_special_tokens=True)
+
+            if remove_noise_subsegments:
+                split_labels = label_ids[i:i_next]
+                noise_inds_start = np.flatnonzero(split_labels == label2id["NOISE_START"])
+                end_index = int(np.flatnonzero(split_ == sep_token_id).min(initial=split_.size))
+                noise_inds_end = np.hstack((np.flatnonzero(split_labels == label2id["NOISE_END"]), end_index))
+
+                for n_start, n_end in zip(noise_inds_start, noise_inds_end):
+                    if n_end - n_start <= maximum_noise_subsegment_length:
+                        split_[n_start:n_end] = -1
+
+                split_ = split_[split_ >= 0]
+
+            seg = self._tokenizer.decode(split_, skip_special_tokens=skip_special_tokens)
+
             if seg:
                 segs.append(seg)
 
