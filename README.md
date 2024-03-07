@@ -293,14 +293,15 @@ The *pooling* operations can be one of the following:
 
 ### Train and evaluation Data
 
-| Ver. | Dataset                                       | Size (MB) | [HF datasets](https://github.com/huggingface/datasets) format | .tsv format      |
+| Ver. | Dataset                                       | Size (MB) | [HF datasets](https://github.com/huggingface/datasets) format | .{tsv,csv} format      |
 | :--- | :---                                          | :---      | :---              | :---             |
 | v1   | Weakly supervised                             | 99.7      | [Link 1](https://cloud.andrelab.icmc.usp.br/s/NoKR3AFGysXFySH) / [Link 2](https://drive.google.com/file/d/1eD832P7r31ey8lhHqDc_uLnyg6TdKlpd/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/KfbggCyfHWknREM) / [Link 2](https://drive.google.com/file/d/1K9Ckn0Q25vLIr_8LoTcTRA2PTho36Vnn/view?usp=share_link) |
 | v2   | Weak + Active supervision                     | 108.7     | [Link 1](https://cloud.andrelab.icmc.usp.br/s/WiejawW5ksJaZMS) / [Link 2](https://drive.google.com/file/d/1Wxfd4qyFCtjpsPPVY9Nx-DQYpxjQvRrJ/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/wLBHrsLfrJpm5Zk) / [Link 2](https://drive.google.com/file/d/1pjNJyd53komxvw68UanW8ESkY9ZwteDd/view?usp=share_link) |
 | v2   | Active learning (curated only)                | 5.4       | [Link 1](https://cloud.andrelab.icmc.usp.br/s/eHzSR5Ai8bAEQi7) / [Link 2](https://drive.google.com/file/d/1pq6fKUJhzVQ5hcbqwrlgPeXBoFUsqFKQ/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/7Aniq5Ka9nn7Y43) / [Link 2](https://drive.google.com/file/d/1zHVFJc-QphKzrXkyuEeOeiEW2hh46Jtd/view?usp=share_link) |
 | v2   | Extra: legislative amendments                 | 0.4       | [Link 1](https://cloud.andrelab.icmc.usp.br/s/KXwcmERqMwaPskd) / [Link 2](https://drive.google.com/file/d/1ywzIVarPy6JUOWDQ0-ShKDk2PaIAEs_0/view?usp=share_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/HzpiyToAmswFSby) / [Link 2](https://drive.google.com/file/d/11jzh8kAW7hyVeiZkWkw_CJyX9xkOc5jy/view?usp=share_link) |
 | v3   | State bills, Senate Procurement, Codes, Acts, CF88 | 4.7      | [Link 1](https://cloud.andrelab.icmc.usp.br/s/5zq5pHDfar5MC3p) / [Link 2](https://drive.google.com/file/d/1d7iEsojyq62S2gUm36DwEioOzN9_NBrh/view?usp=share_link)  | [Link 1](https://cloud.andrelab.icmc.usp.br/s/JryBfFfcGz9YiTZ) / [Link 2](https://drive.google.com/file/d/1_RXd9jOZESftvdNKwmj2IxuLFBm-iAzy/view?usp=share_link) |
-| --   | (Publication only) International legislation (French, Italian, German, U.S.) | | [Link 1](https://cloud.andrelab.icmc.usp.br/s/i5ZEzXeTzLjPDrT) / [Link 2](https://drive.google.com/drive/folders/1PPAbVwSsOzmJh0Mmnt1fjLObujssXdJr?usp=drive_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/i5ZEzXeTzLjPDrT) / [Link 2](https://drive.google.com/drive/folders/1PPAbVwSsOzmJh0Mmnt1fjLObujssXdJr?usp=drive_link) |
+| --   | (Publication only) International legislation (French, Italian, German, U.S.) | -- | [Link 1](https://cloud.andrelab.icmc.usp.br/s/i5ZEzXeTzLjPDrT) / [Link 2](https://drive.google.com/drive/folders/1PPAbVwSsOzmJh0Mmnt1fjLObujssXdJr?usp=drive_link) | [Link 1](https://cloud.andrelab.icmc.usp.br/s/i5ZEzXeTzLjPDrT) / [Link 2](https://drive.google.com/drive/folders/1PPAbVwSsOzmJh0Mmnt1fjLObujssXdJr?usp=drive_link) |
+| --   | Raw data (unlabeled, unprocessed) | 140 | -- | [Link 1](https://cloud.andrelab.icmc.usp.br/s/zGZRN4cECSD7EoX) / [Link 2](https://drive.google.com/file/d/1QjllIfM0VeG8uPDK5G_WNXEKQnEg-FV8/view?usp=sharing) |
 
 You can convert the HF datasets into segments using the Ulysses segmenter `.generate_segments_from_ids(input_ids=..., label_ids=...)` method as follows:
 
@@ -308,6 +309,7 @@ You can convert the HF datasets into segments using the Ulysses segmenter `.gene
 import datasets
 import segmentador
 
+# NOTE: Any segmenter model will do, since they all share the same tokenizer.
 segmenter = segmentador.Segmenter(device="cpu")
 dt = datasets.load_from_disk("./dataset_ulysses_segmenter_train_v3")
 
