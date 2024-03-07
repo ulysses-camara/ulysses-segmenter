@@ -8,67 +8,33 @@ Brazilian legislative bill segmenter models.
 
 ### Table of Contents
 1. [Installation](#installation)
-2. [Available models](#available-models)
-3. [Usage examples](#usage-examples)
+2. [Usage examples](#usage-examples)
     1. [Standard models (Torch format, Huggingface Transformers compatible)](#standard-models)
     2. [Noise subsegment removal](#noise-subsegment-removal)
-    3. [Quantization in ONNX format](#quantization-in-onnx-format)
-4. [Inference details](#inference-details)
-5. [Train and evaluation data](#train-and-evaluation-data)
-6. [Package tests](#package-tests)
-7. [License](#license)
-8. [Citation](#citation)
+3. [Available models](#available-models)
+4. [Model details](#model-details)
+5. [Inference details](#inference-details)
+6. [Train and evaluation data](#train-and-evaluation-data)
+7. [Model quantization in ONNX format](#model-quantization-in-onnx-format)
+8. [Package tests](#package-tests)
+9. [License](#license)
+10. [Citation](#citation)
 
 ---
 
 ### Installation
 
 To install this package, you can use the following command:
+
 ```bash
 python -m pip install "git+https://github.com/ulysses-camara/ulysses-segmenter"
 ```
 
 If you intend to use optimized models in the ONNX format, you will need to install optional dependencies:
+
 ```bash
 python -m pip install "segmentador[optimize] @ git+https://github.com/ulysses-camara/ulysses-segmenter"
 ```
-
----
-
-### Available Models
-
-Pretrained Ulysses segmenter models can be downloaded using the [Ulysses Fetcher](https://github.com/ulysses-camara/ulysses-fetcher) API.
-
-We employ a two-stage training procedure: (1) weak supervision, which involves data labeling with regular expressions, and (2) active learning.
-
-In a curated dataset comprising 1447 ground-truth fragments of federal bills, the Ulysses Segmenter demonstrates higher precision and recall for class 1 ("Start of sentence") compared to other popular segmentation tools such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), the latter being particularly suitable for segmenting legislative bill contents. In the table below, we provide a comparison of these algorithms against the Ulysses Segmenter, showcasing results for both estimated precision and recall.
-
-- *v1* models were trained using weakly supervised data;
-- *v2* models were trained using active learning from the corresponding *v1* model as the base model; and
-- *v3* models were built on top of *v2* models to support state bills and additional legislative documents.
-
-| Segmentation Method             | Est. Precision | Est. Recall | Size (MiB) |
-|:---                             |:---            |:---         | :--------- |
-| NLTK (v3.7)                     | 13.278%        | 19.738%     | --         |
-| SpaCy (v3.5.0)                  | 13.422%        | 25.300%     | --         |
-| LexNLP (v2.2.1.0)               | 13.462%        | 19.806%     | --         |
-| Ulysses Segmenter v1 (LSTM-512) | 96.345%        | 93.004%     | 37         |
-| Ulysses Segmenter v1 (BERT-2)   | 97.440%        | 93.530%     | 74         |
-| Ulysses Segmenter v2 (LSTM-256) | 97.014%        | 94.909%     | **25**     |
-| Ulysses Segmenter v2 (BERT-2)   | 97.981%        | 96.403%     | 74         |
-| Ulysses Segmenter v2 (BERT-4)   | **98.555%**    | 96.854%     | 128        |
-| Ulysses Segmenter v3 (LSTM-256) | 96.539%        | 95.953%     | **25**     |
-| Ulysses Segmenter v3 (BERT-2)   | 97.850%        | 96.601%     | 74         |
-| Ulysses Segmenter v3 (BERT-4)   | 98.334%        | **97.099%** | 128        |
-
-
-The default models loaded for each algorithm are as follows:
-
-- *BERT*: `4_layer_6000_vocab_size_bert_v3`.
-- *Bi-LSTM Model*: `256_hidden_dim_6000_vocab_size_1_layer_lstm_v3`.
-- *Tokenizer*: `6000_subword_tokenizer`.
-
-It's important to note that `4_layer_6000_vocab_size_bert_v3` comes with its own built-in tokenizer, which coincidentally is identical to `6000_subword_tokenizer`.
 
 ---
 
@@ -202,67 +168,49 @@ seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
 
 ---
 
-#### Quantization in ONNX format
+### Available Models
 
-We offer support for models in ONNX format (and also functions to convert from PyTorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. To utilize models in ONNX format, you need to install optional dependencies, as outlined in the [Installation](#installation) section.
+We made our best models readily available for use, so that this package will download resources automatically whenever they are needed. You do not need to download them manually. However, you can access all trained models (including related datasets) to download them manually in the following locations: [Link 1](https://cloud.andrelab.icmc.usp.br/s/RZL2dzcXLoE8Yej) / [Link 2](https://drive.google.com/drive/folders/1H-MLzDEo-MmoCU5pfIRk12fkA5A7igdb?usp=sharing).
 
-Firstly, you should create the ONNX quantized model using the API provided in the `segmentador.optimize` submodule:
+---
 
-```python
-import segmentador.optimize
+### Model details
 
-# Load BERT Torch model
-segmenter_bert = segmentador.BERTSegmenter()
+The training procedure had two-stage: (1) weak supervision, involving data labeling with regular expressions, and (2) active learning, involving curation of a few selected examples.
 
-# Create ONNX BERT model
-quantized_model_paths = segmentador.optimize.quantize_model(
-    segmenter_bert,
-    model_output_format="onnx",
-    verbose=True,
-)
-```
+In a curated dataset comprising 1447 ground-truth fragments of federal bills, the Ulysses Segmenter demonstrates higher precision and recall for class 1 ("Start of sentence") compared to other popular segmentation tools such as [NLTK](https://github.com/nltk/nltk), [SpaCy](https://github.com/explosion/spaCy), and [LexNLP](https://github.com/LexPredict/lexpredict-lexnlp), the latter being particularly suitable for segmenting legislative bill contents. In the table below, we provide a comparison of these algorithms against the Ulysses Segmenter, showcasing results for both estimated precision and recall.
 
-Afterward, load the optimized models with the appropriate classes from the `segmentador.optimize` module. While the configuration of the ONNX segmenter model may differ from its standard (Torch format) version, the usage for inference remains the same:
+- *v1* models were trained using weakly supervised data;
+- *v2* models were trained using active learning from the corresponding *v1* model as the base model; and
+- *v3* models were built on top of *v2* models to support state bills and additional legislative documents.
 
-```python
-# Load ONNX model
-segmenter_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
-    uri_model=quantized_model_paths.output_uri,
-    uri_tokenizer=segmenter_bert.tokenizer.name_or_path,
-)
+| Segmentation Method             | Est. Precision | Est. Recall | Size (MiB) |
+|:---                             |:---            |:---         | :--------- |
+| NLTK (v3.7)                     | 13.278%        | 19.738%     | --         |
+| SpaCy (v3.5.0)                  | 13.422%        | 25.300%     | --         |
+| LexNLP (v2.2.1.0)               | 13.462%        | 19.806%     | --         |
+| Ulysses Segmenter v1 (LSTM-512) | 96.345%        | 93.004%     | 37         |
+| Ulysses Segmenter v1 (BERT-2)   | 97.440%        | 93.530%     | 74         |
+| Ulysses Segmenter v2 (LSTM-256) | 97.014%        | 94.909%     | **25**     |
+| Ulysses Segmenter v2 (BERT-2)   | 97.981%        | 96.403%     | 74         |
+| Ulysses Segmenter v2 (BERT-4)   | **98.555%**    | 96.854%     | 128        |
+| Ulysses Segmenter v3 (LSTM-256) | 96.539%        | 95.953%     | **25**     |
+| Ulysses Segmenter v3 (BERT-2)   | 97.850%        | 96.601%     | 74         |
+| Ulysses Segmenter v3 (BERT-4)   | 98.334%        | **97.099%** | 128        |
 
-seg_result = segmenter_bert_quantized(sample_text, return_logits=True)
-```
+The default models loaded for each algorithm are as follows:
 
-The procedure shown above is similar for ONNX Bi-LSTM models:
+- *BERT*: `4_layer_6000_vocab_size_bert_v3`.
+- *Bi-LSTM Model*: `256_hidden_dim_6000_vocab_size_1_layer_lstm_v3`.
+- *Tokenizer*: `6000_subword_tokenizer`.
 
-```python
-import segmentador.optimize
-
-# Load Bi-LSTM standard model
-segmenter_lstm = segmentador.LSTMSegmenter()
-
-# Create ONNX Bi-LSTM model
-quantized_lstm_paths = segmentador.optimize.quantize_model(
-    segmenter_lstm,
-    model_output_format="onnx",
-    verbose=True,
-)
-
-# Load ONNX model
-segmenter_lstm_quantized = segmentador.optimize.ONNXLSTMSegmenter(
-    uri_model=quantized_lstm_paths.output_uri,
-    uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
-)
-
-seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
-```
+Note that `4_layer_6000_vocab_size_bert_v3` comes with its own built-in tokenizer (which is identical to `6000_subword_tokenizer`).
 
 ---
 
 ### Inference Details
 
-The models utilized in this package consist of Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), featuring different numbers of hidden layers (transformer blocks) and support for up to 1024 subword tokens in BERT models. However, given that legislative bill contents may surpass this limit, the framework automatically pre-segments the text into potentially overlapping moving windows, feeding them independently to the segmenter model. Subsequently, the model's outputs are combined ("pooled"), and the final prediction for each token is derived.
+The models utilized in this package consist of Transformer Encoders (BERT) and Bidirectional LSTM (Bi-LSTM), with different numbers of hidden layers (transformer blocks) and support for up to 1,024 subword tokens in BERT models. However, given that legislative bill contents may surpass this limit, the framework automatically pre-segments the text into potentially overlapping moving windows, feeding them independently to the segmenter model. Subsequently, the model's outputs are combined ("pooled"), and the final prediction for each token is derived.
 
 <p align="center">
   <img src="./diagrams/segmenter_inference_pipeline.drawio.png" alt="Full segmenter inference pipeline."></img>
@@ -331,6 +279,64 @@ df = pd.DataFrame(all_segs, columns=["instance_id", "text"])
 
 ---
 
+### Model quantization in ONNX format
+
+We offer support for models in ONNX format (and also functions to convert from PyTorch to such format), which are highly optimized and also support weight quantization. We apply 8-bit dynamic quantization. To utilize models in ONNX format, you need to install optional dependencies, as outlined in the [Installation](#installation) section.
+
+Firstly, you should create the ONNX quantized model using the API provided in the `segmentador.optimize` submodule:
+
+```python
+import segmentador.optimize
+
+# Load BERT Torch model
+segmenter_bert = segmentador.BERTSegmenter()
+
+# Create ONNX BERT model
+quantized_model_paths = segmentador.optimize.quantize_model(
+    segmenter_bert,
+    model_output_format="onnx",
+    verbose=True,
+)
+```
+
+Afterward, load the optimized models with the appropriate classes from the `segmentador.optimize` module. While the configuration of the ONNX segmenter model may differ from its standard (Torch format) version, the usage for inference remains the same:
+
+```python
+# Load ONNX model
+segmenter_bert_quantized = segmentador.optimize.ONNXBERTSegmenter(
+    uri_model=quantized_model_paths.output_uri,
+    uri_tokenizer=segmenter_bert.tokenizer.name_or_path,
+)
+
+seg_result = segmenter_bert_quantized(sample_text, return_logits=True)
+```
+
+The procedure shown above is similar for ONNX Bi-LSTM models:
+
+```python
+import segmentador.optimize
+
+# Load Bi-LSTM standard model
+segmenter_lstm = segmentador.LSTMSegmenter()
+
+# Create ONNX Bi-LSTM model
+quantized_lstm_paths = segmentador.optimize.quantize_model(
+    segmenter_lstm,
+    model_output_format="onnx",
+    verbose=True,
+)
+
+# Load ONNX model
+segmenter_lstm_quantized = segmentador.optimize.ONNXLSTMSegmenter(
+    uri_model=quantized_lstm_paths.output_uri,
+    uri_tokenizer=segmenter_lstm.tokenizer.name_or_path,
+)
+
+seg_result = segmenter_lstm_quantized(curated_df_subsample, return_logits=True)
+```
+
+---
+
 ### Package tests
 Tests for this package are run using tox, pytest, pylint (codestyle), and mypy (static type checking).
 ```bash
@@ -347,6 +353,9 @@ python -m tox
 ---
 
 ### Citation
+
+Work in progress.
+
 ```bibtex
 @inproceedings{
     paper="",
