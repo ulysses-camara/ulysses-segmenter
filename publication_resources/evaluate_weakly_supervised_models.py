@@ -51,17 +51,19 @@ def fn_compute_metrics(labels, preds):
 
 def eval_model(dt, model_type: str, size: int, batch_size: int = 32):
     if model_type == "lstm":
-        # Models info + download link: https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#available-models
+        # NOTE: Models info + download link:
+        # https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#available-models
         model = segmentador.LSTMSegmenter(
-            uri_model=f"../segmenter_checkpoint_v1/{size}_6000_1_lstm/checkpoints/{size}_hidden_dim_6000_vocab_size_1_layer_lstm.pt",
+            uri_model=f"{size}_hidden_dim_6000_vocab_size_1_layer_lstm.pt",
             uri_tokenizer="tokenizers/6000_subwords",
             device="cuda:0",
         )
 
     else:
-        # Models info + download link: https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#available-models
+        # NOTE: Models info + download link:
+        # https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#available-models
         model = segmentador.BERTSegmenter(
-            uri_model=f"../segmenter_checkpoint_v1/{size}_6000_layer_model",
+            uri_model=f"{size}_6000_layer_model",
             device="cuda:0",
         )
 
@@ -96,7 +98,8 @@ def eval_model(dt, model_type: str, size: int, batch_size: int = 32):
 
 
 def run():
-    # Data info + download link: https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#train-and-evaluation-data
+    # NOTE: Data info + download link:
+    # https://github.com/ulysses-camara/ulysses-segmenter/tree/master?tab=readme-ov-file#train-and-evaluation-data
     dt = datasets.DatasetDict.load_from_disk("data/dataset_ulysses_segmenter_v1_weak_supervision")
     print(dt)
 

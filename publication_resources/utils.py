@@ -1,6 +1,3 @@
-import collections
-import os
-import json
 import functools
 import warnings
 
@@ -10,7 +7,6 @@ import transformers
 import datasets
 import sklearn.metrics
 import numpy as np
-import tqdm
 import segmentador
 
 
@@ -63,7 +59,7 @@ def segments_to_dict(segments: list[str]) -> dict[str, list[list[int]]]:
 
 
 def flatten_dict(d: dict[str, list[list[int]]], *, group_ids=None) -> dict[str, list[int]]:
-    new_dict = dict()
+    new_dict = {}
     if group_ids is not None:
         group_ids_flatten = []
 
@@ -167,7 +163,7 @@ def train(
 
     model.train()
 
-    for i in range(n_epochs):
+    for _ in range(n_epochs):
         mov_loss = None
         optim.zero_grad()
 

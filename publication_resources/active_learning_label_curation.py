@@ -15,7 +15,6 @@ def sample_instances(
     q: float = 0.01,
     *,
     ignore_label: int = -100,
-    device: str = "cuda:0",
 ) -> list[int]:
     instance_quantile_margins = np.full(len(dt), fill_value=np.inf)
 
@@ -39,7 +38,7 @@ def sample_instances(
             is_not_middle_subword = true_labels != ignore_label  # Ignore margins from middle subwords; they don't have labels.
             token_margins = token_margins[is_not_middle_subword]
 
-        except IndexError as err:
+        except IndexError:
             token_margins = [np.inf, np.inf]
 
         try:
@@ -86,7 +85,6 @@ if __name__ == "__main__":
         segmenter=segmenter,
         n=args.n,
         q=args.quantile,
-        device=args.device,
         ignore_label=args.ignore_label,
     )
 

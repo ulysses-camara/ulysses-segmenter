@@ -18,11 +18,11 @@ def run_few_shot_finetuning(input_: dict[str, list[int]], lang: str, *, random_i
     n = len(input_["labels"])
     rng = np.random.RandomState(19888012)
 
-    output_dir = f"./results/few_shot_fine_tuning_international_leg/{lang}"
+    output_dir = f"results/few_shot_fine_tuning_international_leg/{lang}"
     output_dir = os.path.abspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
-    df_test_uri = os.path.abspath("./data/dataset_ulysses_segmenter_v2_active_learning_curated_only/test")
+    df_test_uri = os.path.abspath("data/dataset_ulysses_segmenter_v2_active_learning_curated_only/test")
     df_test_ptbr = datasets.Dataset.load_from_disk(df_test_uri)
     df_test_ptbr = df_test_ptbr.map(functools.partial(utils.fn_pad_and_truncate, max_length=1024))
     df_test_ptbr.set_format("torch")
@@ -43,7 +43,7 @@ def run_few_shot_finetuning(input_: dict[str, list[int]], lang: str, *, random_i
             print(f"Found cached '{output_uri}' result, skipping.")
             continue
 
-        for i in pbar:
+        for _ in pbar:
             (split_train, split_test) = utils.split_train_test(input_, m=k, random_state=rng.randint(1, 2**32 - 1), shifts=3)
 
             assert len(split_test["input_ids"]) >= n - 3 * k, (len(split_test), len(split_test["input_ids"]))
@@ -52,7 +52,7 @@ def run_few_shot_finetuning(input_: dict[str, list[int]], lang: str, *, random_i
             input_flatten = utils.flatten_dict(split_test)
             labels = np.asarray(input_flatten.pop("labels"))
 
-            finetuned_segmenter = train("4_layer_6000_vocab_size_bert_v2", split_train, pbar, random_init=random_init)
+            finetuned_segmenter = utils.train("4_layer_6000_vocab_size_bert_v2", split_train, pbar, random_init=random_init)
 
             with torch.no_grad():
                 logits_lang = finetuned_segmenter(input_flatten, return_logits=True, show_progress_bar=True).logits
@@ -70,7 +70,7 @@ def run_few_shot_finetuning(input_: dict[str, list[int]], lang: str, *, random_i
 
             pbar.set_description(f"{cur_res['cls_1_f1'][-1]=:.6f}")
 
-        with open(output_uri, "w") as f_out:
+        with open(output_uri, "w", encoding="utf-8") as f_out:
             json.dump(cur_res, f_out)
 
 
@@ -83,7 +83,7 @@ def run():
     }
 
     for lang, dt_name in sorted(lang_to_dataset_map.items()):
-        dt = datasets.Dataset.load_from_disk(f"./data/{dt_name}")
+        dt = datasets.Dataset.load_from_disk(f"data/{dt_name}")
 
         print(f"{lang.capitalize()} dataset:")
         print(dt)

@@ -1,7 +1,6 @@
 import collections
 import itertools
 import json
-import itertools
 import os
 
 import matplotlib.pyplot as plt
@@ -93,7 +92,7 @@ def check_misclass_quantiles(dt, indices_by_state):
     segmenter = segmentador.BERTSegmenter(uri_model="4_layer_6000_vocab_size_bert_v2", device="cuda:0")
     misclass_fracs = []
 
-    for state, inds in tqdm.tqdm(indices_by_state.items()):
+    for inds in tqdm.tqdm(indices_by_state.values()):
         for i in inds[:20]:
             dt_cur = dt.select([i]).to_dict()
             labels_true = np.asarray(dt_cur.pop("labels")[0])
@@ -140,8 +139,8 @@ def kfold_with_undersampling(dt, indices_by_state):
     pbar = tqdm.tqdm(range(10))
 
     output_dir = "results/state_legislation_finetuning/first_experiment__per_state"
-    output_name = os.path.join(output_dir, output_name)
     output_name = f"test_results_state_leg_{m}_inst_per_state.json"
+    output_name = os.path.join(output_dir, output_name)
 
     all_res = collections.defaultdict(list)
 
@@ -248,7 +247,7 @@ def kfold_with_undersampling(dt, indices_by_state):
                 all_res=all_res,
             )
 
-        with open(output_name, "w") as f_out:
+        with open(output_name, "w", encoding="utf-8") as f_out:
             json.dump(all_res, f_out)
 
 
@@ -282,7 +281,7 @@ def kfold(dt, random_init: bool = False):
     }
 
     def compute_metrics_(labels, logits, prefix: str, all_res: dict[str, list[float]]) -> None:
-        assert len(labels) == len(logits), (len(labels), len(logits), len(group_ids))
+        assert len(labels) == len(logits), (len(labels), len(logits))
         metrics_micro = utils.fn_compute_metrics(labels=labels, logits=logits)
         for l, v in metrics_micro.items():
             all_res[f"{prefix}{l}"].append(v)
@@ -332,14 +331,16 @@ def kfold(dt, random_init: bool = False):
             all_res=all_res,
         )
 
-        with open(output_name, "w") as f_out:
+        with open(output_name, "w", encoding="utf-8") as f_out:
             json.dump(all_res, f_out)
 
-
-if __name__ == "__main__":
+def run():
     dt, indices_by_state = load()
-
-    check_misclass_quantiles(dt, indices_by_state, test_inference_kwargs)
+    check_misclass_quantiles(dt, indices_by_state)
     kfold_with_undersampling(dt, indices_by_state)
     kfold(dt)
     kfold(dt, random_init=True)
+
+
+if __name__ == "__main__":
+    run()

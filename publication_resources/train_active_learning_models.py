@@ -67,7 +67,7 @@ def train(
     logit_model.to(device)
     logit_model.train()
 
-    for epoch in range(n_epochs):
+    for _ in range(n_epochs):
         for i, batch in enumerate(dl, 1):
             if isinstance(logit_model, transformers.BertForTokenClassification):
                 batch = {k: v.to(device) for k, v in batch.items()}
