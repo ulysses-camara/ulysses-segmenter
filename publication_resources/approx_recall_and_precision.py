@@ -19,8 +19,12 @@ def estimate_seg_perf(sentences_pred: list[str], sentences_true: list[str], remo
     sorted_sentences_true = sorted(sentences_true)
 
     for pred in sentences_pred:
+        if len(sorted_sentences_true) == 0:
+            break
+
         # NOTE: bisect = binary search.
         i = bisect.bisect_right(sorted_sentences_true, pred) - 1
+
         if pred.startswith(sorted_sentences_true[i]) or sorted_sentences_true[i].startswith(pred):
             estimated_correct += 1
             sorted_sentences_true.pop(i)  # NOTE: avoid reusing true sentences.
