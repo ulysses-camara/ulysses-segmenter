@@ -6,9 +6,12 @@ import shutil
 import segmentador
 import segmentador.optimize
 
+import pytest
+
 from . import paths
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_inference_lstm_onnx(
     fixture_quantized_model_lstm_onnx: segmentador.optimize.ONNXLSTMSegmenter,
     fixture_legal_text_short: str,
@@ -24,6 +27,7 @@ def test_inference_lstm_onnx(
     assert num_segments and output.logits.shape == (output.labels.size, 4)
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_inference_bert_onnx(
     fixture_quantized_model_bert_onnx: segmentador.optimize.ONNXBERTSegmenter,
     fixture_legal_text_short: str,
@@ -39,13 +43,14 @@ def test_inference_bert_onnx(
     assert num_segments and output.logits.shape == (output.labels.size, 4)
 
 
+@pytest.mark.skip(reason="Hardware dependant.")
 def test_model_lstm_inference_time_standard_vs_quantized_torch(
     fixture_quantized_model_lstm_torch: segmentador.LSTMSegmenter,
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
     fixture_legal_text_long: str,
 ):
     common_kwargs = {
-        "number": 20,
+        "number": 10,
         "repeat": 3,
         "globals": {
             "fixture_quantized_model_lstm_torch": fixture_quantized_model_lstm_torch,
@@ -69,13 +74,14 @@ def test_model_lstm_inference_time_standard_vs_quantized_torch(
     assert best_time_quantized < best_time_standard
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_model_lstm_inference_time_standard_vs_quantized_onnx(
     fixture_quantized_model_lstm_onnx: segmentador.optimize.ONNXLSTMSegmenter,
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
     fixture_legal_text_long: str,
 ):
     common_kwargs = {
-        "number": 20,
+        "number": 10,
         "repeat": 3,
         "globals": {
             "fixture_quantized_model_lstm_onnx": fixture_quantized_model_lstm_onnx,
@@ -99,6 +105,7 @@ def test_model_lstm_inference_time_standard_vs_quantized_onnx(
     assert best_time_quantized < best_time_standard
 
 
+@pytest.mark.skip(reason="Hardware dependant.")
 def test_model_bert_inference_time_standard_vs_quantized_torch(
     fixture_quantized_model_bert_torch: segmentador.optimize.TorchJITBERTSegmenter,
     fixture_model_bert_2_layers: segmentador.BERTSegmenter,
@@ -129,6 +136,7 @@ def test_model_bert_inference_time_standard_vs_quantized_torch(
     assert best_time_quantized < best_time_standard
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_create_bert_model_with_default_name_onnx(
     fixture_test_paths: paths.TestPaths,
     fixture_model_bert_2_layers: segmentador.BERTSegmenter,
