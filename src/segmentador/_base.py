@@ -26,7 +26,7 @@ class BaseSegmenter:
         self,
         uri_model: str,
         uri_tokenizer: t.Optional[str] = None,
-        inference_pooling_operation: str = "assymetric-max",
+        inference_pooling_operation: str = "asymmetric-max",
         local_files_only: bool = True,
         device: str = "cpu",
         cache_dir_model: str = "./cache/models",

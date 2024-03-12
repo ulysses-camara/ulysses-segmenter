@@ -15,7 +15,7 @@ def no_segmentation_at_middle_subwords(segs: t.List[str]) -> bool:
     return not any(s.startswith("##") for s in segs)
 
 
-@pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
+@pytest.mark.parametrize("pooling_operation", ("max", "sum", "asymmetric-max", "gaussian"))
 def test_inference_pooling_operation_argument_with_long_text_and_bert(
     pooling_operation: str, fixture_test_paths: paths.TestPaths, fixture_legal_text_long: str
 ):
@@ -30,7 +30,7 @@ def test_inference_pooling_operation_argument_with_long_text_and_bert(
     assert len(segs) >= 50 and no_segmentation_at_middle_subwords(segs)
 
 
-@pytest.mark.parametrize("pooling_operation", ("max", "sum", "assymetric-max", "gaussian"))
+@pytest.mark.parametrize("pooling_operation", ("max", "sum", "asymmetric-max", "gaussian"))
 def test_inference_pooling_operation_argument_with_short_text_and_lstm(
     pooling_operation: str, fixture_test_paths: paths.TestPaths, fixture_legal_text_short: str
 ):

@@ -43,7 +43,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
     uri_onnx_config : str
         URI to pickled ONNX configuration.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'asymmetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -56,7 +56,7 @@ class ONNXBERTSegmenter(_base.BaseSegmenter):
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
           to the window center they are, diminishing its weights closer to the window
           limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
+        - `asymmetric-max`: take the maximum logit of each token for all classes other than
           the `No-operation` class, which in turn receives the minimum among all corresponding
           logits instead.
 
@@ -146,7 +146,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
     uri_tokenizer : str
         URI to pretrained text Tokenizer.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'asymmetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -159,7 +159,7 @@ class ONNXLSTMSegmenter(_base.BaseSegmenter):
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
           to the window center they are, diminishing its weights closer to the window
           limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
+        - `asymmetric-max`: take the maximum logit of each token for all classes other than
           the `No-operation` class, which in turn receives the minimum among all corresponding
           logits instead.
 
@@ -254,7 +254,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'asymmetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -267,7 +267,7 @@ class _TorchJITBaseSegmenter(_base.BaseSegmenter):
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
           to the window center they are, diminishing its weights closer to the window
           limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
+        - `asymmetric-max`: take the maximum logit of each token for all classes other than
           the `No-operation` class, which in turn receives the minimum among all corresponding
           logits instead.
 
@@ -346,7 +346,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'asymmetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -359,7 +359,7 @@ class TorchJITBERTSegmenter(_TorchJITBaseSegmenter):
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
           to the window center they are, diminishing its weights closer to the window
           limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
+        - `asymmetric-max`: take the maximum logit of each token for all classes other than
           the `No-operation` class, which in turn receives the minimum among all corresponding
           logits instead.
 
@@ -412,7 +412,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         URI to pretrained text Tokenizer. If None, will assume that the tokenizer was serialized
         alongside the JIT model.
 
-    inference_pooling_operation : {'max', 'sum', 'gaussian', 'assymetric-max'}, default='sum'
+    inference_pooling_operation : {'max', 'sum', 'gaussian', 'asymmetric-max'}, default='sum'
         Specify the strategy used to combine logits during model inference for documents
         larger than 1024 subword tokens. Larger documents are sharded into possibly overlapping
         windows of 1024 subwords each. Thus, a single token may have multiple logits (and,
@@ -425,7 +425,7 @@ class TorchJITLSTMSegmenter(_TorchJITBaseSegmenter):
         - `gaussian`: build a gaussian filter that weights higher logits based on how close
           to the window center they are, diminishing its weights closer to the window
           limits; and
-        - `assymetric-max`: take the maximum logit of each token for all classes other than
+        - `asymmetric-max`: take the maximum logit of each token for all classes other than
           the `No-operation` class, which in turn receives the minimum among all corresponding
           logits instead.
 

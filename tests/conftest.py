@@ -22,7 +22,7 @@ def fn_fixture_model_bert_2_layers(
 ) -> segmentador.BERTSegmenter:
     model = segmentador.BERTSegmenter(
         uri_model=fixture_test_paths.model_bert,
-        inference_pooling_operation="assymetric-max",
+        inference_pooling_operation="asymmetric-max",
         device="cpu",
         local_files_only=False,
         cache_dir_model=fixture_test_paths.cache_dir_models,

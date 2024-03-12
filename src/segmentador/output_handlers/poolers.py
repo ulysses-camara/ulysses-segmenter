@@ -48,7 +48,7 @@ class AutoMovingWindowPooler(_BasePooler):
 
     def __new__(cls, pooling_operation: str):  # type: ignore
         options = {
-            "assymetric-max": AssymetricMaxMovingWindowPooler,
+            "asymmetric-max": AsymmetricMaxMovingWindowPooler,
             "sum": SumMovingWindowPooler,
             "gaussian": GaussianMovingWindowPooler,
             "max": MaxMovingWindowPooler,
@@ -134,8 +134,8 @@ class MaxMovingWindowPooler(_BasePooler):
         return pooled_logits
 
 
-class AssymetricMaxMovingWindowPooler(_BasePooler):
-    """Assymetric-Maximal Pooler.
+class AsymmetricMaxMovingWindowPooler(_BasePooler):
+    """Asymmetric-Maximal Pooler.
 
     Chooses the largest logit element-wise for all classes except the 'No-op'
     class, that receives the smallest logit instead.
@@ -177,7 +177,7 @@ class AssymetricMaxMovingWindowPooler(_BasePooler):
         ...    [[-1, 1], [-2, -2], [-3, 1]],
         ...    [[ 0, 2], [ 5, -3], [-5, 0]],
         ... ])
-        >>> pooler = AssymetricMaxMovingWindowPooler()
+        >>> pooler = AsymmetricMaxMovingWindowPooler()
         >>> pooler(logits, window_shift_size=1)
         array([[ 1.,  0.],
                [-1.,  1.],
