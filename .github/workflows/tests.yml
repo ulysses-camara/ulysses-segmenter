@@ -8,6 +8,7 @@ on:
 
     paths-ignore:
       - '**.md'
+      - 'publication_resources'
       - '.readthedocs.yaml'
       - 'docs/'
       - 'diagrams/'
@@ -20,6 +21,7 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
+      - 'publication_resources'
       - '.readthedocs.yaml'
       - 'docs/'
       - 'diagrams/'
