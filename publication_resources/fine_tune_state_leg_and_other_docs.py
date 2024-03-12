@@ -334,6 +334,7 @@ def kfold(dt, random_init: bool = False):
         with open(output_name, "w", encoding="utf-8") as f_out:
             json.dump(all_res, f_out)
 
+
 def run():
     dt, indices_by_state = load()
     check_misclass_quantiles(dt, indices_by_state)

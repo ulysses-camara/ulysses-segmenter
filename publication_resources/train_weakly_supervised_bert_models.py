@@ -54,10 +54,7 @@ def compute_metrics(
     predictions = np.argmax(pred_logits, axis=-1)
 
     true_predictions: list[int] = [
-        pp
-        for (p, l) in zip(predictions, labels)
-        for (pp, ll) in zip(p, l)
-        if ll != invalid_label_index
+        pp for (p, l) in zip(predictions, labels) for (pp, ll) in zip(p, l) if ll != invalid_label_index
     ]
 
     true_labels: list[int] = [ll for l in labels for ll in l if ll != invalid_label_index]
