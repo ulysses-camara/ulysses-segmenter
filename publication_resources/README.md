@@ -14,6 +14,7 @@ Below we link modules from this directory to related Sections from the publicati
 - Section 6 (active learning):
     - train_active_learning_models.py
     - active_learning_label_curation.py
+    - train_with_active_learning_vs_random_data.py
 - Section 7 (training conclusion):
     - approx_recall_and_precision.py
     - baseline_test_crf.py
