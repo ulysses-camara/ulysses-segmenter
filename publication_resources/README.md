@@ -6,29 +6,30 @@ Below we link modules from this directory to related Sections from the publicati
 
 ### Modules
 - Section 5 (weak supervision):
-    - weak_supervision_data_preparation.py
-    - train_tokenizer_from_leg_bills.py
-    - train_weakly_supervised_bert_models.py
-    - train_weakly_supervised_lstm_models.py
-    - evaluate_weakly_supervised_models.py
+    - `weak_supervision_data_preparation.py`
+    - `train_tokenizer_from_leg_bills.py`
+    - `train_weakly_supervised_bert_models.py`
+    - `train_weakly_supervised_lstm_models.py`
+    - `evaluate_weakly_supervised_models.py`
 - Section 6 (active learning):
-    - train_active_learning_models.py
-    - active_learning_label_curation.py
-    - train_with_active_learning_vs_random_data.py
+    - `train_active_learning_models.py`
+    - `active_learning_label_curation.py`
+    - `train_with_active_learning_vs_random_data.py`
 - Section 7 (training conclusion):
-    - approx_recall_and_precision.py
-    - baseline_test_crf.py
-    - baseline_test_lexnlp.py
-    - baseline_test_nltk.py
-    - baseline_test_spacy.py
-    - baseline_test_topictiling.py
-    - baseline_test_gazetteer.py
+    - `approx_recall_and_precision.py`
+    - `baseline_test_crf.py`
+    - `baseline_test_lexnlp.py`
+    - `baseline_test_nltk.py`
+    - `baseline_test_spacy.py`
+    - `baseline_test_topictiling.py`
+    - `baseline_test_gazetteer.py`
 - Section 8 (inference):
-    - evaluate_inference_window_params.py
+    - `evaluate_inference_window_params.py`
 - Section 9 (extra legislative data):
-    - fine_tune_state_leg_and_other_docs.py
+    - `fine_tune_state_leg_and_other_docs.py`
 - Section 10 (international legislation):
-    - few_shot_fine_tuning_international_leg.py
+    - `few_shot_fine_tuning_international_leg.py`
+    - `evaluate_regex_international_leg.py`
 
 ### Pretrained models and Datasets
 
