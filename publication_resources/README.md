@@ -22,6 +22,7 @@ Below we link modules from this directory to related Sections from the publicati
     - baseline_test_nltk.py
     - baseline_test_spacy.py
     - baseline_test_topictiling.py
+    - baseline_test_gazetteer.py
 - Section 8 (inference):
     - evaluate_inference_window_params.py
 - Section 9 (extra legislative data):
