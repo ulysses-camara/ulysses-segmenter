@@ -15,7 +15,7 @@ Below we link modules from this directory to related Sections from the publicati
     - `train_active_learning_models.py`
     - `active_learning_label_curation.py`
     - `train_with_active_learning_vs_random_data.py`
-- Section 7 (training conclusion):
+- Section 7 (model assessment):
     - `approx_recall_and_precision.py`
     - `baseline_test_crf.py`
     - `baseline_test_lexnlp.py`
@@ -24,6 +24,7 @@ Below we link modules from this directory to related Sections from the publicati
     - `baseline_test_topictiling.py`
     - `baseline_test_gazetteer.py`
 - Section 8 (inference):
+    - `evaluate_shrunken_windows.py`
     - `evaluate_inference_window_params.py`
 - Section 9 (extra legislative data):
     - `fine_tune_state_leg_and_other_docs.py`
