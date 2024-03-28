@@ -173,14 +173,14 @@ def test():
     print(scores_macro)
 
     df_c1 = pd.DataFrame(scores_c1, index=context_sizes, columns=context_sizes)
-    df_c1.to_csv("results/scores_c1.csv")
+    df_c1.to_csv("results/shrunken_windows/scores_c1.csv")
 
     df_macro = pd.DataFrame(scores_macro, index=context_sizes, columns=context_sizes)
-    df_macro.to_csv("results/scores_macro.csv")
+    df_macro.to_csv("results/shrunken_windows/scores_macro.csv")
 
 
 def run():
-    if not os.path.exists("results/scores_c1.csv"):
+    if not os.path.exists("results/shrunken_windows/scores_c1.csv"):
         test()
 
 
