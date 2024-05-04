@@ -71,6 +71,7 @@ def test_invalid_inference_pooling_operation(
         )
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_invalid_quantization_output_format(fixture_model_lstm_1_layer: segmentador.LSTMSegmenter):
     with pytest.raises(ValueError):
         segmentador.optimize.quantize_model(
@@ -106,6 +107,7 @@ def test_invalid_onnx_format_for_pruned_bert(fixture_test_paths: paths.TestPaths
         )
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_repeated_file_uris_in_onnx_quantization_lstm(
     fixture_model_lstm_1_layer: segmentador.LSTMSegmenter,
 ):
@@ -118,6 +120,7 @@ def test_repeated_file_uris_in_onnx_quantization_lstm(
         )
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_repeated_file_uris_in_onnx_quantization_bert(
     fixture_model_bert_2_layers: segmentador.Segmenter,
 ):
