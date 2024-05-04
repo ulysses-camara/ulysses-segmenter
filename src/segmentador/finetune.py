@@ -153,7 +153,7 @@ def finetune(
     max_epochs: int = 10,
     batch_size: int = 3,
     grad_acc_its: int = 1,
-    device: str | torch.device = "cuda:0",
+    device: t.Union[str, torch.device] = "cuda:0",
     inst_length: int = 1024,
     show_progress_bar: bool = True,
     focus_on_misclassifications: bool = False,
