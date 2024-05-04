@@ -87,6 +87,7 @@ def finetune(
     model: torch.nn.Module,
     tokenizer,
     segments: t.List[t.List[str]],
+    is_complete_input: bool,
     *,
     lr: int = 1e-4,
     max_epochs: int = 10,
@@ -147,11 +148,12 @@ def finetune(
             cur_input_ids = input_ids[batch_inds, :]
             batch_weight = batch_weight.to(device)
 
-            batch = {
-                "input_ids": cur_input_ids,
-                "token_type_ids": torch.zeros_like(cur_input_ids),
-                "attention_mask": torch.ones_like(cur_input_ids),
-            }
+            batch = {"input_ids": cur_input_ids}
+
+            if is_complete_input:
+                batch["token_type_ids"] = torch.zeros_like(cur_input_ids)
+                batch["attention_mask"] = torch.ones_like(cur_input_ids)
+
             batch = {k: torch.atleast_2d(v).to(device) for k, v in batch.items()}
 
             y_true = labels[batch_inds, :].to(device)

@@ -641,6 +641,7 @@ class BaseSegmenter:
         self._model = finetune.finetune(
             model=self.model,
             tokenizer=self.tokenizer,
+            is_complete_input=isinstance(self.model, transformers.BertForTokenClassification),
             segments=segments,
             **kwargs,
         )
