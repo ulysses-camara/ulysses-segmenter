@@ -559,6 +559,8 @@ class BaseSegmenter:
             input_ids=tokens["input_ids"],
             label_ids=label_ids,
             apply_postprocessing=apply_postprocessing,
+            remove_noise_subsegments=remove_noise_subsegments,
+            maximum_noise_subsegment_length=maximum_noise_subsegment_length,
         )
 
         label_ids = label_ids[:num_tokens]
