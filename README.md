@@ -11,6 +11,7 @@ Brazilian legislative bill segmenter models.
 2. [Usage examples](#usage-examples)
     1. [Standard models (Torch format, Huggingface Transformers compatible)](#standard-models)
     2. [Noise subsegment removal](#noise-subsegment-removal)
+    3. [Fine-tune models to your documents](#fine-tune-models-to-your-documents)
 3. [Available models](#available-models)
 4. [Model details](#model-details)
 5. [Inference details](#inference-details)
@@ -165,6 +166,35 @@ Tokens are classified into one of four available classes: No-op (0), Segment (1)
 ```python
 seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
 ```
+
+---
+
+#### Fine-tune models to your documents
+
+If the pretrained segmenter models are not performing satisfactorily on your documents, you can fine-tune them by providing segmented examples and using the `finetune` method as follows:
+
+```python
+import segmentador
+
+segmenter = segmentador.Segmenter()
+
+segs = [
+  "XIII - DAS RESOLUÇÕES E DAS NORMAS ESPECÍFICAS",
+  "XIII.1 - O procedimento de avaliação dos protocolos de pesquisa...",
+  "XIII.2 - O processo de acreditação dos Comitês de Ética em Pesquisa...",
+  "XIII.3 - As especificidades éticas [NOISE_START] pág. 2 [NOISE_END] das pesquisas nas...",
+]
+
+segmenter.finetune(segs, output_uri="models/finetuned_segmenter_model")
+```
+
+Note that:
+
+- The optimizer used is Adam.
+- You can provide a few hyper-parameters to the optimization step. Check the `help(segmenter.finetune)` method documentation for more information.
+- You can fine-tune both BERT and bi-LSTM pretrained models.
+- As shown in the example above, will can mark noise sequences by enclosing it between `[NOISE_START]` and `[NOISE_END]`.
+- Note that the fine-tuned model will be saved to disk only if `output_uri=...` parameter is provided.
 
 ---
 
