@@ -631,6 +631,8 @@ class BaseSegmenter:
 
             - `early_stopping_accuracy_threshold`: float, default=1.0
                 Accuracy threshold value for early stopping of the optimization procedure.
+                Note that accuracy during optimization and inference may differ due to distinct
+                inference configucarion (e.g., moving window and shift size, pooling function).
         
         Returns
         -------
@@ -648,6 +650,7 @@ class BaseSegmenter:
         if output_uri:
             output_kwargs = output_kwargs or {}
             self.model.save_pretrained(output_uri, **output_kwargs)
+            self.tokenizer.save_pretrained(output_uri)
 
         return self
 
