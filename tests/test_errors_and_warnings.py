@@ -79,6 +79,7 @@ def test_invalid_quantization_output_format(fixture_model_lstm_1_layer: segmenta
         )
 
 
+@pytest.mark.skip(reason="Support for ONNX newer versions has been dropped.")
 def test_invalid_quantization_model_format(
     fixture_quantized_model_lstm_onnx: segmentador.optimize.ONNXLSTMSegmenter,
 ):
