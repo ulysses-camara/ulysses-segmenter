@@ -193,8 +193,8 @@ Note that:
 - The optimizer used is Adam.
 - You can provide a few hyper-parameters to the optimization step. Check the `help(segmenter.finetune)` method documentation for more information.
 - You can fine-tune both BERT and bi-LSTM pretrained models.
-- As shown in the example above, will can mark noise sequences by enclosing it between `[NOISE_START]` and `[NOISE_END]`.
-- Note that the fine-tuned model will be saved to disk only if `output_uri=...` parameter is provided.
+- As shown in the example above, you can mark noise sequences by enclosing them between `[NOISE_START]` and `[NOISE_END]`.
+- Note that the fine-tuned model will be saved to disk only if `output_uri=...` parameter is provided. Otherwise, the fine-tuned model will just stay in memory.
 
 ---
 
