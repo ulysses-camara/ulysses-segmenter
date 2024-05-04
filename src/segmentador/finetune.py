@@ -1,3 +1,4 @@
+"""Module for fine-tuning pretrained segmenter models in new documents."""
 import typing as t
 import functools
 import copy
@@ -15,6 +16,7 @@ def _label_noise_tokens(
     noise_start_id: int,
     noise_end_id: int,
 ) -> t.Tuple[t.List[str], t.List[int], t.List[int]]:
+    """Place labels to noise sequences enclosed by `noise_start_id` and `noise_end_id`."""
     input_ids_np = np.array(input_ids, dtype=int)
     noise_start_inds = np.flatnonzero(input_ids_np == noise_start_id)
 
@@ -46,6 +48,7 @@ def text_to_ids(
     noise_start_token: str,
     noise_end_token: str,
 ) -> t.Tuple[t.List[t.List[int]], t.List[t.List[int]]]:
+    """Convert text segments to tokenized input ids."""
     input_ids: t.List[t.List[int]] = []
     labels: t.List[t.List[int]] = []
 
@@ -98,6 +101,10 @@ def ids_to_insts(
     inst_length: int,
     pad_id: int,
 ) -> t.Tuple[torch.Tensor, torch.Tensor]:
+    """Concatenate segment input ids to form instances.
+
+    All instances will have exactly `inst_length` length.
+    """
     all_input_ids: t.List[torch.Tensor] = [[]]
     all_labels: t.List[torch.Tensor] = [[]]
 
@@ -154,6 +161,7 @@ def finetune(
     noise_start_token: str = "[NOISE_START]",
     noise_end_token: str = "[NOISE_END]",
 ):
+    """Fine-tune a pretrained model in new data."""
     if len(segments) == 0:
         return model
 
