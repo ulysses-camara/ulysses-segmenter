@@ -1,39 +1,93 @@
 import typing as t
 import functools
+import copy
 
+import numpy as np
 import torch
 import torch.nn
 import tqdm
 
 
+def _label_noise_tokens(
+    input_ids: t.List[int],
+    labels: t.List[int],
+    tokens: t.List[str],
+    noise_start_id: int,
+    noise_end_id: int,
+) -> t.Tuple[t.List[str], t.List[int], t.List[int]]:
+    input_ids_np = np.array(input_ids, dtype=int)
+    noise_start_inds = np.flatnonzero(input_ids_np == noise_start_id)
+
+    if noise_start_inds.size > 0:
+        noise_end_inds = np.hstack((np.flatnonzero(input_ids_np == noise_end_id), input_ids_np.size))
+
+        for i_start, i_end in zip(noise_start_inds, noise_end_inds):
+            if i_end > i_start + 1:
+                labels[i_start + 1] = 2 if labels[i_start + 1] != -100 else -100
+                if i_end + 1 < input_ids_np.size:
+                    labels[i_end + 1] = 3 if labels[i_end + 1] != -100 else -100
+
+            input_ids[i_start] = -1
+            if i_end < input_ids_np.size:
+                input_ids[i_end] = -1
+
+        labels = [lab for lab, i in zip(labels, input_ids) if i >= 0]
+        tokens = [tok for tok, i in zip(tokens, input_ids) if i >= 0]
+        input_ids = [i for i in input_ids if i >= 0]
+
+    assert len(input_ids) == len(labels)
+
+    return (tokens, input_ids, labels)
+
+
 def text_to_ids(
     segments: t.List[t.List[str]],
     tokenizer,
+    noise_start_token: str,
+    noise_end_token: str,
 ) -> t.Tuple[t.List[t.List[int]], t.List[t.List[int]]]:
     input_ids: t.List[t.List[int]] = []
     labels: t.List[t.List[int]] = []
 
+    tokenizer = copy.deepcopy(tokenizer)
+    tokenizer.add_tokens([noise_start_token, noise_end_token], special_tokens=True)
+
+    (noise_start_id, noise_end_id) = tokenizer.encode(
+        f"{noise_start_token} {noise_end_token}",
+        add_special_tokens=False,
+    )
+
     for doc_segs in segments:
         for j, seg in enumerate(doc_segs):
-            if j == 0: seg = f"{tokenizer.pad_token} {seg}"
-            if j == len(doc_segs) - 1: seg = f"{seg} {tokenizer.sep_token}"
+            if j == 0:
+                seg = f"{tokenizer.cls_token} {seg}"
+            if j == len(doc_segs) - 1:
+                seg = f"{seg} {tokenizer.sep_token}"
 
             cur_tokens = tokenizer.tokenize(seg, add_special_tokens=False)
-
             cur_input_ids = tokenizer.convert_tokens_to_ids(cur_tokens)
 
             cur_labels = [-100 if tok.startswith("##") else 0 for tok in cur_tokens]
             cur_labels[0] = 1
 
             if j == 0:
-                cur_labels[0] = -100
+                cur_labels[0] = -100  # NOTE: labeling [CLS] token as '-100'.
                 cur_labels[1] = 1
 
             if j == len(doc_segs) - 1:
-                cur_labels[-1] = -100
+                cur_labels[-1] = -100  # NOTE: labeling [SEP] token as '-100'.
 
-            input_ids.append(cur_input_ids)
-            labels.append(cur_labels)
+            (_, cur_input_ids, cur_labels) = _label_noise_tokens(
+                input_ids=cur_input_ids,
+                labels=cur_labels,
+                tokens=cur_tokens,
+                noise_start_id=noise_start_id,
+                noise_end_id=noise_end_id,
+            )
+
+            if cur_input_ids:
+                input_ids.append(cur_input_ids)
+                labels.append(cur_labels)
 
     return (input_ids, labels)
 
@@ -82,7 +136,6 @@ def ids_to_insts(
     return (all_input_ids, all_labels)
 
 
-
 def finetune(
     model: torch.nn.Module,
     tokenizer,
@@ -98,6 +151,8 @@ def finetune(
     show_progress_bar: bool = True,
     focus_on_misclassifications: bool = False,
     early_stopping_accuracy_threshold: float = 1.0,
+    noise_start_token: str = "[NOISE_START]",
+    noise_end_token: str = "[NOISE_END]",
 ):
     if len(segments) == 0:
         return model
@@ -105,7 +160,12 @@ def finetune(
     if isinstance(segments[0], str):
         segments = [segments]
 
-    (seg_input_ids, seg_labels) = text_to_ids(segments=segments, tokenizer=tokenizer)
+    (seg_input_ids, seg_labels) = text_to_ids(
+        segments=segments,
+        tokenizer=tokenizer,
+        noise_start_token=noise_start_token,
+        noise_end_token=noise_end_token,
+    )
 
     (input_ids, labels) = ids_to_insts(
         seg_input_ids=seg_input_ids,

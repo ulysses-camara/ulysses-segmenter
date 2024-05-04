@@ -632,7 +632,13 @@ class BaseSegmenter:
             - `early_stopping_accuracy_threshold`: float, default=1.0
                 Accuracy threshold value for early stopping of the optimization procedure.
                 Note that accuracy during optimization and inference may differ due to distinct
-                inference configucarion (e.g., moving window and shift size, pooling function).
+                inference configuration (e.g., moving window and shift size, pooling function).
+
+            - `noise_start_token`: str, default="[NOISE_START]"
+                Token to indicate noise sequence start.
+
+            - `noise_end_token`: str, default="[NOISE_END]"
+                Token to indicate noise sequence end.
         
         Returns
         -------
