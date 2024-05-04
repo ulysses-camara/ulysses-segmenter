@@ -12,6 +12,7 @@ import tqdm.auto
 
 from . import output_handlers
 from . import input_handlers
+from . import finetune
 
 
 class BaseSegmenter:
@@ -573,6 +574,82 @@ class BaseSegmenter:
         )
 
         return ret
+
+    def finetune(
+        self,
+        segments: t.List[t.List[str]],
+        output_uri: t.Optional[str] = None,
+        output_kwargs: t.Optional[t.Dict[str, t.Any]] = None,
+        **kwargs: t.Any,
+    ) -> "BaseSegmenter":
+        """Finetune segmenter model for new documents.
+
+        Parameters
+        ----------
+
+        segments : t.List[str] or t.List[t.List[str]]
+            List of segments.
+            If multiple documents are provided, it should be a list of lists of strings (one separate
+            list per document).
+
+        output_uri : str or None, default=None
+            If provided, will save the fine-tuned model to disk in the provided path.
+
+        output_kwargs : t.Dict[str, t.Any] or None, default=None
+            Additional arguments to pass to `transformers.BertForTokenClassification.save_pretrained(...)`.
+            Only used if `output_uri` is provided.
+
+        **kwargs : t.Any
+            Additional arguments for the optimization procedure.
+            The optimizer used is Adam. The available options are:
+
+            - `lr`: int, default=1e-4
+                Learning rate for Adam optimizer.
+
+            - `max_epochs`: int, default=10
+                Maximum training epochs.
+
+            - `batch_size`: int, default=3
+                Training batch size.
+
+            - `grad_acc_its`: int, default=1
+                Number of gradient accumulation steps.
+
+            - `device`: str or torch.device, default="cuda:0"
+                Training device.
+
+            - `inst_length`: int, default=1024
+                Instance length. Segments are concatenated to form instances up to the length of this
+                parameter. Ulysses pretrained models only support up to 1024 tokens.
+
+            - `show_progress_bar`: bool, default=True
+                If True, show progress bar during optimization.
+
+            - `focus_on_misclassifications`: bool, default=False
+                If True, progressively increases optimization weight coefficients for instances
+                with misclassifications.
+
+            - `early_stopping_accuracy_threshold`: float, default=1.0
+                Accuracy threshold value for early stopping of the optimization procedure.
+        
+        Returns
+        -------
+        self
+        """
+        self._model = finetune.finetune(
+            model=self.model,
+            tokenizer=self.tokenizer,
+            segments=segments,
+            **kwargs,
+        )
+
+        self.model.to(self.device)
+
+        if output_uri:
+            output_kwargs = output_kwargs or {}
+            self.model.save_pretrained(output_uri, **output_kwargs)
+
+        return self
 
 
 class LSTMSegmenterTorchModule(torch.nn.Module):
