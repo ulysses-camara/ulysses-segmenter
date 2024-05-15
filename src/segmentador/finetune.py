@@ -157,7 +157,7 @@ def finetune(
     inst_length: int = 1024,
     show_progress_bar: bool = True,
     focus_on_misclassifications: bool = False,
-    early_stopping_accuracy_threshold: float = 1.0,
+    early_stopping_accuracy_threshold: t.Optional[float] = None,
     noise_start_token: str = "[NOISE_START]",
     noise_end_token: str = "[NOISE_END]",
 ):
@@ -201,6 +201,9 @@ def finetune(
 
     model.train()
     model.to(device)
+
+    if early_stopping_accuracy_threshold is None:
+        early_stopping_accuracy_threshold = np.inf
 
     for i in range(1, 1 + max_epochs):
         mov_loss = None
