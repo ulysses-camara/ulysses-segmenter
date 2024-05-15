@@ -164,7 +164,12 @@ segmenter_lstm = segmentador.LSTMSegmenter(
 Tokens are classified into one of four available classes: No-op (0), Segment (1), Noise Start (2), and Noise End (3). Tokens located between any pair of `Noise Start` (inclusive) and the nearest `Noise End` or `Segment` (exclusive) can be eliminated during segmentation by setting the argument `remove_noise_subsegments=True` for the segmenter model, as illustrated below:
 
 ```python
-seg_result = segmenter(sample_text, ..., remove_noise_subsegments=True)
+seg_result = segmenter(
+    sample_text,
+    ...,
+    remove_noise_subsegments=True,
+    maximum_noise_subsegment_length=25,
+)
 ```
 
 ---
