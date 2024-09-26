@@ -392,9 +392,15 @@ python -m tox
 Work in progress.
 
 ```bibtex
-@inproceedings{
-    paper="",
-    author="",
-    date="",
+@article{SiqueiraSegmenter2024,
+  author    = {Felipe A. Siqueira and Diany Pressato and Fabíola S. F. Pereira and Nádia F. F. da Silva and Ellen Souza and Márcio S. Dias and André C. P. L. F. de Carvalho},
+  title     = {Segmenting Brazilian legislative text using weak supervision and active learning},
+  journal   = {Artificial Intelligence and Law},
+  year      = {2024},
+  doi       = {10.1007/s10506-024-09419-5},
+  url       = {https://doi.org/10.1007/s10506-024-09419-5},
+  issn      = {1572-8382},
+  month     = sep,
+  note      = {Published online 2024/09/26}
 }
 ```
