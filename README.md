@@ -181,7 +181,7 @@ If the pretrained segmenter models are not performing satisfactorily on your doc
 ```python
 import segmentador
 
-segmenter = segmentador.Segmenter()
+segmenter = segmentador.BERTSegmenter()
 
 segs = [
   "XIII - DAS RESOLUÇÕES E DAS NORMAS ESPECÍFICAS",
@@ -191,6 +191,19 @@ segs = [
 ]
 
 segmenter.finetune(segs, output_uri="models/finetuned_segmenter_model")
+```
+
+To load your finetuned models:
+
+```python
+# BERT
+bert_segmenter = segmentador.BERTSegmenter(uri_model="models/finetuned_segmenter_model")
+
+# LSTM
+lstm_segmenter = segmentador.LSTMSegmenter(
+    uri_model="models/finetuned_segmenter_model/model.pt",
+    uri_tokenizer="models/finetuned_segmenter_model",
+)
 ```
 
 Note that:
