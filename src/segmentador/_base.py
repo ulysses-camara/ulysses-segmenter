@@ -1,6 +1,7 @@
 """Base classes for segmenter models."""
 import typing as t
 import warnings
+import os
 
 import regex
 import transformers
@@ -646,10 +647,12 @@ class BaseSegmenter:
         -------
         self
         """
+        is_bert = isinstance(self.model, transformers.BertForTokenClassification)
+
         self._model = finetune.finetune(
             model=self.model,
             tokenizer=self.tokenizer,
-            is_complete_input=isinstance(self.model, transformers.BertForTokenClassification),
+            is_complete_input=is_bert,
             segments=segments,
             **kwargs,
         )
@@ -658,8 +661,13 @@ class BaseSegmenter:
 
         if output_uri:
             output_kwargs = output_kwargs or {}
-            self.model.save_pretrained(output_uri, **output_kwargs)
             self.tokenizer.save_pretrained(output_uri)
+
+            if is_bert:
+                self.model.save_pretrained(output_uri, **output_kwargs)
+            else:
+                parameters_uri = os.path.join(output_uri, "model.pt")
+                torch.save(self.model.state_dict(), parameters_uri)
 
         return self
 
